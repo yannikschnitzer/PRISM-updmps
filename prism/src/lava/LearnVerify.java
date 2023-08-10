@@ -60,8 +60,8 @@ public class LearnVerify {
             System.out.println("running with default seed");
             LearnVerify l = new LearnVerify();
             l.basic();
-            l.switching_environment();
-            l.gridStrengthEval();
+//            l.switching_environment();
+//            l.gridStrengthEval();
 //            l.evaluate_strength();
         }
     }
@@ -71,21 +71,21 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
         run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(1000, 1000000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(7, 1000000, seed).stratWeight(0.9).info(id));
-        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(7, 1000000, seed).stratWeight(0.9).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
+//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
         String postfix = String.format("_seed_%d", ex.seed);
-        compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
+//        compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
         compareSamplingStrategies("PAC1" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
-        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
-        compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
+//        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
+//        compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
         //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
         //new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
     }
@@ -252,7 +252,7 @@ public class LearnVerify {
         String path = directoryPath + label +".csv";
         if (Files.exists(Paths.get(path))) {
             System.out.printf("File %s already exists.%n", path);
-            return;
+            //return;
         }
 
         ex.dumpConfiguration(directoryPath, label, estimator.getName());
