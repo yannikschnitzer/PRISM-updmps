@@ -235,29 +235,60 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		SYMBOLIC, EXPLICIT
 	}
 
-	// Info about currently loaded model, if any
-	// Model source
-	private ModelSource currentModelSource = ModelSource.PRISM_MODEL;
-	// Model type
-	private ModelType currentModelType = null;
-	// Model info
-	private ModelInfo currentModelInfo = null;
-	// PRISM model (null if none loaded)
-	private ModulesFile currentModulesFile = null;
-	// Model generator (null if none loaded)
-	private ModelGenerator<?> currentModelGenerator = null;
-	// Reward generator (null if none loaded)
-	private RewardGenerator<?> currentRewardGenerator = null;
-	// Constants to be defined for PRISM model
-	private Values currentDefinedMFConstants = null;
-	// Was currentDefinedMFConstants evaluated exactly?
-	private boolean currentDefinedMFConstantsAreExact = false;
-	// Built model storage - symbolic or explicit - at most one is non-null
-	private Model currentModelSymb = null;
-	private explicit.Model<?> currentModelExpl = null;
-	private ModelBuildType currentModelBuildType = null;
-	// Are we doing digital clocks translation for PTAs?
-	boolean currentModelDigitalClocks = false;
+	/** Class to store details about a loaded model */
+	public class ModelDetails
+	{
+		// Model source (null if none/unknown)
+		ModelSource modelSource = null;
+		// Model type (null if none/unknown)
+		ModelType modelType = null;
+		// Model info (null if none/unknown)
+		ModelInfo modelInfo = null;
+		// PRISM model (null if none loaded)
+		ModulesFile modulesFile = null;
+		// Model generator (null if none loaded)
+		ModelGenerator<?> modelGenerator = null;
+		// Reward generator (null if none loaded)
+		RewardGenerator<?> rewardGenerator = null;
+		// Constants to be defined for PRISM model (null if none/undefined)
+		Values definedMFConstants = null;
+		// Was definedMFConstants evaluated exactly?
+		boolean definedMFConstantsAreExact = false;
+		// Built model storage - symbolic or explicit - at most one is non-null
+		Model modelSymb = null;
+		explicit.Model<?> modelExpl = null;
+		// Type of built model storage
+		ModelBuildType modelBuildType = null;
+		// Are we doing digital clocks translation for PTAs?
+		boolean modelDigitalClocks = false;
+
+		/** Default constructor */
+		ModelDetails()
+		{
+			// Fields take default values as listed above
+		}
+
+		/** Copy constructor */
+		ModelDetails(ModelDetails other)
+		{
+			modelSource = other.modelSource;
+			modelType = other.modelType;
+			modelInfo = other.modelInfo;
+			modelSource = other.modelSource;
+			modulesFile = other.modulesFile;
+			modelGenerator = other.modelGenerator;
+			rewardGenerator = other.rewardGenerator;
+			definedMFConstants = other.definedMFConstants;
+			definedMFConstantsAreExact = other.definedMFConstantsAreExact;
+			modelSymb = other.modelSymb;
+			modelExpl = other.modelExpl;
+			modelBuildType = other.modelBuildType;
+			modelDigitalClocks = other.modelDigitalClocks;
+		}
+	}
+
+	/** Info about currently loaded model, if any */
+	private ModelDetails currentModelDetails = new ModelDetails();
 
 	// The last strategy that was generated
 	private Strategy<?> strategy = null;
@@ -1781,7 +1812,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public ModelSource getModelSource()
 	{
-		return currentModelSource;
+		return currentModelDetails.modelSource;
 	}
 
 	/**
@@ -1789,7 +1820,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public boolean isModelSourceDigitalClocks()
 	{
-		return currentModelDigitalClocks;
+		return currentModelDetails.modelDigitalClocks;
 	}
 
 	/**
@@ -1797,7 +1828,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public ModelType getModelType()
 	{
-		return currentModelType;
+		return currentModelDetails.modelType;
 	}
 
 	/**
@@ -1805,7 +1836,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public ModelInfo getModelInfo()
 	{
-		return currentModelInfo;
+		return currentModelDetails.modelInfo;
 	}
 
 	/**
@@ -1813,7 +1844,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public ModulesFile getPRISMModel()
 	{
-		return currentModulesFile;
+		return currentModelDetails.modulesFile;
 	}
 
 	/**
@@ -1849,13 +1880,13 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	private ModelGenerator<?> getModelGenerator(boolean buildIfMissing) throws PrismException
 	{
 		// Only rebuild if not already present
-		if (currentModelGenerator == null && buildIfMissing) {
+		if (currentModelDetails.modelGenerator == null && buildIfMissing) {
 			switch (getModelSource()) {
 			case PRISM_MODEL:
 				if (getPRISMModel() != null) {
 					// Create a model generator via ModulesFileModelGenerator
 					setModelGenerator(ModulesFileModelGenerator.create(getPRISMModel(), this));
-					setRewardGenerator((ModulesFileModelGenerator<?>) currentModelGenerator);
+					setRewardGenerator((ModulesFileModelGenerator<?>) currentModelDetails.modelGenerator);
 				} else {
 					throw new PrismException("There is no currently loaded PRISM model");
 				}
@@ -1873,10 +1904,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			}
 		}
 		// Default error message if we failed to create a ModelGenerator
-		if (currentModelGenerator == null && buildIfMissing) {
+		if (currentModelDetails.modelGenerator == null && buildIfMissing) {
 			throw new PrismException("Could not create a model generator");
 		}
-		return currentModelGenerator;
+		return currentModelDetails.modelGenerator;
 	}
 
 	/**
@@ -1884,7 +1915,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public RewardGenerator<?> getRewardGenerator() throws PrismException
 	{
-		return currentRewardGenerator;
+		return currentModelDetails.rewardGenerator;
 	}
 
 	/**
@@ -1892,7 +1923,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public Values getUndefinedModelValues()
 	{
-		return currentDefinedMFConstants;
+		return currentModelDetails.definedMFConstants;
 	}
 
 	/**
@@ -1900,7 +1931,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public boolean areUndefinedModelValuesExact()
 	{
-		return currentDefinedMFConstantsAreExact;
+		return currentModelDetails.definedMFConstantsAreExact;
 	}
 
 	/**
@@ -1916,7 +1947,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private prism.Model getBuiltModelSymbolic()
 	{
-		return currentModelSymb;
+		return currentModelDetails.modelSymb;
 	}
 
 	/**
@@ -1924,7 +1955,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public explicit.Model<?> getBuiltModelExplicit()
 	{
-		return currentModelExpl;
+		return currentModelDetails.modelExpl;
 	}
 
 	/**
@@ -1932,7 +1963,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public ModelBuildType getBuiltModelType()
 	{
-		return currentModelBuildType;
+		return currentModelDetails.modelBuildType;
 	}
 
 	/**
@@ -4112,7 +4143,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setModelSource(ModelSource modelSource) throws PrismException
 	{
-		currentModelSource = modelSource;
+		currentModelDetails.modelSource = modelSource;
 	}
 
 	/**
@@ -4120,7 +4151,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setModelSourceIsDigitalClocks(boolean digital) throws PrismException
 	{
-		this.currentModelDigitalClocks = digital;
+		this.currentModelDetails.modelDigitalClocks = digital;
 	}
 
 	/**
@@ -4128,7 +4159,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setModelType(ModelType modelType) throws PrismException
 	{
-		currentModelType = modelType;
+		currentModelDetails.modelType = modelType;
 	}
 
 	/**
@@ -4136,7 +4167,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setModelInfo(ModelInfo modelInfo) throws PrismException
 	{
-		currentModelInfo = modelInfo;
+		currentModelDetails.modelInfo = modelInfo;
 	}
 
 	/**
@@ -4144,7 +4175,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setPRISMModel(ModulesFile modulesFile) throws PrismException
 	{
-		currentModulesFile = modulesFile;
+		currentModelDetails.modulesFile = modulesFile;
 	}
 
 	/**
@@ -4152,7 +4183,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setModelGenerator(ModelGenerator modelGenerator) throws PrismException
 	{
-		currentModelGenerator = modelGenerator;
+		currentModelDetails.modelGenerator = modelGenerator;
 	}
 
 	/**
@@ -4160,7 +4191,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setRewardGenerator(RewardGenerator rewardGenerator) throws PrismException
 	{
-		currentRewardGenerator = rewardGenerator;
+		currentModelDetails.rewardGenerator = rewardGenerator;
 	}
 
 	/**
@@ -4176,8 +4207,8 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void setDefinedMFConstants(Values definedMFConstants, boolean exact) throws PrismException
 	{
-		currentDefinedMFConstants = definedMFConstants;
-		currentDefinedMFConstantsAreExact = exact;
+		currentModelDetails.definedMFConstants = definedMFConstants;
+		currentModelDetails.definedMFConstantsAreExact = exact;
 	}
 
 	/**
@@ -4187,17 +4218,17 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	{
 		switch (buildType) {
 			case SYMBOLIC:
-				this.currentModelSymb = newModelSymb;
-				this.currentModelExpl = null;
+				this.currentModelDetails.modelSymb = newModelSymb;
+				this.currentModelDetails.modelExpl = null;
 				break;
 			case EXPLICIT:
-				this.currentModelSymb = null;
-				this.currentModelExpl = newModelExpl;
+				this.currentModelDetails.modelSymb = null;
+				this.currentModelDetails.modelExpl = newModelExpl;
 				break;
 			default:
 				throw new PrismException("Unknown built model type");
 		}
-		this.currentModelBuildType = buildType;
+		this.currentModelDetails.modelBuildType = buildType;
 	}
 
 	/**
@@ -4207,12 +4238,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	private void clearBuiltModel()
 	{
-		if (currentModelSymb != null) {
-			currentModelSymb.clear();
-			currentModelSymb = null;
+		if (currentModelDetails.modelSymb != null) {
+			currentModelDetails.modelSymb.clear();
+			currentModelDetails.modelSymb = null;
 		}
-		currentModelExpl = null;
-		currentModelBuildType = null;
+		currentModelDetails.modelExpl = null;
+		currentModelDetails.modelBuildType = null;
 		clearStrategy();
 	}
 
