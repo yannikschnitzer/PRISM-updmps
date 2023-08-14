@@ -257,7 +257,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	private explicit.Model<?> currentModelExpl = null;
 	private ModelBuildType currentModelBuildType = null;
 	// Are we doing digital clocks translation for PTAs?
-	boolean digital = false;
+	boolean currentModelDigitalClocks = false;
 
 	// The last strategy that was generated
 	private Strategy<?> strategy = null;
@@ -1785,6 +1785,14 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	}
 
 	/**
+	 * Is the source of the currently loaded model digital clocks?
+	 */
+	public boolean isModelSourceDigitalClocks()
+	{
+		return currentModelDigitalClocks;
+	}
+
+	/**
 	 * Get the type of the currently loaded model (null if none/unknown).
 	 */
 	public ModelType getModelType()
@@ -2124,7 +2132,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			mainLog.println("\nTime for model construction: " + l / 1000.0 + " seconds.");
 
 			// For digital clocks, do some extra checks on the built model
-			if (digital) {
+			if (isModelSourceDigitalClocks()) {
 				doBuildModelDigitalClocksChecks();
 			}
 
@@ -3073,7 +3081,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		boolean engineSwitch = false, switchToMTBDDEngine = false, switchedToExplicitEngine = false;
 		int lastEngine = -1;
 
-		if (!digital)
+		if (!isModelSourceDigitalClocks())
 			mainLog.printSeparator();
 		mainLog.println("\nModel checking: " + prop);
 		if (getUndefinedModelValues() != null && getUndefinedModelValues().getNumValues() > 0)
@@ -3227,7 +3235,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		
 		// Digital clocks translation
 		if (settings.getString(PrismSettings.PRISM_PTA_METHOD).equals("Digital clocks") || getModelType() == ModelType.POPTA) {
-			digital = true;
+			setModelSourceIsDigitalClocks(true);
 			ModulesFile oldModulesFile = getPRISMModel();
 			try {
 				DigitalClocks dc = new DigitalClocks(this);
@@ -3247,7 +3255,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				}
 				return modelCheck(dc.getNewPropertiesFile(), dc.getNewPropertyToCheck());
 			} finally {
-				digital = false;
+				setModelSourceIsDigitalClocks(false);
 				// Preserve strategy (setting to null stops it being cleared with model)
 				Strategy strategyDigital = strategy;
 				strategy = null;
@@ -3492,7 +3500,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		mc.setParameters(paramNames, paramLowerBounds, paramUpperBounds);
 		mc.setModulesFileAndPropertiesFile(getPRISMModel(), propertiesFile);
 
-		if (digital) {
+		if (isModelSourceDigitalClocks()) {
 			// have to do deadlock checks, as we are in digital clock mode for PTA checking,
 			// cf. doBuildModelDigitalClocksChecks()
 			if (modelExpl.getNumDeadlockStates() > 0) {
@@ -4105,6 +4113,14 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	private void setModelSource(ModelSource modelSource) throws PrismException
 	{
 		currentModelSource = modelSource;
+	}
+
+	/**
+	 * Specify whether the source of the currently loaded model is digital clocks.
+	 */
+	private void setModelSourceIsDigitalClocks(boolean digital) throws PrismException
+	{
+		this.currentModelDigitalClocks = digital;
 	}
 
 	/**
