@@ -253,7 +253,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	// Was currentDefinedMFConstants evaluated exactly?
 	private boolean currentDefinedMFConstantsAreExact = false;
 	// Built model storage - symbolic or explicit - at most one is non-null
-	private Model currentModel = null;
+	private Model currentModelSymb = null;
 	private explicit.Model<?> currentModelExpl = null;
 	private ModelBuildType currentModelBuildType = null;
 	// Are we doing digital clocks translation for PTAs?
@@ -1712,19 +1712,19 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 * Pass in nulls to clear storage of the current model.
 	 * @param modulesFile The PRISM model
 	 */
-	public void loadPRISMModelAndBuiltModel(ModulesFile modulesFile, Model model)
+	public void loadPRISMModelAndBuiltModel(ModulesFile modulesFile, Model model) throws PrismException
 	{
 		currentModelSource = ModelSource.PRISM_MODEL;
 		// Clear any existing built model(s)
 		clearBuiltModel();
 		// Store model info
 		currentModulesFile = modulesFile;
-		currentModel = model;
-		currentModelBuildType = ModelBuildType.SYMBOLIC;
 		// Reset dependent info
 		currentModelType = currentModulesFile == null ? null : currentModulesFile.getModelType();
 		currentModelInfo = currentModulesFile;
 		currentDefinedMFConstants = null;
+		// Store built model info
+		setBuiltModel(ModelBuildType.SYMBOLIC, model, null);
 	}
 
 	/**
@@ -1733,18 +1733,18 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 * Pass in null to clear storage of the current model.
 	 * @param model The built model
 	 */
-	public void loadBuiltModel(Model model)
+	public void loadBuiltModel(Model model) throws PrismException
 	{
 		currentModelSource = ModelSource.BUILT_MODEL;
 		// Clear any existing built model(s)
 		clearBuiltModel();
 		// Store model info
 		currentModulesFile = null;
-		currentModel = model;
-		currentModelBuildType = ModelBuildType.SYMBOLIC;
 		// Reset dependent info
-		currentModelType = currentModel == null ? null : currentModel.getModelType();
+		currentModelType = model == null ? null : model.getModelType();
 		currentDefinedMFConstants = null;
+		// Store built model info
+		setBuiltModel(ModelBuildType.SYMBOLIC, model, null);
 	}
 
 	/**
@@ -1861,7 +1861,15 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public Model getBuiltModel()
 	{
-		return currentModel;
+		return getBuiltModelSymbolic();
+	}
+
+	/**
+	 * Get the currently stored built symbolic model.
+	 */
+	private prism.Model getBuiltModelSymbolic()
+	{
+		return currentModelSymb;
 	}
 
 	/**
@@ -1870,6 +1878,14 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	public explicit.Model<?> getBuiltModelExplicit()
 	{
 		return currentModelExpl;
+	}
+
+	/**
+	 * Get the type of currently built model (null if not built).
+	 */
+	public ModelBuildType getBuiltModelType()
+	{
+		return currentModelBuildType;
 	}
 
 	/**
@@ -1904,7 +1920,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	public boolean modelIsBuilt()
 	{
 		ModelBuildType modelBuildTypeForEngine = getModelBuildTypeForEngine(getCurrentEngine());
-		return modelBuildTypeForEngine != null && currentModelBuildType == modelBuildTypeForEngine;
+		return modelBuildTypeForEngine != null && getBuiltModelType() == modelBuildTypeForEngine;
 	}
 
 	/**
@@ -2002,26 +2018,24 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			
 			switch (getCurrentEngine()) {
 			case SYMBOLIC:
+				prism.Model newModelSymb;
 				switch (currentModelSource) {
 				case PRISM_MODEL:
 					Modules2MTBDD mod2mtbdd = new Modules2MTBDD(this, currentModulesFile);
-					currentModel = mod2mtbdd.translate();
-					currentModelExpl = null;
-					currentModelBuildType = ModelBuildType.SYMBOLIC;
-					break;				
+					newModelSymb = mod2mtbdd.translate();
+					setBuiltModel(ModelBuildType.SYMBOLIC, newModelSymb, null);
+					break;
 				case MODEL_GENERATOR:
 					ModelGenerator2MTBDD modelGen2mtbdd = new ModelGenerator2MTBDD(this);
 					ModelGenerator<Double> modelGenDbl = (ModelGenerator<Double>) getModelGenerator();
-					currentModel = modelGen2mtbdd.build(modelGenDbl, (RewardGenerator<Double>) currentRewardGenerator);
-					currentModelExpl = null;
-					currentModelBuildType = ModelBuildType.SYMBOLIC;
+					newModelSymb = modelGen2mtbdd.build(modelGenDbl, (RewardGenerator<Double>) currentRewardGenerator);
+					setBuiltModel(ModelBuildType.SYMBOLIC, newModelSymb, null);
 					break;
 				case EXPLICIT_FILES:
 					ExplicitFiles2MTBDD expf2mtbdd = new ExplicitFiles2MTBDD(this);
 					ExplicitFilesRewardGenerator4MTBDD erfg4m = new ExplicitFilesRewardGenerator4MTBDD(this, explicitFilesStateRewardsFiles, explicitFilesNumStates);
-					currentModel = expf2mtbdd.build(explicitFilesStatesFile, explicitFilesTransFile, explicitFilesLabelsFile, currentModelInfo, explicitFilesNumStates, erfg4m);
-					currentModelExpl = null;
-					currentModelBuildType = ModelBuildType.SYMBOLIC;
+					newModelSymb = expf2mtbdd.build(explicitFilesStatesFile, explicitFilesTransFile, explicitFilesLabelsFile, currentModelInfo, explicitFilesNumStates, erfg4m);
+					setBuiltModel(ModelBuildType.SYMBOLIC, newModelSymb, null);
 					// Also build a RewardGenerator
 					// (needed e.g. when (multiple) reward files are later exported)
 					currentRewardGenerator = erfg4m;
@@ -2033,6 +2047,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				}
 				break;
 			case EXPLICIT:
+				explicit.Model<?> newModelExpl;
 				switch (currentModelSource) {
 				case PRISM_MODEL:
 				case MODEL_GENERATOR:
@@ -2043,20 +2058,18 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 					}
 					ConstructModel constructModel = new ConstructModel(this);
 					constructModel.setFixDeadlocks(getFixDeadlocks());
-					currentModelExpl = constructModel.constructModel(currentModelGenerator);
-					currentModel = null;
-					currentModelBuildType = ModelBuildType.EXPLICIT;
+					newModelExpl = constructModel.constructModel(currentModelGenerator);
+					setBuiltModel(ModelBuildType.EXPLICIT, null, newModelExpl);
 					break;
 				case EXPLICIT_FILES:
 					ExplicitFiles2Model expf2model = new ExplicitFiles2Model(this);
-					currentModelExpl = expf2model.build(explicitFilesStatesFile, explicitFilesTransFile, explicitFilesLabelsFile, currentModelInfo, explicitFilesNumStates);
-					currentModel = null;
-					currentModelBuildType = ModelBuildType.EXPLICIT;
+					newModelExpl = expf2model.build(explicitFilesStatesFile, explicitFilesTransFile, explicitFilesLabelsFile, currentModelInfo, explicitFilesNumStates);
+					setBuiltModel(ModelBuildType.EXPLICIT, null, newModelExpl);
 					// Also build a Model/RewardGenerator
 					// (the latter since rewards are built later, the former e.g. for simulation)
-					currentModelGenerator = new ModelModelGenerator<>(currentModelExpl, currentModelInfo);
+					currentModelGenerator = new ModelModelGenerator<>(getBuiltModelExplicit(), currentModelInfo);
 					ExplicitFilesRewardGenerator efrg4e = new ExplicitFilesRewardGenerator4Explicit(this, explicitFilesStateRewardsFiles, explicitFilesNumStates);
-					efrg4e.setStatesList(currentModelExpl.getStatesList());
+					efrg4e.setStatesList(getBuiltModelExplicit().getStatesList());
 					currentRewardGenerator = efrg4e;
 					break;
 				default:
@@ -2076,14 +2089,14 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			}
 
 			// Deal with deadlocks
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-				StateList deadlocks = currentModel.getDeadlockStates();
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+				StateList deadlocks = getBuiltModelSymbolic().getDeadlockStates();
 				int numDeadlocks = deadlocks.size();
 				if (numDeadlocks > 0) {
 					if (getFixDeadlocks()) {
 						mainLog.printWarning("Deadlocks detected and fixed in " + numDeadlocks + " states");
 					} else {
-						currentModel.printTransInfo(mainLog, getExtraDDInfo());
+						getBuiltModelSymbolic().printTransInfo(mainLog, getExtraDDInfo());
 						mainLog.print("\n" + numDeadlocks + " deadlock states found");
 						if (!getVerbose() && numDeadlocks > 10) {
 							mainLog.print(". The first 10 are below. Use verbose mode to view them all.\n");
@@ -2097,13 +2110,13 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 					}
 				}
 			} else {
-				explicit.StateValues deadlocks = currentModelExpl.getDeadlockStatesList();
-				int numDeadlocks = currentModelExpl.getNumDeadlockStates();
+				explicit.StateValues deadlocks = getBuiltModelExplicit().getDeadlockStatesList();
+				int numDeadlocks = getBuiltModelExplicit().getNumDeadlockStates();
 				if (numDeadlocks > 0) {
 					if (getFixDeadlocks()) {
 						mainLog.printWarning("Deadlocks detected and fixed in " + numDeadlocks + " states");
 					} else {
-						mainLog.print(currentModelExpl.infoStringTable());
+						mainLog.print(getBuiltModelExplicit().infoStringTable());
 						mainLog.print("\n" + numDeadlocks + " deadlock states found");
 						if (!getVerbose() && numDeadlocks > 10) {
 							mainLog.print(". The first 10 are below. Use verbose mode to view them all.\n");
@@ -2120,12 +2133,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 
 			// Print model stats
 			mainLog.println();
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-				mainLog.println("Type:        " + currentModel.getModelType());
-				currentModel.printTransInfo(mainLog, getExtraDDInfo());
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+				mainLog.println("Type:        " + getBuiltModelSymbolic().getModelType());
+				getBuiltModelSymbolic().printTransInfo(mainLog, getExtraDDInfo());
 			} else {
-				mainLog.println("Type:        " + currentModelExpl.getModelType());
-				mainLog.print(currentModelExpl.infoStringTable());
+				mainLog.println("Type:        " + getBuiltModelExplicit().getModelType());
+				mainLog.print(getBuiltModelExplicit().infoStringTable());
 			}
 
 			// Notify model listeners of build success
@@ -2147,22 +2160,22 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	private void doBuildModelDigitalClocksChecks() throws PrismException
 	{
 		// For digital clocks, by construction, deadlocks can only occur from timelocks (and are not allowed)
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			StateList deadlocks = currentModel.getDeadlockStates();
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			StateList deadlocks = getBuiltModelSymbolic().getDeadlockStates();
 			if (deadlocks.size() > 0) {
 				throw new PrismException("Timelock in PTA, e.g. in state (" + deadlocks.getFirstAsValues() + ")");
 			}
 		} else {
-			if (currentModelExpl.getNumDeadlockStates() > 0) {
-				int dl = currentModelExpl.getFirstDeadlockState();
-				String dls = currentModelExpl.getStatesList().get(dl).toString(currentModelInfo);
+			if (getBuiltModelExplicit().getNumDeadlockStates() > 0) {
+				int dl = getBuiltModelExplicit().getFirstDeadlockState();
+				String dls = getBuiltModelExplicit().getStatesList().get(dl).toString(currentModelInfo);
 				throw new PrismException("Timelock in PTA, e.g. in state " + dls);
 			}
 		}
 
 		/*// Create new model checker object and do model checking
 		PropertiesFile pf = parsePropertiesString("filter(exists,!\"invariants\"); E[F!\"invariants\"]");
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			ModelChecker mc = new NondetModelChecker(this, currentModel, pf);
 			if (((Boolean) mc.check(pf.getProperty(0)).getResult()).booleanValue()) {
 				mainLog.println(mc.check(pf.getProperty(1)).getCounterexample());
@@ -2174,7 +2187,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			mc.setLog(mainLog);
 			mc.setSettings(settings);
 			mc.setModulesFileAndPropertiesFile(currentModulesFile, pf);
-			explicit.StateValues sv = mc.checkExpression(currentModelExpl, pf.getProperty(0));
+			explicit.StateValues sv = mc.checkExpression(getBuiltModelExplicit(), pf.getProperty(0));
 			sv.print(mainLog, 1);
 		}*/
 	}
@@ -2273,19 +2286,19 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		mainLog.println("\nExporting to spy file \"" + file + "\"...");
 
 		// choose depth
-		depth = currentModel.getAllDDRowVars().n();
+		depth = getBuiltModelSymbolic().getAllDDRowVars().n();
 		if (depth > 9)
 			depth = 9;
 
 		// get rid of non det vars if necessary
-		tmp = currentModel.getTrans();
+		tmp = getBuiltModelSymbolic().getTrans();
 		JDD.Ref(tmp);
 		if (currentModelType == ModelType.MDP) {
-			tmp = JDD.MaxAbstract(tmp, ((NondetModel) currentModel).getAllDDNondetVars());
+			tmp = JDD.MaxAbstract(tmp, ((NondetModel) getBuiltModelSymbolic()).getAllDDNondetVars());
 		}
 
 		// export to spy file
-		JDD.ExportMatrixToSpyFile(tmp, currentModel.getAllDDRowVars(), currentModel.getAllDDColVars(), depth, file.getPath());
+		JDD.ExportMatrixToSpyFile(tmp, getBuiltModelSymbolic().getAllDDRowVars(), getBuiltModelSymbolic().getAllDDColVars(), depth, file.getPath());
 		JDD.Deref(tmp);
 	}
 
@@ -2309,7 +2322,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		
 		// Export to dot file
 		mainLog.println("\nExporting to dot file \"" + file + "\"...");
-		JDD.ExportDDToDotFileLabelled(currentModel.getTrans(), file.getPath(), currentModel.getDDVarNames());
+		JDD.ExportDDToDotFileLabelled(getBuiltModelSymbolic().getTrans(), file.getPath(), getBuiltModelSymbolic().getDDVarNames());
 	}
 
 	/**
@@ -2356,21 +2369,21 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 
 		// do export
 		int precision = settings.getInteger(PrismSettings.PRISM_EXPORT_MODEL_PRECISION);
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			currentModel.exportToFile(exportType, ordered, file, precision);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			getBuiltModelSymbolic().exportToFile(exportType, ordered, file, precision);
 		} else {
 			PrismLog tmpLog = getPrismLogForFile(file);
 			switch (exportType) {
 			case Prism.EXPORT_PLAIN:
-				currentModelExpl.exportToPrismExplicitTra(tmpLog, precision);
+				getBuiltModelExplicit().exportToPrismExplicitTra(tmpLog, precision);
 				break;
 			case Prism.EXPORT_MATLAB:
 				throw new PrismNotSupportedException("Export not yet supported");
 			case Prism.EXPORT_DOT:
-				currentModelExpl.exportToDotFile(tmpLog, precision);
+				getBuiltModelExplicit().exportToDotFile(tmpLog, precision);
 				break;
 			case Prism.EXPORT_DOT_STATES:
-				currentModelExpl.exportToDotFile(tmpLog, null, true, precision);
+				getBuiltModelExplicit().exportToDotFile(tmpLog, null, true, precision);
 				break;
 			case Prism.EXPORT_MRMC:
 			case Prism.EXPORT_ROWS:
@@ -2380,11 +2393,11 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		}
 
 		// for export to dot with states, need to do a bit more
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC && exportType == EXPORT_DOT_STATES) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC && exportType == EXPORT_DOT_STATES) {
 			// open (appending to) existing new file log or use main log
 			PrismLog tmpLog = getPrismLogForFile(file, true);
 			// insert states info into dot file
-			currentModel.getReachableStates().printDot(tmpLog);
+			getBuiltModelSymbolic().getReachableStates().printDot(tmpLog);
 			// print footer
 			tmpLog.println("}");
 			// tidy up
@@ -2434,12 +2447,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				files.add(filename);
 			}
 			File fileToUse = (filename == null) ? null : new File(filename);
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-				currentModel.exportStateRewardsToFile(r, exportType, fileToUse, precision, noexportheaders);
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+				getBuiltModelSymbolic().exportStateRewardsToFile(r, exportType, fileToUse, precision, noexportheaders);
 			} else {
 				explicit.StateModelChecker mcExpl = createModelCheckerExplicit(null);
 				try (PrismLog out = getPrismLogForFile(fileToUse)){
-					((explicit.ProbModelChecker) mcExpl).exportStateRewardsToFile(currentModelExpl, r, exportType, out, noexportheaders, precision);
+					((explicit.ProbModelChecker) mcExpl).exportStateRewardsToFile(getBuiltModelExplicit(), r, exportType, out, noexportheaders, precision);
 				} catch (PrismNotSupportedException e1) {
 					mainLog.println("\nReward export failed: " + e1.getMessage());
 					try {
@@ -2476,7 +2489,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			mainLog.println("\nOmitting transition reward export as there are no reward structures");
 			return;
 		}
-		
+
 		// Can only do ordered version of export for MDPs
 		if (currentModelType == ModelType.MDP) {
 			if (!ordered)
@@ -2514,12 +2527,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				files.add(filename);
 			}
 			File fileToUse = (filename == null) ? null : new File(filename);
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-				currentModel.exportTransRewardsToFile(r, exportType, ordered, fileToUse, precision, noexportheaders);
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+				getBuiltModelSymbolic().exportTransRewardsToFile(r, exportType, ordered, fileToUse, precision, noexportheaders);
 			} else {
 				explicit.StateModelChecker mcExpl = createModelCheckerExplicit(null);
 				try (PrismLog out = getPrismLogForFile(fileToUse)){
-					((explicit.ProbModelChecker) mcExpl).exportTransRewardsToFile(currentModelExpl, r, exportType, out, noexportheaders, precision);
+					((explicit.ProbModelChecker) mcExpl).exportTransRewardsToFile(getBuiltModelExplicit(), r, exportType, out, noexportheaders, precision);
 				} catch (PrismNotSupportedException e1) {
 					mainLog.println("\nReward export failed: " + e1.getMessage());
 					try {
@@ -2569,12 +2582,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		// Compute BSCCs
 		mainLog.println("\nComputing BSCCs...");
 		l = System.currentTimeMillis();
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			sccComputer = getSCCComputer(currentModel);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			sccComputer = getSCCComputer(getBuiltModelSymbolic());
 			sccComputer.computeBSCCs();
 		} else {
 			sccConsumerExpl = new explicit.SCCConsumerStore();
-			getExplicitSCCComputer(currentModelExpl, sccConsumerExpl).computeSCCs();
+			getExplicitSCCComputer(getBuiltModelExplicit(), sccConsumerExpl).computeSCCs();
 		}
 		l = System.currentTimeMillis() - l;
 		mainLog.println("\nTime for BSCC computation: " + l / 1000.0 + " seconds.");
@@ -2599,7 +2612,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		tmpLog.println(")");
 
 		// print states for each bscc
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			n = sccComputer.getBSCCs().size();
 		} else {
 			n = sccConsumerExpl.getBSCCs().size();
@@ -2611,20 +2624,20 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			tmpLog.println("BSCC " + (i + 1) + "/" + n + ":");
 			if (exportType == EXPORT_MATLAB)
 				tmpLog.println("bscc" + (i + 1) + "=[");
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 				if (exportType != EXPORT_MATLAB)
-					new StateListMTBDD(sccComputer.getBSCCs().get(i), currentModel).print(tmpLog);
+					new StateListMTBDD(sccComputer.getBSCCs().get(i), getBuiltModelSymbolic()).print(tmpLog);
 				else
-					new StateListMTBDD(sccComputer.getBSCCs().get(i), currentModel).printMatlab(tmpLog);
+					new StateListMTBDD(sccComputer.getBSCCs().get(i), getBuiltModelSymbolic()).printMatlab(tmpLog);
 				JDD.Deref(sccComputer.getBSCCs().get(i));
 			} else {
-				explicit.StateValues.createFromBitSet(sccConsumerExpl.getBSCCs().get(i), currentModelExpl).print(tmpLog, true, exportType == EXPORT_MATLAB, true, true);
+				explicit.StateValues.createFromBitSet(sccConsumerExpl.getBSCCs().get(i), getBuiltModelExplicit()).print(tmpLog, true, exportType == EXPORT_MATLAB, true, true);
 			}
 			if (exportType == EXPORT_MATLAB)
 				tmpLog.println("];");
 		}
 
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			JDD.Deref(sccComputer.getNotInBSCCs());
 		}
 
@@ -2662,11 +2675,11 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		// Compute MECs
 		mainLog.println("\nComputing MECs...");
 		l = System.currentTimeMillis();
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			ecComputer = getECComputer((NondetModel) currentModel);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			ecComputer = getECComputer((NondetModel) getBuiltModelSymbolic());
 			ecComputer.computeMECStates();
 		} else {
-			ecComputerExpl = getExplicitECComputer((explicit.NondetModel<?>) currentModelExpl);
+			ecComputerExpl = getExplicitECComputer((explicit.NondetModel<?>) getBuiltModelExplicit());
 			ecComputerExpl.computeMECStates();
 		}
 		l = System.currentTimeMillis() - l;
@@ -2692,7 +2705,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		tmpLog.println(")");
 
 		// print states for each mec
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			n = ecComputer.getMECStates().size();
 		} else {
 			n = ecComputerExpl.getMECStates().size();
@@ -2704,14 +2717,14 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			tmpLog.println("MEC " + (i + 1) + "/" + n + ":");
 			if (exportType == EXPORT_MATLAB)
 				tmpLog.println("mec" + (i + 1) + "=[");
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 				if (exportType != EXPORT_MATLAB)
-					new StateListMTBDD(ecComputer.getMECStates().get(i), currentModel).print(tmpLog);
+					new StateListMTBDD(ecComputer.getMECStates().get(i), getBuiltModelSymbolic()).print(tmpLog);
 				else
-					new StateListMTBDD(ecComputer.getMECStates().get(i), currentModel).printMatlab(tmpLog);
+					new StateListMTBDD(ecComputer.getMECStates().get(i), getBuiltModelSymbolic()).printMatlab(tmpLog);
 				JDD.Deref(ecComputer.getMECStates().get(i));
 			} else {
-				explicit.StateValues.createFromBitSet(ecComputerExpl.getMECStates().get(i), currentModelExpl).print(tmpLog, true, exportType == EXPORT_MATLAB,
+				explicit.StateValues.createFromBitSet(ecComputerExpl.getMECStates().get(i), getBuiltModelExplicit()).print(tmpLog, true, exportType == EXPORT_MATLAB,
 						true, true);
 			}
 			if (exportType == EXPORT_MATLAB)
@@ -2752,12 +2765,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		// Compute SCCs
 		mainLog.println("\nComputing SCCs...");
 		l = System.currentTimeMillis();
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			sccComputer = getSCCComputer(currentModel);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			sccComputer = getSCCComputer(getBuiltModelSymbolic());
 			sccComputer.computeSCCs();
 		} else {
 			sccConsumerExpl = new explicit.SCCConsumerStore();
-			getExplicitSCCComputer(currentModelExpl, sccConsumerExpl).computeSCCs();
+			getExplicitSCCComputer(getBuiltModelExplicit(), sccConsumerExpl).computeSCCs();
 		}
 		l = System.currentTimeMillis() - l;
 		mainLog.println("\nTime for SCC computation: " + l / 1000.0 + " seconds.");
@@ -2782,7 +2795,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		tmpLog.println(")");
 
 		// print states for each scc
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			n = sccComputer.getSCCs().size();
 		} else {
 			n = sccConsumerExpl.getSCCs().size();
@@ -2794,20 +2807,20 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			tmpLog.println("SCC " + (i + 1) + "/" + n + ":");
 			if (exportType == EXPORT_MATLAB)
 				tmpLog.println("scc" + (i + 1) + "=[");
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 				if (exportType != EXPORT_MATLAB)
-					new StateListMTBDD(sccComputer.getSCCs().get(i), currentModel).print(tmpLog);
+					new StateListMTBDD(sccComputer.getSCCs().get(i), getBuiltModelSymbolic()).print(tmpLog);
 				else
-					new StateListMTBDD(sccComputer.getSCCs().get(i), currentModel).printMatlab(tmpLog);
+					new StateListMTBDD(sccComputer.getSCCs().get(i), getBuiltModelSymbolic()).printMatlab(tmpLog);
 				JDD.Deref(sccComputer.getSCCs().get(i));
 			} else {
-				explicit.StateValues.createFromBitSet(sccConsumerExpl.getSCCs().get(i), currentModelExpl).print(tmpLog, true, exportType == EXPORT_MATLAB, true, true);
+				explicit.StateValues.createFromBitSet(sccConsumerExpl.getSCCs().get(i), getBuiltModelExplicit()).print(tmpLog, true, exportType == EXPORT_MATLAB, true, true);
 			}
 			if (exportType == EXPORT_MATLAB)
 				tmpLog.println("];");
 		}
 
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			JDD.Deref(sccComputer.getNotInSCCs());
 		}
 
@@ -2886,10 +2899,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		mainLog.println(getDestinationStringForFile(file));
 
 		// Export
-		if (currentModelBuildType != ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() != ModelBuildType.SYMBOLIC) {
 			PrismLog out = getPrismLogForFile(file);
 			explicit.StateModelChecker mcExpl = createModelCheckerExplicit(propertiesFile);
-			mcExpl.exportLabels(currentModelExpl, labelNames, exportType, out);
+			mcExpl.exportLabels(getBuiltModelExplicit(), labelNames, exportType, out);
 			out.close();
 		} else {
 			StateModelChecker mc = createModelChecker(propertiesFile);
@@ -2928,10 +2941,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		tmpLog = getPrismLogForFile(file);
 
 		// Export
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			currentModel.exportStates(exportType, tmpLog);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			getBuiltModelSymbolic().exportStates(exportType, tmpLog);
 		} else {
-			currentModelExpl.exportStates(exportType, currentModelInfo.createVarList(), tmpLog);
+			getBuiltModelExplicit().exportStates(exportType, currentModelInfo.createVarList(), tmpLog);
 		}
 
 		// Tidy up
@@ -2973,7 +2986,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		PrismLog tmpLog = getPrismLogForFile(file);
 
 		// Export (explicit engine only)
-		((PartiallyObservableModel<?>) currentModelExpl).exportObservations(exportType, currentModelInfo, tmpLog);
+		((PartiallyObservableModel<?>) getBuiltModelExplicit()).exportObservations(exportType, currentModelInfo, tmpLog);
 
 		// Tidy up
 		if (file != null)
@@ -3104,7 +3117,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 
 			// Compatibility check
 			if (genStrat && currentModelType.nondeterministic() && getCurrentEngine() == PrismEngine.SYMBOLIC) {
-				if (!((NondetModel) currentModel).areAllChoiceActionsUnique())
+				if (!((NondetModel) getBuiltModelSymbolic()).areAllChoiceActionsUnique())
 					throw new PrismException("Cannot generate strategies with the current engine "
 							+ "because some state of the model do not have unique action labels for each choice. "
 							+ "Either switch to the explicit engine or add more action labels to the model");
@@ -3112,7 +3125,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 
 			// Check if we need to switch to MTBDD engine
 			if (getCurrentEngine() == PrismEngine.SYMBOLIC && getEngine() != MTBDD && !switchedToExplicitEngine) {
-				long n = currentModel.getNumStates();
+				long n = getBuiltModelSymbolic().getNumStates();
 				// Either because number of states is two big for double-valued solution vectors
 				if (n == -1 || n > Integer.MAX_VALUE) {
 					mainLog.printWarning("Switching to MTBDD engine, as number of states is too large for " + engineStrings[getEngine()] + " engine.");
@@ -3139,7 +3152,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				res = mc.check(prop.getExpression());
 			} else {
 				explicit.StateModelChecker mc = createModelCheckerExplicit(propertiesFile);
-				res = mc.check(currentModelExpl, prop.getExpression());
+				res = mc.check(getBuiltModelExplicit(), prop.getExpression());
 			}
 			
 			// If model checking generated a strategy, store it
@@ -3641,10 +3654,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		buildModelIfRequired();
 
 		l = System.currentTimeMillis();
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
-			probs = computeSteadyStateProbabilities(currentModel, fileIn);
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
+			probs = computeSteadyStateProbabilities(getBuiltModelSymbolic(), fileIn);
 		} else {
-			probsExpl = computeSteadyStateProbabilitiesExplicit(currentModelExpl, fileIn);
+			probsExpl = computeSteadyStateProbabilitiesExplicit(getBuiltModelExplicit(), fileIn);
 		}
 		l = System.currentTimeMillis() - l;
 
@@ -3657,7 +3670,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		tmpLog = getPrismLogForFile(fileOut);
 
 		// print out or export probabilities
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			probs.print(tmpLog, fileOut == null, exportType == EXPORT_MATLAB, fileOut == null, fileOut == null);
 		} else {
 			probsExpl.print(tmpLog, fileOut == null, exportType == EXPORT_MATLAB, fileOut == null, fileOut == null);
@@ -3667,7 +3680,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		mainLog.println("\nTime for steady-state probability computation: " + l / 1000.0 + " seconds.");
 
 		// tidy up
-		if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+		if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 			probs.clear();
 		} else {
 			probsExpl.clear();
@@ -3776,12 +3789,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			// Build model, if necessary
 			buildModelIfRequired();
 			// Symbolic
-			if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+			if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 				if (currentModelType == ModelType.DTMC) {
-					mc = new ProbModelChecker(this, currentModel, null);
+					mc = new ProbModelChecker(this, getBuiltModelSymbolic(), null);
 					probs = ((ProbModelChecker) mc).doTransient((int) time, fileIn);
 				} else {
-					mc = new StochModelChecker(this, currentModel, null);
+					mc = new StochModelChecker(this, getBuiltModelSymbolic(), null);
 					probs = ((StochModelChecker) mc).doTransient(time, fileIn);
 				}
 			}
@@ -3789,10 +3802,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			else {
 				if (currentModelType == ModelType.DTMC) {
 					DTMCModelChecker mcDTMC = new DTMCModelChecker(this);
-					probsExpl = mcDTMC.doTransient((DTMC<Double>) currentModelExpl, (int) time, fileIn);
+					probsExpl = mcDTMC.doTransient((DTMC<Double>) getBuiltModelExplicit(), (int) time, fileIn);
 				} else if (currentModelType == ModelType.CTMC) {
 					CTMCModelChecker mcCTMC = new CTMCModelChecker(this);
-					probsExpl = mcCTMC.doTransient((CTMC<Double>) currentModelExpl, time, fileIn);
+					probsExpl = mcCTMC.doTransient((CTMC<Double>) getBuiltModelExplicit(), time, fileIn);
 				} else {
 					throw new PrismException("Transient probabilities only computed for DTMCs/CTMCs");
 				}
@@ -3893,16 +3906,16 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				// Build model, if necessary
 				buildModelIfRequired();
 				// Symbolic
-				if (currentModelBuildType == ModelBuildType.SYMBOLIC) {
+				if (getBuiltModelType() == ModelBuildType.SYMBOLIC) {
 					if (currentModelType.continuousTime()) {
-						StochModelChecker mc = new StochModelChecker(this, currentModel, null);
+						StochModelChecker mc = new StochModelChecker(this, getBuiltModelSymbolic(), null);
 						if (i == 0) {
 							initDist = mc.readDistributionFromFile(fileIn);
 							initTimeDouble = 0;
 						}
 						probs = ((StochModelChecker) mc).doTransient(timeDouble - initTimeDouble, initDist);
 					} else {
-						ProbModelChecker mc = new ProbModelChecker(this, currentModel, null);
+						ProbModelChecker mc = new ProbModelChecker(this, getBuiltModelSymbolic(), null);
 						if (i == 0) {
 							initDist = mc.readDistributionFromFile(fileIn);
 							initTimeInt = 0;
@@ -3915,17 +3928,17 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 					if (currentModelType.continuousTime()) {
 						CTMCModelChecker mc = new CTMCModelChecker(this);
 						if (i == 0) {
-							initDistExpl = mc.readDistributionFromFile(fileIn, currentModelExpl);
+							initDistExpl = mc.readDistributionFromFile(fileIn, getBuiltModelExplicit());
 							initTimeDouble = 0;
 						}
-						probsExpl = mc.doTransient((CTMC<Double>) currentModelExpl, timeDouble - initTimeDouble, initDistExpl);
+						probsExpl = mc.doTransient((CTMC<Double>) getBuiltModelExplicit(), timeDouble - initTimeDouble, initDistExpl);
 					} else {
 						DTMCModelChecker mc = new DTMCModelChecker(this);
 						if (i == 0) {
-							initDistExpl = mc.readDistributionFromFile(fileIn, currentModelExpl);
+							initDistExpl = mc.readDistributionFromFile(fileIn, getBuiltModelExplicit());
 							initTimeInt = 0;
 						}
-						probsExpl = mc.doTransient((DTMC<Double>) currentModelExpl, timeInt - initTimeInt, initDistExpl);
+						probsExpl = mc.doTransient((DTMC<Double>) getBuiltModelExplicit(), timeInt - initTimeInt, initDistExpl);
 					}
 				}
 			}
@@ -4013,34 +4026,6 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	}
 
 	/**
-	 * Clear the built model if needed (free/deallocate memory etc).
-	 * This resets {@code currentModel} and {@code currentModelExpl} to {@code null}.
-	 * Also clear objects that connect to a build model, notably strategies.
-	 */
-	private void clearBuiltModel()
-	{
-		if (currentModel != null) {
-			currentModel.clear();
-			currentModel = null;
-		}
-		currentModelExpl = null;
-		currentModelBuildType = null;
-		clearStrategy();
-	}
-
-	/**
-	 * Clear the currently stored strategy if present (free/deallocate memory etc).
-	 * This resets {@code strategy} to {@code null}.
-	 */
-	private void clearStrategy()
-	{
-		if (strategy != null) {
-			strategy.clear();
-			strategy = null;
-		}
-	}
-	
-	/**
 	 * Clear up and close down.
 	 */
 	public void closeDown()
@@ -4070,6 +4055,62 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		}
 	}
 
+	//------------------------------------------------------------------------------
+	// Private methods for dealing with model state
+	//------------------------------------------------------------------------------
+
+	/**
+	 * Store the built model (only one of the symbolic./explicit models should be non-null)
+	 */
+	private void setBuiltModel(ModelBuildType buildType, prism.Model newModelSymb, explicit.Model newModelExpl) throws PrismException
+	{
+		switch (buildType) {
+			case SYMBOLIC:
+				this.currentModelSymb = newModelSymb;
+				this.currentModelExpl = null;
+				break;
+			case EXPLICIT:
+				this.currentModelSymb = null;
+				this.currentModelExpl = newModelExpl;
+				break;
+			default:
+				throw new PrismException("Unknown built model type");
+		}
+		this.currentModelBuildType = buildType;
+	}
+
+	/**
+	 * Clear the built model if needed (free/deallocate memory etc).
+	 * This resets {@code currentModelSymb} and {@code currentModelExpl} to {@code null}.
+	 * Also clear objects that connect to a build model, notably strategies.
+	 */
+	private void clearBuiltModel()
+	{
+		if (currentModelSymb != null) {
+			currentModelSymb.clear();
+			currentModelSymb = null;
+		}
+		currentModelExpl = null;
+		currentModelBuildType = null;
+		clearStrategy();
+	}
+
+	/**
+	 * Clear the currently stored strategy if present (free/deallocate memory etc).
+	 * This resets {@code strategy} to {@code null}.
+	 */
+	private void clearStrategy()
+	{
+		if (strategy != null) {
+			strategy.clear();
+			strategy = null;
+		}
+	}
+
+	//------------------------------------------------------------------------------
+	// Private utility methods
+	//------------------------------------------------------------------------------
+
 	/**
 	 * Utility method to create and initialise a (symbolic) model checker based on the current model.
 	 * @param propertiesFile Optional properties file for extra info needed during model checking (can be null)
@@ -4082,7 +4123,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			propertiesFile = parsePropertiesString("");
 		}
 		// Create model checker
-		StateModelChecker mc = StateModelChecker.createModelChecker(currentModelType, this, currentModel, propertiesFile);
+		StateModelChecker mc = StateModelChecker.createModelChecker(currentModelType, this, getBuiltModelSymbolic(), propertiesFile);
 		// Pass any additional local settings
 		// TODO
 
