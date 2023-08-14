@@ -79,6 +79,8 @@ import strat.Strategy;
 import strat.StrategyExportOptions;
 import strat.StrategyExportOptions.StrategyExportType;
 import strat.StrategyGenerator;
+import symbolic.model.Model;
+import symbolic.model.NondetModel;
 
 /**
  * Main class for all PRISM's core functionality.
@@ -255,7 +257,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		// Was definedMFConstants evaluated exactly?
 		boolean definedMFConstantsAreExact = false;
 		// Built model storage - symbolic or explicit - at most one is non-null
-		Model modelSymb = null;
+		symbolic.model.Model modelSymb = null;
 		explicit.Model<?> modelExpl = null;
 		// Type of built model storage
 		ModelBuildType modelBuildType = null;
@@ -1945,7 +1947,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	/**
 	 * Get the currently stored built symbolic model.
 	 */
-	private prism.Model getBuiltModelSymbolic()
+	private symbolic.model.Model getBuiltModelSymbolic()
 	{
 		return currentModelDetails.modelSymb;
 	}
@@ -2097,7 +2099,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			
 			switch (getCurrentEngine()) {
 			case SYMBOLIC:
-				prism.Model newModelSymb;
+				symbolic.model.Model newModelSymb;
 				switch (getModelSource()) {
 				case PRISM_MODEL:
 					Modules2MTBDD mod2mtbdd = new Modules2MTBDD(this, getPRISMModel());
@@ -4214,7 +4216,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	/**
 	 * Store the built model (only one of the symbolic./explicit models should be non-null)
 	 */
-	private void setBuiltModel(ModelBuildType buildType, prism.Model newModelSymb, explicit.Model newModelExpl) throws PrismException
+	private void setBuiltModel(ModelBuildType buildType, symbolic.model.Model newModelSymb, explicit.Model newModelExpl) throws PrismException
 	{
 		switch (buildType) {
 			case SYMBOLIC:
