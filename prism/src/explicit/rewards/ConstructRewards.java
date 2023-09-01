@@ -36,6 +36,7 @@ import java.util.List;
 import explicit.DTMC;
 import explicit.MDP;
 import explicit.Model;
+import explicit.NondetModel;
 import parser.State;
 import parser.Values;
 import parser.ast.ASTElement;
@@ -83,7 +84,7 @@ public class ConstructRewards extends PrismComponent
 		case MDP:
 		case POMDP:
 		case IMDP:
-			rewards = buildMDPRewardStructure((MDP<Value>) model, rewardGen, r);
+			rewards = buildMDPRewardStructure((NondetModel<Value>) model, rewardGen, r);
 			break;
 		default:
 			throw new PrismNotSupportedException("Cannot build rewards for " + model.getModelType() + "s");
@@ -136,7 +137,7 @@ public class ConstructRewards extends PrismComponent
 	 * @param rewardGen The RewardGenerator defining the rewards
 	 * @param r The index of the reward structure to build
 	 */
-	public <Value> Rewards<Value> buildMDPRewardStructure(MDP<Value> mdp, RewardGenerator<Value> rewardGen, int r) throws PrismException
+	public <Value> Rewards<Value> buildMDPRewardStructure(NondetModel<Value> mdp, RewardGenerator<Value> rewardGen, int r) throws PrismException
 	{
 		int numStates = mdp.getNumStates();
 		List<State> statesList = mdp.getStatesList();
