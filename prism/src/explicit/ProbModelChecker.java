@@ -747,7 +747,7 @@ public class ProbModelChecker extends NonProbModelChecker
 			res = ((IDTMCModelChecker) this).computeNextProbs((IDTMC<Double>) model, target, minMax);
 			break;
 		case IMDP:
-			res = ((IMDPModelChecker) this).computeNextProbs((IMDP<Double>) model, target, minMax);
+			res = ((UMDPModelChecker) this).computeNextProbs((IMDP<Double>) model, target, minMax);
 			break;
 		default:
 			throw new PrismNotSupportedException("Cannot model check " + expr + " for " + model.getModelType() + "s");
@@ -809,7 +809,7 @@ public class ProbModelChecker extends NonProbModelChecker
 				res = ((IDTMCModelChecker) this).computeUntilProbs((IDTMC<Double>) model, remain, target, minMax);
 				break;
 			case IMDP:
-				res = ((IMDPModelChecker) this).computeUntilProbs((IMDP<Double>) model, remain, target, minMax);
+				res = ((UMDPModelChecker) this).computeUntilProbs((IMDP<Double>) model, remain, target, minMax);
 				break;
 			default:
 				throw new PrismException("Cannot model check " + expr + " for " + model.getModelType() + "s");
@@ -837,7 +837,7 @@ public class ProbModelChecker extends NonProbModelChecker
 				res = ((IDTMCModelChecker) this).computeBoundedUntilProbs((IDTMC<Double>) model, remain, target, windowSize, minMax);
 				break;
 			case IMDP:
-				res = ((IMDPModelChecker) this).computeBoundedUntilProbs((IMDP<Double>) model, remain, target, windowSize, minMax);
+				res = ((UMDPModelChecker) this).computeBoundedUntilProbs((IMDP<Double>) model, remain, target, windowSize, minMax);
 				break;
 			default:
 				throw new PrismNotSupportedException("Cannot model check " + expr + " for " + model.getModelType() + "s");
@@ -906,7 +906,7 @@ public class ProbModelChecker extends NonProbModelChecker
 			res = ((IDTMCModelChecker) this).computeUntilProbs((IDTMC<Double>) model, remain, target, minMax);
 			break;
 		case IMDP:
-			res = ((IMDPModelChecker) this).computeUntilProbs((IMDP<Double>) model, remain, target, minMax);
+			res = ((UMDPModelChecker) this).computeUntilProbs((IMDP<Double>) model, remain, target, minMax);
 			break;
 		default:
 			throw new PrismNotSupportedException("Cannot model check " + expr + " for " + model.getModelType() + "s");
@@ -1225,7 +1225,7 @@ public class ProbModelChecker extends NonProbModelChecker
 			res = ((IDTMCModelChecker) this).computeReachRewards((IDTMC<Double>) model, (MCRewards<Double>) modelRewards, target, minMax);
 			break;
 		case IMDP:
-			res = ((IMDPModelChecker) this).computeReachRewards((IMDP<Double>) model, (MDPRewards<Double>) modelRewards, target, minMax);
+			res = ((UMDPModelChecker) this).computeReachRewards((IMDP<Double>) model, (MDPRewards<Double>) modelRewards, target, minMax);
 			break;
 		default:
 			throw new PrismNotSupportedException("Explicit engine does not yet handle the " + expr.getOperatorSymbol() + " reward operator for " + model.getModelType()

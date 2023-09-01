@@ -67,14 +67,12 @@ import parser.ast.PropertiesFile;
 import parser.ast.Property;
 import parser.type.TypeBool;
 import parser.type.TypeDouble;
-import parser.type.TypeInt;
 import parser.visitor.ASTTraverseModify;
 import parser.visitor.ReplaceLabels;
 import prism.Accuracy;
 import prism.Filter;
 import prism.ModelInfo;
 import prism.ModelType;
-import prism.OpRelOpBound;
 import prism.Prism;
 import prism.PrismComponent;
 import prism.PrismException;
@@ -84,7 +82,6 @@ import prism.PrismLog;
 import prism.PrismNotSupportedException;
 import prism.PrismSettings;
 import prism.Result;
-import prism.ResultTesting;
 import prism.RewardGenerator;
 
 /**
@@ -212,7 +209,7 @@ public class StateModelChecker extends PrismComponent
 			mc = new IDTMCModelChecker(parent);
 			break;
 		case IMDP:
-			mc = new IMDPModelChecker(parent);
+			mc = new UMDPModelChecker(parent);
 			break;
 		case LTS:
 			mc = new NonProbModelChecker(parent);
