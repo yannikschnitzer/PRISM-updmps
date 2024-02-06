@@ -770,7 +770,7 @@ public class PrismCL implements PrismModelListener
 
 	private void doExports()
 	{
-		if (param || prism.getSettings().getBoolean(PrismSettings.PRISM_EXACT_ENABLED)) {
+		if (param) {
 			if (exporttrans ||
 			    exportstaterewards ||
 			    exporttransrewards ||
