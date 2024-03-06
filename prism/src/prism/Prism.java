@@ -54,6 +54,7 @@ import mtbdd.PrismMTBDD;
 import odd.ODDUtils;
 import param.BigRational;
 import param.Function;
+import param.ParamMode;
 import param.ParamModelChecker;
 import param.ParamResult;
 import parser.PrismParser;
@@ -243,11 +244,11 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	}
 
 	public enum ModelBuildType {
-		SYMBOLIC, EXPLICIT, EXACT
+		SYMBOLIC, EXPLICIT, EXACT, PARAM
 	}
 	
 	public enum PrismEngine {
-		SYMBOLIC, EXPLICIT, EXACT
+		SYMBOLIC, EXPLICIT, EXACT, PARAM
 	}
 
 	/** Class to store details about a loaded model */
@@ -315,6 +316,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	private File explicitFilesLabelsFile = null;
 	private List<File> explicitFilesStateRewardsFiles = new ArrayList<>();
 	private int explicitFilesNumStates = -1;
+
+	// Info about parametric mode
+	private boolean param = false;
+	private String[] paramNames;
+	private String[] paramLowerBounds;
+	private String[] paramUpperBounds;
 
 	// Has the CUDD library been initialised yet?
 	private boolean cuddStarted = false;
@@ -548,6 +555,19 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	}
 
 	// Set methods for miscellaneous options
+
+	public void setParametric(String[] paramNames, String[] paramLowerBounds, String[] paramUpperBounds)
+	{
+		param = true;
+		this.paramNames = paramNames;
+		this.paramLowerBounds = paramLowerBounds;
+		this.paramUpperBounds = paramUpperBounds;
+	}
+
+	public void setParametricOff()
+	{
+		param = false;
+	}
 
 	public void setExportPrism(boolean b) throws PrismException
 	{
@@ -1868,7 +1888,9 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	 */
 	public PrismEngine getCurrentEngine()
 	{
-		if (settings.getBoolean(PrismSettings.PRISM_EXACT_ENABLED)) {
+		if (param) {
+			return PrismEngine.PARAM;
+		} else if (settings.getBoolean(PrismSettings.PRISM_EXACT_ENABLED)) {
 			return PrismEngine.EXACT;
 		} else if (getEngine() == Prism.EXPLICIT) {
 			return PrismEngine.EXPLICIT;
@@ -1904,7 +1926,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				if (getPRISMModel() != null) {
 					// Create a model generator via ModulesFileModelGenerator
 					ModulesFileModelGenerator<?> mfmg = null;
-					if (getCurrentEngine() == PrismEngine.EXACT) {
+					if (getCurrentEngine() == PrismEngine.PARAM) {
+						// Exact model checking uses functions
+						mfmg = ModulesFileModelGenerator.createForRationalFunctions(getPRISMModel(), paramNames, paramLowerBounds, paramUpperBounds, this);
+					} else if (getCurrentEngine() == PrismEngine.EXACT) {
 						// Exact model checking uses rationals
 						mfmg = ModulesFileModelGenerator.createForRationalFunctions(getPRISMModel(), this);
 					} else {
@@ -2016,6 +2041,8 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 			return ModelBuildType.SYMBOLIC;
 		case EXACT:
 			return ModelBuildType.EXACT;
+		case PARAM:
+			return ModelBuildType.PARAM;
 		default:
 			return null;
 		}
@@ -2155,6 +2182,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				break;
 			case EXPLICIT:
 			case EXACT:
+			case PARAM:
 				explicit.Model<?> newModelExpl;
 				switch (getModelSource()) {
 				case PRISM_MODEL:
@@ -2167,7 +2195,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 					ConstructModel constructModel = new ConstructModel(this);
 					constructModel.setFixDeadlocks(getFixDeadlocks());
 					newModelExpl = constructModel.constructModel(getModelGenerator());
-					setBuiltModel(getCurrentEngine() == PrismEngine.EXPLICIT ? ModelBuildType.EXPLICIT : ModelBuildType.EXACT, newModelExpl);
+					setBuiltModel(getModelBuildTypeForEngine(getCurrentEngine()), newModelExpl);
 					break;
 				case EXPLICIT_FILES:
 					ExplicitFiles2Model expf2model = new ExplicitFiles2Model(this);
@@ -3261,7 +3289,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				explicit.StateModelChecker mc = createModelCheckerExplicit(propertiesFile);
 				res = mc.check(getBuiltModelExplicit(), prop.getExpression());
 			} else if (getCurrentEngine() == PrismEngine.EXACT) {
-				ParamModelChecker mc = new ParamModelChecker(this, param.ParamMode.EXACT);
+				ParamModelChecker mc = new ParamModelChecker(this, ParamMode.EXACT);
 				mc.setModelCheckingInfo(getPRISMModel(), propertiesFile, getRewardGenerator());
 				res = mc.check(getBuiltModelExplicit(), prop.getExpression());
 			}
@@ -3576,7 +3604,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		constructModel.setFixDeadlocks(getFixDeadlocks());
 		ModulesFileModelGenerator<Function> modelGenFunc  = ModulesFileModelGenerator.createForRationalFunctions(getPRISMModel(), paramNames, paramLowerBounds, paramUpperBounds, this);
 		explicit.Model<?> modelExpl = constructModel.constructModel(modelGenFunc);
-		ParamModelChecker mc = new ParamModelChecker(this, param.ParamMode.PARAMETRIC);
+		ParamModelChecker mc = new ParamModelChecker(this, ParamMode.PARAMETRIC);
 		mc.setModelCheckingInfo(getPRISMModel(), propertiesFile, modelGenFunc);
 		Result result = mc.check(modelExpl, prop.getExpression());
 
