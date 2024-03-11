@@ -1651,11 +1651,9 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		setModelType(modulesFile.getModelType());
 		setModelInfo(modulesFile);
 		setPRISMModel(modulesFile);
-		// Don't create ModelGenerator yet; do it on demand
-		setModelGenerator(null);
-		// For now, use ModulesFile as a RewardGenerator (via reward struct objects)
-		// If we build a ModelGenerator too, that can be used for rewards too
-		setRewardGenerator(modulesFile);
+		// Reset model/reward generator (will be created properly when needed)
+		resetGenerators();
+		// No constant definitions yet
 		setDefinedMFConstants(null);
 		// Clear any existing built model(s)
 		clearBuiltModel();
@@ -1716,6 +1714,21 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 	}
 
 	/**
+	 * For model sources where model/reward generators are created automatically,
+	 * reset these to default settings, so will be recreated when neeeded.
+	 */
+	private void resetGenerators() throws PrismException
+	{
+		if (getModelSource() == ModelSource.PRISM_MODEL) {
+			// Don't create ModelGenerator yet; do it on demand
+			setModelGenerator(null);
+			// For now, use ModulesFile as a RewardGenerator (via reward struct objects)
+			// If we build a ModelGenerator too, that can be used for rewards too
+			setRewardGenerator(getPRISMModel());
+		}
+	}
+
+	/**
 	 * Set (some or all) undefined constants for the currently loaded PRISM model
 	 * (assuming they have changed since the last time this was called).
 	 * <br>
@@ -1738,12 +1751,12 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		// If there is no change in constants, there is nothing to do
 		boolean currentMFNone = getUndefinedModelValues() == null || getUndefinedModelValues().getNumValues() == 0;
 		boolean newMFNone = definedMFConstants == null || definedMFConstants.getNumValues() == 0;
-		if (currentMFNone && newMFNone && areUndefinedModelValuesExact() == exact) {
+		boolean exactSame = areUndefinedModelValuesExact() == exact;
+		if (currentMFNone && newMFNone && exactSame) {
 			return;
 		}
 		if (getUndefinedModelValues() != null &&
-				getUndefinedModelValues().equals(definedMFConstants) &&
-				areUndefinedModelValuesExact() == exact) {
+				getUndefinedModelValues().equals(definedMFConstants) && exactSame) {
 			return;
 		}
 
@@ -1754,7 +1767,10 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 		if (getPRISMModel() != null) {
 			getPRISMModel().setSomeUndefinedConstants(definedMFConstants, exact);
 		}
-		if (getModelGenerator(false) != null) {
+		// Reset/update model generator
+		if (!exactSame) {
+			resetGenerators();
+		} else if (getModelGenerator(false) != null) {
 			getModelGenerator(false).setSomeUndefinedConstants(definedMFConstants, exact);
 		}
 
@@ -1927,7 +1943,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 					// Create a model generator via ModulesFileModelGenerator
 					ModulesFileModelGenerator<?> mfmg = null;
 					if (getCurrentEngine() == PrismEngine.PARAM) {
-						// Exact model checking uses functions
+						// Parametric model checking uses functions
 						mfmg = ModulesFileModelGenerator.createForRationalFunctions(getPRISMModel(), paramNames, paramLowerBounds, paramUpperBounds, this);
 					} else if (getCurrentEngine() == PrismEngine.EXACT) {
 						// Exact model checking uses rationals
@@ -4221,6 +4237,7 @@ public class Prism extends PrismComponent implements PrismSettingsListener
 				break;
 			case EXPLICIT:
 			case EXACT:
+			case PARAM:
 				if (!(newModel instanceof explicit.Model)) {
 					throw new PrismException("Attempt to store model of incorrect type");
 				}
