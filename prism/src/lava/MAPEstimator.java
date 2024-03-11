@@ -190,6 +190,7 @@ public class MAPEstimator extends Estimator
 		mc.setErrorOnNonConverge(false);
 		PropertiesFile pf = prism.parsePropertiesString(ex.robustSpec);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(estimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Expression exprTarget = this.prism.parsePropertiesString(ex.robustSpec).getProperty(0);
 		Result result = mc.check(estimate, exprTarget);
@@ -224,6 +225,7 @@ public class MAPEstimator extends Estimator
 		ModulesFile modulesFileDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
 		modulesFileDTMC.setModelType(ModelType.DTMC);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileDTMC, this.prism);
+		modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
 		RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, mdp, strat);
 		mc.setModelCheckingInfo(modelGen, pf, rewGen);
 		Result result = mc.check(dtmc, pf.getProperty(0));
@@ -264,6 +266,7 @@ public class MAPEstimator extends Estimator
 		IMDPSimple<Double> imdp = new IMDPSimple<>(numStates);
 		imdp.addInitialState(mdp.getFirstInitialState());
 		imdp.setStatesList(mdp.getStatesList());
+		imdp.setConstantValues(mdp.getConstantValues());
 		imdp.setIntervalEvaluator(Evaluator.forDoubleInterval());
 
 		for (int s = 0; s < numStates; s++) {
@@ -321,6 +324,7 @@ public class MAPEstimator extends Estimator
 			pf = prism.parsePropertiesString(ex.optimisticSpec);
 
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(this.estimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Result result = mc.check(this.estimate, pf.getProperty(0));
 		if (verbose) {
@@ -341,6 +345,7 @@ public class MAPEstimator extends Estimator
 		mc.setErrorOnNonConverge(false);
 		PropertiesFile pf = prism.parsePropertiesString(ex.robustSpec);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(pointEstimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Result result = mc.check(pointEstimate, pf.getProperty(0));
 		System.out.println("\nModel checking point estimate MDP:");

@@ -163,6 +163,9 @@ public class Estimator {
      */
     public void buildSUL() throws PrismException {
         this.prism.loadPRISMModel(modulesFile);
+        if (ex.values != null) {
+            this.prism.setPRISMModelConstants(ex.values);
+        }
         this.prism.setStoreVector(true);
         Result result = this.prism.modelCheck(ex.spec);
         //System.out.println(result);
@@ -368,6 +371,7 @@ public class Estimator {
 			? prism.parsePropertiesString(ex.robustSpec)
 			: prism.parsePropertiesString(ex.optimisticSpec);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(estimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Expression exprTarget = pf.getProperty(0);
 		Result result = mc.check(estimate, exprTarget);

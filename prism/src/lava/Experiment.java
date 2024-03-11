@@ -1,5 +1,7 @@
 package lava;
 
+import parser.Values;
+
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -48,6 +50,8 @@ public class Experiment {
 	public String optimisticSpec;
 	public String modelFile;
 	public String dtmcSpec;
+
+    public Values values;
 
     public String experimentInfo = "basic";
 
