@@ -2,8 +2,8 @@ mdp
 
 const double p = 0.15;
 const double q = 0.1;
-const int M = 9;
-const int N = 9;
+const int M = 6;
+const int N = 6;
 
 formula trapped = (x=0 & y=4) | (x=1 & y=4) | (x=3 & y=4) | (x=4 & y=4) | (x=5 & y=4) | (x=8 & y=4) | (x=9 & y=4) | (x=4 & y=0) | (x=4 & y=1) | (x=4 & y=3) | (x=4 & y=4) | (x=4 & y=5) | (x=4 & y=8) | (x=4 & y=9);
 

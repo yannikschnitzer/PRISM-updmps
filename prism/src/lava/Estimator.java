@@ -2,6 +2,7 @@ package lava;
 
 import common.Interval;
 import explicit.MDP;
+import parser.Values;
 import parser.ast.ModulesFile;
 import prism.ModelType;
 import prism.Prism;
@@ -95,6 +96,13 @@ public class Estimator {
         this.processTransitions();
     }
 
+    public void set_experiment(Experiment ex, Values values)  {
+        this.ex = ex;
+        this.buildModulesFiles();
+        this.tryBuildSUUncertain(values);
+        this.processTransitions();
+    }
+
     private void buildModulesFiles()  {
         try {
             this.modulesFile = this.prism.parseModelFile(new File(ex.modelFile));
@@ -152,6 +160,51 @@ public class Estimator {
             System.exit(1);
         }
     }
+
+    private void tryBuildSUUncertain(Values values) {
+        try {
+            this.buildSULUncertain(values);
+        } catch (PrismException e) {
+            System.out.println("Error: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    public void buildSULUncertain(Values values) throws PrismException {
+        this.prism.loadPRISMModel(modulesFile);
+        //this.prism.currentModelInfo.getConstantValues().setValues(values);
+        this.prism.getPRISMModel().getConstantValues().setValues(values); // Set constant values to sampled parameters
+        this.prism.setStoreVector(true);
+        Result result = this.prism.modelCheck(ex.spec);
+        //System.out.println(result);
+        MDP<Double> mdp = (MDP<Double>) this.prism.getBuiltModelExplicit();
+        //System.out.println("Model checking SUL:\n" + this.spec + " : " + result.getResultAndAccuracy());
+        this.SULoptimum = result.getResultAndAccuracy();
+        this.sulOpt = (Double) result.getResult();
+        this.ex.setTrueOpt(this.sulOpt);
+        this.mdp = mdp;
+        ArrayList<Integer> initialStates = (ArrayList<Integer>) this.mdp.getInitialStates();
+        if (ex.type == Experiment.Type.REACH)
+        {
+            computeProb01States(result);
+            for (int s : initialStates) {
+                if (this.prob01States.contains(s)) {
+                    System.out.println("Initial state " + s + " is a 01 prob state. Exiting.");
+                    System.exit(0);
+                }
+            }
+        }
+        else if (ex.type == Experiment.Type.REWARD)
+        {
+            computeRew0InfStates(result);
+        }
+        else
+        {
+            System.out.println("ERROR: unsupported type unknown " + ex.type);
+            System.exit(1);
+        }
+    }
+
 
 
     public IMDP<Double> getEstimate() {

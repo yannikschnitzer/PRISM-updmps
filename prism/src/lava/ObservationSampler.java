@@ -173,7 +173,7 @@ public class ObservationSampler {
 	}
 
 	public boolean collectedEnoughSamples() {
-		return this.collectedEnoughSamples(1);
+		return this.collectedEnoughSamples(2);
 	}
 
 	public boolean collectedEnoughSamples(float ratio) {

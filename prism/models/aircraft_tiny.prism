@@ -1,11 +1,11 @@
 mdp
 
 
-const int maxX = 5;
-const int maxY = 2;
-const double r = 0.8; // pilot response factor
+const int maxX = 8;
+const int maxY = 4;
+const double r = 0.5; // pilot response factor
 
-const double p = 0.4; // prob of adversary moving up or down, ensure 2p <= 1 
+const double p = 0.19; // prob of adversary moving up or down, ensure 2p <= 1
 
 
 formula xclose = (x-ax >= 0 & x-ax < 3) | (ax-x >= 0 & ax-x < 3);

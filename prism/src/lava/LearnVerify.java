@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 
 import explicit.MDP;
+import parser.Values;
 import prism.Pair;
 import prism.Prism;
 import prism.PrismDevNullLog;
@@ -23,7 +26,7 @@ public class LearnVerify {
 
     private int seed = 1650280571;
 
-    private boolean verbose = false;
+    private boolean verbose = true;
 
 
     public LearnVerify() {
@@ -70,7 +73,7 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(1000, 1000000, seed).info(id));
+        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(20, 1_000_000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
 //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(7, 1000000, seed).stratWeight(0.9).info(id));
 //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
@@ -233,8 +236,29 @@ public class LearnVerify {
     }
 
 
+//    public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor){
+//        compareSamplingStrategies(label, ex, estimatorConstructor, null);
+//    }
+
     public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor){
-        compareSamplingStrategies(label, ex, estimatorConstructor, null);
+
+        List<Values> values = new ArrayList<>();
+
+        double rangeMin = 0.7;
+        double rangeMax = 0.99;
+        //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
+        Random r = new Random();
+
+        for (int i = 0; i < 10; i++){
+            Values v = new Values();
+            double p = rangeMin + (rangeMax - rangeMin) * r.nextDouble(); //r.nextGaussian();
+            //double q = 1 - p;
+            v.addValue("r", p);
+            //v.addValue("p2", q);
+            values.add(v);
+        }
+
+        compareSamplingStrategiesUncertain(label, ex, estimatorConstructor, values);
     }
 
     public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor, Experiment follow_up_ex) {
@@ -268,6 +292,51 @@ public class LearnVerify {
         dp.dumpRawData(directoryPath, label, results, ex);
     }
 
+    public void compareSamplingStrategiesUncertain(String label, Experiment ex, EstimatorConstructor estimatorConstructor, List<Values> uncertainParameters) {
+        resetAll();
+        System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
+                + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
+                + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
+
+        if (verbose)
+            System.out.printf("%s, seed %d\n", label, ex.seed);
+
+        List<Double> robustValues = new ArrayList<>();
+        List<Double> trueValues = new ArrayList<>();
+
+        for (Values values : uncertainParameters){
+            Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.set_experiment(ex, values);
+
+            String directoryPath = makeOutputDirectory(ex);
+
+            String path = directoryPath + label +".csv";
+            if (Files.exists(Paths.get(path))) {
+                System.out.printf("File %s already exists.%n", path);
+                //return;
+            }
+            ex.dumpConfiguration(directoryPath, label, estimator.getName());
+
+            // Iterate and run experiments for each of the sampled parameter vectors
+            System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
+            ArrayList<DataPoint> results = runSamplingStrategyDoublingEpoch(ex, estimator);
+
+            robustValues.add(results.get(results.size() - 1).getEstimatedValue());
+            trueValues.add(estimator.sulOpt);
+
+            DataProcessor dp = new DataProcessor();
+            dp.dumpRawData(directoryPath, label, results, ex);
+        }
+
+
+        System.out.println("Results: " + robustValues);
+        System.out.println("Robust Lambda:" + Collections.min(robustValues));
+        System.out.println("True Results" + trueValues);
+        System.out.println("True Lambda:" + Collections.min(trueValues));
+//        DataProcessor dp = new DataProcessor();
+//        //dp.dumpRawData(directoryPath, label, results, ex);
+    }
+
     public ArrayList<DataPoint> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator) {
         return runSamplingStrategyDoublingEpoch(ex, estimator, 0);
     }
@@ -275,7 +344,7 @@ public class LearnVerify {
     public ArrayList<DataPoint> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
         try {
             MDP<Double> SUL = estimator.getSUL();
-            if (this.modelStats == null) {
+            if (true/*this.modelStats == null*/) {
                 this.modelStats = estimator.getModelStats();
                 System.out.println(this.modelStats);
             }
@@ -304,9 +373,12 @@ public class LearnVerify {
                     currentResults = estimator.getCurrentResults();
                     observationSampler.resetObservationSequence();
                     if (this.verbose) System.out.println("New performance " + currentResults[1]);
+                    if (this.verbose) System.out.println("New robust guarantee " + currentResults[0]);
                     results.add(new DataPoint(samples, i+1, currentResults));
                 }
             }
+            System.out.println("Robust" + currentResults[0]);
+            System.out.println("Opimistic" + currentResults[5]);
             if (this.verbose) {
                 System.out.println("DONE");
             }
