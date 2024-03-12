@@ -52,6 +52,7 @@ public class ObservationSampler {
 		this.sampleSizeMap = new HashMap<>();
 		this.samplesMap = new HashMap<>();
 		this.accumulatedSamples = new HashMap<>();
+		this.accumulatedSamples = new HashMap<>();
 		this.transitionsOfInterest = new HashSet<>();
 		this.terminatingStates = terminatingStates;
 
@@ -204,6 +205,7 @@ public class ObservationSampler {
 		mc.setErrorOnNonConverge(false);
 		PropertiesFile pf = prism.parsePropertiesString(robustSpec);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(estimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Expression exprTarget = this.prism.parsePropertiesString(propertyString).getProperty(0);
 		//BitSet target = mc.check(estimate, exprTarget).getBitSet();
@@ -243,6 +245,7 @@ public class ObservationSampler {
 		mc.setErrorOnNonConverge(false);
 		PropertiesFile pf = prism.parsePropertiesString(robustSpec);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
+		modelGen.setSomeUndefinedConstants(estimate.getConstantValues());
 		mc.setModelCheckingInfo(modelGen, pf, modelGen);
 		Expression exprTarget = this.prism.parsePropertiesString(propertyString).getProperty(0);
 		//BitSet target = mc.check(estimate, exprTarget).getBitSet();
