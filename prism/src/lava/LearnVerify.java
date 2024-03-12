@@ -1,5 +1,7 @@
 package lava;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,11 +17,13 @@ import param.BigRational;
 import param.Function;
 import param.Point;
 import parser.Values;
+import parser.ast.ModulesFile;
 import prism.Evaluator;
 import prism.Pair;
 import prism.Prism;
 import prism.PrismDevNullLog;
 import prism.PrismException;
+import prism.PrismLangException;
 import strat.Strategy;
 
 import lava.Experiment.Model;
@@ -310,35 +314,38 @@ public class LearnVerify {
         List<Double> robustValues = new ArrayList<>();
         List<Double> trueValues = new ArrayList<>();
 
+        try {
+            ModulesFile modulesFile = prism.parseModelFile(new File(ex.modelFile));
+            prism.loadPRISMModel(modulesFile);
+
+            // Temporarily get parametric model
+            String[] paramNames = new String[]{"r"};
+            String[] paramLowerBounds = new String[]{"0"};
+            String[] paramUpperBounds = new String[]{"1"};
+            this.prism.setPRISMModelConstants(new Values(), true);
+            this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
+            this.prism.buildModel();
+            MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
+            System.out.println(mdpParam);
+
+            // Instantiate parametric model
+            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5) });
+            MDP<Double> mdpInst = new MDPSimple<>(mdpParam, f -> f.evaluate(paramValues).doubleValue(), Evaluator.forDouble());
+            System.out.println(mdpInst);
+
+            // Then revert to original model
+            this.prism.setParametricOff();
+
+        } catch (PrismException e) {
+			throw new RuntimeException(e);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+
         for (Values values : uncertainParameters){
             ex.values = values;
             Estimator estimator = estimatorConstructor.get(this.prism, ex);
             estimator.set_experiment(ex);
-
-            try {
-                // Temporarily get parametric model
-                String[] paramNames = new String[]{"r"};
-                String[] paramLowerBounds = new String[]{"0"};
-                String[] paramUpperBounds = new String[]{"1"};
-                this.prism.setPRISMModelConstants(new Values(), true);
-                this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
-                this.prism.buildModel();
-                MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
-                System.out.println(mdpParam);
-
-                // Instantiate parametric model
-                Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5) });
-                MDP<Double> mdpInst = new MDPSimple<>(mdpParam, f -> f.evaluate(paramValues).doubleValue(), Evaluator.forDouble());
-                System.out.println(mdpInst);
-
-                // Then revert to original model
-                this.prism.setParametricOff();
-                this.prism.setPRISMModelConstants(values, false);
-                this.prism.buildModel();
-            } catch (PrismException e) {
-                // TODO
-            }
-
 
             String directoryPath = makeOutputDirectory(ex);
 
