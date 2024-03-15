@@ -2,6 +2,8 @@ package lava;
 
 import common.Interval;
 import explicit.MDP;
+import param.BigRational;
+import param.Function;
 import parser.Values;
 import parser.ast.ModulesFile;
 import prism.ModelType;
@@ -29,10 +31,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.RoundingMode;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.sql.SQLOutput;
+import java.util.*;
 
 public class Estimator {
     protected String name = "Base";
@@ -50,6 +50,9 @@ public class Estimator {
     protected HashMap<TransitionTriple, Integer> samplesMap;
     protected HashMap<StateActionPair, Integer> sampleSizeMap;
     protected HashMap<TransitionTriple, Interval<Double>> intervalsMap;
+    private Map<Function, List<TransitionTriple>> functionMap;
+
+    protected Map<TransitionTriple, Double> constantMap;
 
     protected ModulesFile modulesFile;
     protected ModulesFile modulesFileIMDP;
@@ -84,9 +87,11 @@ public class Estimator {
         this.transitionsOfInterest = new HashSet<>();
         this.trueProbabilitiesMap = new HashMap<>();
 
+        this.constantMap = new HashMap<>();
+
         this.buildModulesFiles();
         this.tryBuildSUL();
-        this.processTransitions();
+        //this.processTransitions();
     }
 
     public void set_experiment(Experiment ex)  {
@@ -289,13 +294,17 @@ public class Estimator {
         this.numLearnableTransitions = 0;
         this.transitionsOfInterest.clear();
         int numStates = this.mdp.getNumStates();
-
+        //System.out.println("Processing Transitions");
         for (int s = 0; s < numStates; s++) {
+            //System.out.println("State:" + s);
             int numChoices = this.mdp.getNumChoices(s);
             final int state = s;
             for (int i = 0 ; i < numChoices; i++) {
+                //System.out.println("Choice:" + i);
                 final String action = getActionString(this.mdp, s, i);
+                //System.out.println("Action String:" + action);
                 this.mdp.forEachDoubleTransition(s, i, (int sFrom, int sTo, double p)->{
+                    //System.out.println("State to:" + sTo + " with Prob: " + p);
                     if (0 < p && p < 1.0) {
                         this.numLearnableTransitions += 1;
                         this.transitionsOfInterest.add(new TransitionTriple(state, action, sTo));
@@ -304,6 +313,24 @@ public class Estimator {
                 });
             }
         }
+    }
+
+    public void processsdfTransitions() {
+        this.numLearnableTransitions = 0;
+        this.transitionsOfInterest.clear();
+        int numStates = this.mdp.getNumStates();
+        for (Function function : this.functionMap.keySet()) {
+            List<TransitionTriple> transitions = this.functionMap.get(function);
+            if (function.isConstant()) {
+                for (TransitionTriple transition : transitions) {
+                    this.constantMap.put(transition, function.asBigRational().doubleValue());
+                }
+            } else {
+                this.numLearnableTransitions += transitions.size();
+                this.transitionsOfInterest.addAll(transitions);
+            }
+        }
+        //processTrueTransitions();
     }
 
 
@@ -489,6 +516,13 @@ public class Estimator {
         return this.name;
     }
 
+    public Map<Function, List<TransitionTriple>> getFunctionMap() {
+        return functionMap;
+    }
+
+    public void setFunctionMap(Map<Function, List<TransitionTriple>> functionMap) {
+        this.functionMap = functionMap;
+    }
 }
 
 interface EstimatorConstructor {

@@ -5,11 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import explicit.MDP;
 import explicit.MDPSimple;
@@ -256,7 +253,7 @@ public class LearnVerify {
         double rangeMin = 0.7;
         double rangeMax = 0.99;
         //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-        Random r = new Random();
+        Random r = new Random(100);
 
         for (int i = 0; i < 10; i++){
             Values v = new Values();
@@ -301,6 +298,26 @@ public class LearnVerify {
         dp.dumpRawData(directoryPath, label, results, ex);
     }
 
+    public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam){
+        Map<Function, List<TransitionTriple>> functionMap = new HashMap<>();
+
+        for (int s = 0; s < mdpParam.getNumStates(); s++) {
+            int numChoices = mdpParam.getNumChoices(s);
+            for (int i = 0 ; i < numChoices; i++) {
+                String action = (String) mdpParam.getAction(s, i);
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                    if (functionMap.containsKey(p)) {
+                        functionMap.get(p).add(new TransitionTriple(sFrom,  action, sTo));
+                    } else {
+                        functionMap.put(p, new ArrayList<>());
+                        functionMap.get(p).add(new TransitionTriple(sFrom,  action, sTo));
+                    }
+                });
+            }
+        }
+
+        return functionMap;
+    }
     public void compareSamplingStrategiesUncertain(String label, Experiment ex, EstimatorConstructor estimatorConstructor, List<Values> uncertainParameters)
     {
         resetAll();
@@ -326,6 +343,12 @@ public class LearnVerify {
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
             MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
+
+            Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
+            for (Function f : functionMap.keySet()){
+                System.out.println("function:" + f + functionMap.get(f));
+            }
+
             System.out.println(mdpParam);
 
             // Instantiate parametric model
@@ -336,15 +359,12 @@ public class LearnVerify {
             // Then revert to original model
             this.prism.setParametricOff();
 
-        } catch (PrismException e) {
-			throw new RuntimeException(e);
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+
 
         for (Values values : uncertainParameters){
             ex.values = values;
             Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.setFunctionMap(functionMap);
             estimator.set_experiment(ex);
 
             String directoryPath = makeOutputDirectory(ex);
@@ -367,6 +387,11 @@ public class LearnVerify {
             dp.dumpRawData(directoryPath, label, results, ex);
         }
 
+        } catch (PrismException e) {
+            throw new RuntimeException(e);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         System.out.println("Results: " + robustValues);
         System.out.println("Robust Lambda:" + Collections.min(robustValues));

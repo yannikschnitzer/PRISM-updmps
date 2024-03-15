@@ -53,6 +53,9 @@ public class Experiment {
 
     public Values values;
 
+    // Turn model-based optimizations on / off
+    public boolean optimizations = false;
+
     public String experimentInfo = "basic";
 
     public int seed = 1;
@@ -186,6 +189,7 @@ public class Experiment {
             this.dtmcSpec = "P=?  [!collision U \"goal\"]";
             this.modelFile = "models/aircraft_tiny.prism";
             this.type = Type.REACH;
+            this.optimizations = false;
             break;
             case BANDIT:
             this.goal = "\"goal\"";

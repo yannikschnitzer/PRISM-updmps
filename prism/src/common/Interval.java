@@ -26,6 +26,11 @@
 
 package common;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 /**
  * This class stores an interval of numerical values.
  */
@@ -67,5 +72,15 @@ public class Interval<Value>
 	public String toString()
 	{
 		return "[" + lower + "," + upper + "]";
+	}
+
+	public static void main(String[] args){
+		Interval<Double> i1 = new Interval(0.5,0.64);
+		Interval<Double> i2 = new Interval(0.55,0.7);
+		List<Interval<Double>> l = new ArrayList<>();
+		l.add(i1);
+		l.add(i2);
+
+		System.out.println(Collections.min(l, Comparator.comparingDouble(anInt -> anInt.getUpper() - anInt.getLower())));
 	}
 }

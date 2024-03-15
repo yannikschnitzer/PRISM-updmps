@@ -68,4 +68,6 @@ public class Interval
 	{
 		return "[" + lower + "," + upper + "]";
 	}
+
 }
+

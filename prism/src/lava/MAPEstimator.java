@@ -255,13 +255,13 @@ public class MAPEstimator extends Estimator
 	}
 
 
-
 	/**
 	 * Builds a point estimate IMDP of point intervals with laplace smoothing for the parameter epsilon
 	 * @param mdp MDP for the underlying state space
 	 * @return IMDP of point intervals
 	 */
 	public IMDP<Double> buildPointIMDP(MDP<Double> mdp) {
+		//System.out.println("Building IMDP");
 		int numStates = mdp.getNumStates();
 		IMDPSimple<Double> imdp = new IMDPSimple<>(numStates);
 		imdp.addInitialState(mdp.getFirstInitialState());
@@ -281,6 +281,7 @@ public class MAPEstimator extends Estimator
 					Interval<Double> interval;
 					if (0 < p && p < 1.0) {
 						interval = getTransitionInterval(t);
+						//System.out.println("Triple: " + t + " Interval: " + interval);
 						distrNew.add(sTo, interval);
 						this.intervalsMap.put(t, interval);
 					}
