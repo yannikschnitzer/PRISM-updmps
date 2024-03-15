@@ -98,14 +98,12 @@ public class Estimator {
         this.ex = ex;
         this.buildModulesFiles();
         this.tryBuildSUL();
-        this.processTransitions();
-    }
 
-    public void set_experiment(Experiment ex, Values values)  {
-        this.ex = ex;
-        this.buildModulesFiles();
-        this.tryBuildSUUncertain(values);
-        this.processTransitions();
+        if (this.ex.optimizations) {
+            this.processTransitions();
+        } else {
+            this.processTransitionsNaive();
+        }
     }
 
     private void buildModulesFiles()  {
@@ -288,9 +286,7 @@ public class Estimator {
         }
     }
 
-
-
-    public void processTransitions() {
+    public void processTransitionsNaive() {
         this.numLearnableTransitions = 0;
         this.transitionsOfInterest.clear();
         int numStates = this.mdp.getNumStates();
@@ -315,10 +311,35 @@ public class Estimator {
         }
     }
 
-    public void processsdfTransitions() {
+    public void processTrueTransitions() {
+        //this.numLearnableTransitions = 0;
+        //this.transitionsOfInterest.clear();
+        int numStates = this.mdp.getNumStates();
+        //System.out.println("Processing Transitions");
+        for (int s = 0; s < numStates; s++) {
+            //System.out.println("State:" + s);
+            int numChoices = this.mdp.getNumChoices(s);
+            final int state = s;
+            for (int i = 0 ; i < numChoices; i++) {
+                //System.out.println("Choice:" + i);
+                final String action = getActionString(this.mdp, s, i);
+                //System.out.println("Action String:" + action);
+                this.mdp.forEachDoubleTransition(s, i, (int sFrom, int sTo, double p)->{
+                    //System.out.println("State to:" + sTo + " with Prob: " + p);
+                    if (0 < p && p < 1.0) {
+                        //this.numLearnableTransitions += 1;
+                        //this.transitionsOfInterest.add(new TransitionTriple(state, action, sTo));
+                        this.trueProbabilitiesMap.put(new TransitionTriple(state, action, sTo), p);
+                    }
+                });
+            }
+        }
+    }
+
+    public void processTransitions() {
         this.numLearnableTransitions = 0;
         this.transitionsOfInterest.clear();
-        int numStates = this.mdp.getNumStates();
+
         for (Function function : this.functionMap.keySet()) {
             List<TransitionTriple> transitions = this.functionMap.get(function);
             if (function.isConstant()) {
@@ -330,7 +351,7 @@ public class Estimator {
                 this.transitionsOfInterest.addAll(transitions);
             }
         }
-        //processTrueTransitions();
+        processTrueTransitions();
     }
 
 

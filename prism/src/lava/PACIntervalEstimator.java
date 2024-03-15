@@ -83,9 +83,9 @@ public class PACIntervalEstimator extends MAPEstimator {
 				mdp.forEachDoubleTransition(s, i, (int sFrom, int sTo, double p)->{
 					TransitionTriple t = new TransitionTriple(state, action, sTo);
 					Interval<Double> interval;
-					if (true) {
+					if (!this.ex.optimizations) {
 						if (0 < p && p < 1.0) {
-							interval = this.ex.optimizations ? minIntervals.get(t) : getTransitionInterval(t);
+							interval = getTransitionInterval(t);
 							//System.out.println("Transition:" + t + " Naive Interval: " + interval + " New Interval: " + minIntervals.get(t));
 							//System.out.println("Triple: " + t + " Interval: " + interval);
 							distrNew.add(sTo, interval);
@@ -97,17 +97,13 @@ public class PACIntervalEstimator extends MAPEstimator {
 						}
 					} else {
 						if (!this.constantMap.containsKey(t)) {
-							interval = this.ex.optimizations ? minIntervals.get(t) : getTransitionInterval(t);
-							//System.out.println("Transition:" + t + " Naive Interval: " + interval + " New Interval: " + minIntervals.get(t));
-							//System.out.println("Triple: " + t + " Interval: " + interval);
-							distrNew.add(sTo, interval);
-							this.intervalsMap.put(t, interval);
+							interval = minIntervals.get(t);
 						} else {
 							p = this.constantMap.get(t);
 							interval = new Interval<Double>(p, p);
-							distrNew.add(sTo, interval);
-							this.intervalsMap.put(t, interval);
 						}
+						distrNew.add(sTo, interval);
+						this.intervalsMap.put(t, interval);
 					}
 				});
 				imdp.addActionLabelledChoice(s, distrNew, getActionString(mdp, s, i));
