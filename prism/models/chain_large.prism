@@ -1,8 +1,8 @@
 mdp
 
-const int H = 30;
-const double p = 0.05;
-const double q = 0.95;
+const int H = 20;
+const double p;
+const double q;
 
 module chain
 

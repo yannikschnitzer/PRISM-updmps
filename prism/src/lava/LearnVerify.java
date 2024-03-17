@@ -79,20 +79,31 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(20, 1_000_000, seed).info(id));
+       run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
+
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 10_000, seed, false).info(id));
+
+        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true).info(id));
+
 //        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(7, 1000000, seed).stratWeight(0.9).info(id));
+        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed).stratWeight(0.9).info(id));
 //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed).info(id));
+        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, true).info(id));
+
 //        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
         String postfix = String.format("_seed_%d", ex.seed);
+        postfix += (ex.optimizations ? "_opt" : "_naive");
 //        compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
-        compareSamplingStrategies("PAC1" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
+        compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
 //        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
 //        compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
         //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
@@ -250,15 +261,15 @@ public class LearnVerify {
 
         List<Values> values = new ArrayList<>();
 
-        double rangeMin = 0.7;
-        double rangeMax = 0.99;
+        double rangeMin = 0.4;
+        double rangeMax = 0.6;
         //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-        Random r = new Random(100);
+        Random r = new Random(2342);
 
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 1; i++){
             Values v = new Values();
             double p = rangeMin + (rangeMax - rangeMin) * r.nextDouble(); //r.nextGaussian();
-            //double q = 1 - p;
+            double q = rangeMin + (rangeMax - rangeMin) * r.nextDouble();
             v.addValue("r", p);
             //v.addValue("p2", q);
             values.add(v);
@@ -298,13 +309,22 @@ public class LearnVerify {
         dp.dumpRawData(directoryPath, label, results, ex);
     }
 
+    public String getActionString(MDP<Function> mdp, int s, int i) {
+        String action = (String) mdp.getAction(s,i);
+        if (action == null) {
+            action = "_empty";
+        }
+        return action;
+    }
+
     public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam){
         Map<Function, List<TransitionTriple>> functionMap = new HashMap<>();
 
         for (int s = 0; s < mdpParam.getNumStates(); s++) {
             int numChoices = mdpParam.getNumChoices(s);
             for (int i = 0 ; i < numChoices; i++) {
-                String action = (String) mdpParam.getAction(s, i);
+                //String action = (String) mdpParam.getAction(s, i);
+                String action = getActionString(mdpParam, s, i);
                 mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
                     if (functionMap.containsKey(p)) {
                         functionMap.get(p).add(new TransitionTriple(sFrom,  action, sTo));
@@ -336,9 +356,9 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"r"};
-            String[] paramLowerBounds = new String[]{"0"};
-            String[] paramUpperBounds = new String[]{"1"};
+            String[] paramNames = new String[]{"r","p2"};
+            String[] paramLowerBounds = new String[]{"0","0"};
+            String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -352,7 +372,7 @@ public class LearnVerify {
             System.out.println(mdpParam);
 
             // Instantiate parametric model
-            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5) });
+            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5),BigRational.from(0.5) });
             MDP<Double> mdpInst = new MDPSimple<>(mdpParam, f -> f.evaluate(paramValues).doubleValue(), Evaluator.forDouble());
             System.out.println(mdpInst);
 
@@ -368,8 +388,9 @@ public class LearnVerify {
             estimator.set_experiment(ex);
 
             String directoryPath = makeOutputDirectory(ex);
-
-            String path = directoryPath + label +".csv";
+            System.out.println("Exp opt: " + ex.optimizations + ex.model);
+            String path = directoryPath + label + ".csv";
+            System.out.println("Path: "+ path);
             if (Files.exists(Paths.get(path))) {
                 System.out.printf("File %s already exists.%n", path);
                 //return;
@@ -408,6 +429,7 @@ public class LearnVerify {
     public ArrayList<DataPoint> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
         try {
             MDP<Double> SUL = estimator.getSUL();
+
             if (true/*this.modelStats == null*/) {
                 this.modelStats = estimator.getModelStats();
                 System.out.println(this.modelStats);

@@ -30,6 +30,8 @@ public class Experiment {
         LOOP,
         AIRCRAFT,
         BANDIT,
+        SAV2,
+        CONSENSUS2,
     }
 
 
@@ -117,6 +119,7 @@ public class Experiment {
             this.dtmcSpec = "R=? [F \"goal\"]";
             this.modelFile = "models/chain_large.prism";
             this.type = Type.REWARD;
+            this.optimizations = true;
             break;
             case CHAIN_LARGE2:
             this.goal = "\"goal\"";
@@ -126,6 +129,26 @@ public class Experiment {
             this.dtmcSpec = "R=? [F \"goal\"]";
             this.modelFile = "models/chain_large2.prism";
             this.type = Type.REWARD;
+            break;
+            case SAV2:
+            this.goal = "\"Target\"";
+            this.spec = "Pmax=? [!(\"Crash\") U (\"Target\")]";
+            this.robustSpec = "Pmaxmin=? [!(\"Crash\") U (\"Target\")]";
+            this.optimisticSpec = "Pmaxmax=? [!(\"Crash\") U (\"Target\")]";
+            this.dtmcSpec = "P=? [!(\"Crash\") U (\"Target\")]";
+            this.modelFile = "models/sav.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case CONSENSUS2:
+            this.goal = "\"finished\"&\"all_coins_equal_1\"";
+            this.spec = "Pmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.robustSpec = "Pminmax=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.optimisticSpec = "Pminmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.dtmcSpec = "P=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.modelFile = "models/consensus.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
             break;
             case TINY:
             this.goal = "\"goal\"";
@@ -189,7 +212,7 @@ public class Experiment {
             this.dtmcSpec = "P=?  [!collision U \"goal\"]";
             this.modelFile = "models/aircraft_tiny.prism";
             this.type = Type.REACH;
-            this.optimizations = false;
+            this.optimizations = true;
             break;
             case BANDIT:
             this.goal = "\"goal\"";
@@ -208,6 +231,7 @@ public class Experiment {
             this.dtmcSpec = "R=?  [F \"done\"]";
             this.modelFile = "models/bet_fav.prism";
             this.type = Type.REWARD;
+            this.optimizations = false;
             break;
             case BETTING_GAME_UNFAVOURABLE:
             this.goal = "\"done\"";
@@ -231,6 +255,14 @@ public class Experiment {
         this.max_episode_length = max_episode_length;
         this.iterations = iterations;
         this.seed = repetitions;
+        return this;
+    }
+
+    public Experiment config(int max_episode_length, int iterations, int repetitions, boolean optimizations) {
+        this.max_episode_length = max_episode_length;
+        this.iterations = iterations;
+        this.seed = repetitions;
+        this.optimizations = optimizations;
         return this;
     }
 

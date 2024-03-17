@@ -1,6 +1,6 @@
 mdp
-const double q = 0.2;
-const double p = 0.8;
+const double q;
+const double p;
 
 module chain
 

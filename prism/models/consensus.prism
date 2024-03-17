@@ -1,6 +1,10 @@
+//Randomised Consensus Protocol
+
 mdp
-const double p1 = 0.4;
-const double p2 = 0.4;
+const double p1; // in [0.2 , 0.8]
+const double p2; // in [0.2 , 0.8]
+
+
 const int N=2;
 const int K=2;
 const int range = 2*(K+1)*N;
@@ -42,9 +46,9 @@ module process1
 endmodule
 
 module process2 = process1[pc1=pc2,coin1=coin2,p1=p2] endmodule
+
 label "finished" = pc1=3 &pc2=3 ;
 label "all_coins_equal_1" = coin1=1 &coin2=1 ;
-
 rewards "steps"
 	true : 1;
 endrewards
