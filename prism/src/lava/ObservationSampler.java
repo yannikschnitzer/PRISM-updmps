@@ -169,12 +169,16 @@ public class ObservationSampler {
 	private void parseLastStep(PathOnTheFly path) {
 		State s = path.getPreviousState();
 		String a = path.getPreviousActionString();
+		//System.out.println("State: " + s + a );
+		if (a.equals("process1") || a.equals("process2")) {
+			a = "[_empty]";
+		}
 		State successor = path.getCurrentState();
 		parseStep(s, a, successor);
 	}
 
 	public boolean collectedEnoughSamples() {
-		return this.collectedEnoughSamples(5);
+		return this.collectedEnoughSamples(10);
 	}
 
 	public boolean collectedEnoughSamples(float ratio) {
@@ -284,7 +288,6 @@ public class ObservationSampler {
 
 		StateActionPair sa = new StateActionPair(currentState, action);
 		TransitionTriple t = new TransitionTriple(currentState, action, successorState);
-		
 		//only process t if it is a transition of 0 < p < 1
 		if (transitionsOfInterest.contains(t)) {
 			if (this.samplesMap.containsKey(t)) {

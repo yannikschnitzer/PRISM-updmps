@@ -32,6 +32,7 @@ public class Experiment {
         BANDIT,
         SAV2,
         CONSENSUS2,
+        BRP,
     }
 
 
@@ -137,6 +138,16 @@ public class Experiment {
             this.optimisticSpec = "Pmaxmax=? [!(\"Crash\") U (\"Target\")]";
             this.dtmcSpec = "P=? [!(\"Crash\") U (\"Target\")]";
             this.modelFile = "models/sav.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case BRP:
+            this.goal = "\"Target\"";
+            this.spec = "Pmax=? [ true U (s=5 & T) ]";
+            this.robustSpec = "Pmaxmin=? [ true U (s=5 & T) ]";
+            this.optimisticSpec = "Pmaxmax=? [ true U (s=5 & T) ]";
+            this.dtmcSpec = "P=? [ true U (s=5 & T) ]";
+            this.modelFile = "models/brp.prism";
             this.type = Type.REACH;
             this.optimizations = false;
             break;

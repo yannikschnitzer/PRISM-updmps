@@ -79,12 +79,15 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-       run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
+      // run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.BRP).config(200, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.BRP).config(80, 1_00_000, seed, true).info(id));
+        run_basic_algorithms(new Experiment(Model.BRP).config(300, 1_00_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
 
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 10_000, seed, false).info(id));
+       // run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 10_000, seed, false).info(id));
 
         //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true).info(id));
 
@@ -270,8 +273,8 @@ public class LearnVerify {
             Values v = new Values();
             double p = rangeMin + (rangeMax - rangeMin) * r.nextDouble(); //r.nextGaussian();
             double q = rangeMin + (rangeMax - rangeMin) * r.nextDouble();
-            v.addValue("r", p);
-            //v.addValue("p2", q);
+            v.addValue("pL", p);
+            v.addValue("pK", q);
             values.add(v);
         }
 
@@ -356,7 +359,7 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"r","p2"};
+            String[] paramNames = new String[]{"pL","pK"};
             String[] paramLowerBounds = new String[]{"0","0"};
             String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
@@ -451,6 +454,7 @@ public class LearnVerify {
             for (int i = past_iterations; i < ex.iterations + past_iterations; i++) {
                 int sampled = observationSampler.simulateEpisode(ex.max_episode_length, samplingStrategy);
                 samples += sampled;
+                //System.out.println("Samples Map:" + observationSampler.getSamplesMap());
                 boolean last_iteration = i == ex.iterations + past_iterations - 1;
                 if (observationSampler.collectedEnoughSamples() || last_iteration) {
                     if (this.verbose) System.out.println("Episode " + i + ". Recomputing sampling strategy.");
