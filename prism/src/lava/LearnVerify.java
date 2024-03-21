@@ -79,27 +79,31 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-      // run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(200, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(80, 1_00_000, seed, true).info(id));
-        run_basic_algorithms(new Experiment(Model.BRP).config(300, 1_00_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.BRP).config(300, 1_00_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_0_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
+        // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
-
-       // run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 10_000, seed, false).info(id));
-
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true).info(id));
-
-//        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
+        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
+        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
+        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
         //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed).stratWeight(0.9).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
+        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, true).info(id));
-
-//        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
+        //run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
@@ -264,17 +268,30 @@ public class LearnVerify {
 
         List<Values> values = new ArrayList<>();
 
-        double rangeMin = 0.4;
-        double rangeMax = 0.6;
+        double rangeMin1 = 0.4;
+        double rangeMax1 = 0.6;
+
+        double rangeMin2 = 0.4;
+        double rangeMax2 = 0.6;
+
+        double rangeMin3 = 0.4;
+        double rangeMax3 = 0.6;
+
+        double rangeMin4 = 0.4;
+        double rangeMax4 = 0.6;
         //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
         Random r = new Random(2342);
 
         for (int i = 0; i < 1; i++){
             Values v = new Values();
-            double p = rangeMin + (rangeMax - rangeMin) * r.nextDouble(); //r.nextGaussian();
-            double q = rangeMin + (rangeMax - rangeMin) * r.nextDouble();
-            v.addValue("pL", p);
-            v.addValue("pK", q);
+            double p = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
+            double q = rangeMin2 + (rangeMax2 - rangeMin2) * r.nextDouble();
+            double s = rangeMin3 + (rangeMax3 - rangeMin3) * r.nextDouble();
+            double t = rangeMin4 + (rangeMax4 - rangeMin4) * r.nextDouble();
+            v.addValue("p1", p);
+            v.addValue("p2", q);
+            v.addValue("p3", s);
+            v.addValue("p4", t);
             values.add(v);
         }
 
@@ -359,9 +376,9 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"pL","pK"};
-            String[] paramLowerBounds = new String[]{"0","0"};
-            String[] paramUpperBounds = new String[]{"1","1"};
+            String[] paramNames = new String[]{"p1","p2","p3","p4"};
+            String[] paramLowerBounds = new String[]{"0","0","0","0"};
+            String[] paramUpperBounds = new String[]{"1","1","1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -372,10 +389,10 @@ public class LearnVerify {
                 System.out.println("function:" + f + functionMap.get(f));
             }
 
-            System.out.println(mdpParam);
+            System.out.println("Num states:"+mdpParam.getNumStates());
 
             // Instantiate parametric model
-            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5),BigRational.from(0.5) });
+            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5),BigRational.from(0.5),BigRational.from(0.5) ,BigRational.from(0.5)});
             MDP<Double> mdpInst = new MDPSimple<>(mdpParam, f -> f.evaluate(paramValues).doubleValue(), Evaluator.forDouble());
             System.out.println(mdpInst);
 

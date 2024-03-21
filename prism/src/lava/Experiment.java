@@ -32,7 +32,11 @@ public class Experiment {
         BANDIT,
         SAV2,
         CONSENSUS2,
+        CONSENSUS4,
         BRP,
+        NAND,
+        DRONE,
+        CROWD,
     }
 
 
@@ -151,13 +155,53 @@ public class Experiment {
             this.type = Type.REACH;
             this.optimizations = false;
             break;
+            case CROWD:
+            this.goal = "\"Target\"";
+            this.spec = "Pmax=? [F \"observe0Greater1\" ]";
+            this.robustSpec = "Pmaxmin=? [F \"observe0Greater1\" ]";
+            this.optimisticSpec = "Pmaxmax=? [F \"observe0Greater1\" ]";
+            this.dtmcSpec = "P=? [F \"observe0Greater1\" ]";
+            this.modelFile = "models/crowd.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case NAND:
+            this.goal = "\"Target\"";
+            this.spec = "Pmax=? [F \"target\" ]";
+            this.robustSpec = "Pmaxmin=? [F \"target\" ]";
+            this.optimisticSpec = "Pmaxmax=? [F \"target\" ]";
+            this.dtmcSpec = "P=? [F \"target\" ]";
+            this.modelFile = "models/nand.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case DRONE:
+            this.goal = "\"Target\"";
+            this.spec = "Pmax=? [F attarget ]";
+            this.robustSpec = "Pmaxmin=? [F attarget ]";
+            this.optimisticSpec = "Pmaxmax=? [F attarget ]";
+            this.dtmcSpec = "P=? [F attarget ]";
+            this.modelFile = "models/drone.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
             case CONSENSUS2:
             this.goal = "\"finished\"&\"all_coins_equal_1\"";
             this.spec = "Pmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
             this.robustSpec = "Pminmax=? [ F \"finished\"&\"all_coins_equal_1\" ]";
             this.optimisticSpec = "Pminmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
             this.dtmcSpec = "P=? [ F \"finished\"&\"all_coins_equal_1\" ]";
-            this.modelFile = "models/consensus.prism";
+            this.modelFile = "models/consensus3.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case CONSENSUS4:
+            this.goal = "\"finished\"&\"all_coins_equal_1\"";
+            this.spec = "Pmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.robustSpec = "Pminmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.optimisticSpec = "Pminmin=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.dtmcSpec = "P=? [ F \"finished\"&\"all_coins_equal_1\" ]";
+            this.modelFile = "models/consensus4.prism";
             this.type = Type.REACH;
             this.optimizations = false;
             break;
