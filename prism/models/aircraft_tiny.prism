@@ -1,7 +1,7 @@
 mdp
 
 
-const int maxX = 20;
+const int maxX = 50;
 const int maxY = 4;
 const double r;// = 0.5; // pilot response factor
 
