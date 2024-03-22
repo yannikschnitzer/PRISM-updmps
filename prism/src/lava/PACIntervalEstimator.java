@@ -14,6 +14,8 @@ import java.util.*;
 public class PACIntervalEstimator extends MAPEstimator {
 
 	protected double error_tolerance;
+	protected HashMap<TransitionTriple, Double> tiedModes = new HashMap<>();
+	protected HashMap<TransitionTriple, Integer> tiedStateActionCounts = new HashMap<>();
 
     public PACIntervalEstimator(Prism prism, Experiment ex) {
 		super(prism, ex);
@@ -21,19 +23,52 @@ public class PACIntervalEstimator extends MAPEstimator {
 		this.name = "PAC";
     }
 
+	/**
+	 * Combine transition-triple and state-action pair counts for similar tranisitons, i.e., tie the parameters.
+	 */
+	public void tieParameters() {
+		List<List<TransitionTriple>> similarTransitions = this.getSimilarTransitions();
+
+		for (List<TransitionTriple> transitions : similarTransitions) {
+			// Compute mode over all similar transitions
+			int num = 0;
+			int denum = 0;
+
+			for (TransitionTriple t : transitions) {
+				StateActionPair sa = t.getStateAction();
+				num += samplesMap.getOrDefault(t, 0);
+				denum += sampleSizeMap.getOrDefault(sa, 0);
+			}
+
+			for (TransitionTriple t : transitions) {
+				double mode = (double) num / (double) denum;
+				tiedModes.put(t, mode);
+				tiedStateActionCounts.put(t, denum);
+			}
+		}
+
+	}
+
 	@Override
 	protected Interval<Double> getTransitionInterval(TransitionTriple t) {
-		double point = mode(t);
-		//System.out.println("Point = " + point);
+		double precision = 1e-8;
+		if (!this.samplesMap.containsKey(t)){
+			return new Interval<>(precision, 1-precision);
+		}
+		//double point = mode(t);
+		double point = tiedModes.get(t);
+//		System.out.println("Transition:" + t + " Old Mode: " + point + " Old Count:"
+//				+ getStateActionCount(t.getStateAction()) + " New Mode: " + tiedModes.get(t) + " New Count:" + tiedStateActionCounts.get(t));
+//		//System.out.println("Point = " + point);
 		double confidence_interval = confidenceInterval(t);
 		//System.out.println("confidence_interval = " + confidence_interval);
-		double precision = 1e-8;
 		double lower_bound = Math.max(point - confidence_interval, precision);
 		double upper_bound = Math.min(point + confidence_interval, 1-precision);
 		//System.out.println("confidence interval: " + confidence_interval);
 		//System.out.println("[l, u]: [" + lower_bound +", "+  upper_bound+ "]")
 		return new Interval<>(lower_bound, upper_bound);
 	}
+
 
 	/**
 	 * Get minimum (width) interval for each transition.
@@ -63,13 +98,15 @@ public class PACIntervalEstimator extends MAPEstimator {
 
 	@Override
 	public IMDP<Double> buildPointIMDP(MDP<Double> mdp) {
-		//System.out.println("Building IMDP");
+		System.out.println("Building IMDP");
 		int numStates = mdp.getNumStates();
 		IMDPSimple<Double> imdp = new IMDPSimple<>(numStates);
 		imdp.addInitialState(mdp.getFirstInitialState());
 		imdp.setStatesList(mdp.getStatesList());
 		imdp.setConstantValues(mdp.getConstantValues());
 		imdp.setIntervalEvaluator(Evaluator.forDoubleInterval());
+
+		tieParameters();
 
 		Map<TransitionTriple, Interval<Double>> minIntervals = computeMinIntervals();
 
@@ -102,8 +139,10 @@ public class PACIntervalEstimator extends MAPEstimator {
 							p = this.constantMap.get(t);
 							interval = new Interval<Double>(p, p);
 						}
-						distrNew.add(sTo, interval);
-						this.intervalsMap.put(t, interval);
+						if (p > 0) {
+							distrNew.add(sTo, interval);
+							this.intervalsMap.put(t, interval);
+						}
 					}
 				});
 				imdp.addActionLabelledChoice(s, distrNew, getActionString(mdp, s, i));
@@ -144,7 +183,8 @@ public class PACIntervalEstimator extends MAPEstimator {
 		double alpha = error_tolerance; // probability of error (i.e. 1-alpha is probability of correctly specifying the interval)
 		int m = this.getNumLearnableTransitions();
 		//System.out.println("m = " + m);
-		int n = getStateActionCount(t.getStateAction());
+		//int n = getStateActionCount(t.getStateAction());
+		int n = tiedStateActionCounts.get(t);
 		alpha = (error_tolerance*(1.0/(double) m));///((double) this.mdp.getNumChoices(t.getStateAction().getState())); // distribute error over all transitions
 
 		double delta = Math.sqrt((Math.log(2 / alpha))/(2*n));

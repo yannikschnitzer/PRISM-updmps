@@ -52,7 +52,6 @@ public class ObservationSampler {
 		this.sampleSizeMap = new HashMap<>();
 		this.samplesMap = new HashMap<>();
 		this.accumulatedSamples = new HashMap<>();
-		this.accumulatedSamples = new HashMap<>();
 		this.transitionsOfInterest = new HashSet<>();
 		this.terminatingStates = terminatingStates;
 
@@ -178,13 +177,13 @@ public class ObservationSampler {
 	}
 
 	public boolean collectedEnoughSamples() {
-		return this.collectedEnoughSamples(8);
+		return this.collectedEnoughSamples(4);
 	}
 
 	public boolean collectedEnoughSamples(float ratio) {
 		for (Map.Entry<StateActionPair, Integer> entry: this.sampleSizeMap.entrySet()){
 //			if (this.accumulatedSamples.containsKey(entry.getKey())) {
-			if (entry.getValue() >=  ratio * this.accumulatedSamples.getOrDefault(entry.getKey(), 1) ) {
+			if (entry.getValue() - this.accumulatedSamples.getOrDefault(entry.getKey(), 1) >=  ratio * this.accumulatedSamples.getOrDefault(entry.getKey(), 1) ) {
 				return true;
 			}
 		}
@@ -319,7 +318,7 @@ public class ObservationSampler {
 		this.samplesMap.clear();
     }
 
-	private void incrementAccumulatedSamples() {
+	public void incrementAccumulatedSamples() {
 		this.sampleSizeMap.forEach((sa, counter) -> {
 			this.accumulatedSamples.put(sa, this.accumulatedSamples.getOrDefault(sa, 0) + counter);
 		});

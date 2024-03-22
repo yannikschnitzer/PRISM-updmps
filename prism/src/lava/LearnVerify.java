@@ -20,7 +20,6 @@ import prism.Pair;
 import prism.Prism;
 import prism.PrismDevNullLog;
 import prism.PrismException;
-import prism.PrismLangException;
 import strat.Strategy;
 
 import lava.Experiment.Model;
@@ -79,7 +78,7 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, true).info(id));
+        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(20, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(200, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(80, 1_00_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(300, 1_00_000, seed, false).info(id));
@@ -92,8 +91,8 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
-        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
-        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
@@ -101,7 +100,7 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, false).info(id));
+        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 10000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
@@ -268,8 +267,8 @@ public class LearnVerify {
 
         List<Values> values = new ArrayList<>();
 
-        double rangeMin1 = 0.4;
-        double rangeMax1 = 0.6;
+        double rangeMin1 = 0.6;
+        double rangeMax1 = 0.8;
 
         double rangeMin2 = 0.4;
         double rangeMax2 = 0.6;
@@ -285,13 +284,13 @@ public class LearnVerify {
         for (int i = 0; i < 1; i++){
             Values v = new Values();
             double p = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
-            double q = rangeMin2 + (rangeMax2 - rangeMin2) * r.nextDouble();
+            double q = 1 - p;//rangeMin2 + (rangeMax2 - rangeMin2) * r.nextDouble();
             double s = rangeMin3 + (rangeMax3 - rangeMin3) * r.nextDouble();
             double t = rangeMin4 + (rangeMax4 - rangeMin4) * r.nextDouble();
-            v.addValue("p1", p);
-            v.addValue("p2", q);
-            v.addValue("p3", s);
-            v.addValue("p4", t);
+            v.addValue("r", p);
+            v.addValue("q", q);
+//            v.addValue("p3", s);
+//            v.addValue("p4", t);
             values.add(v);
         }
 
@@ -337,6 +336,8 @@ public class LearnVerify {
         return action;
     }
 
+
+
     public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam){
         Map<Function, List<TransitionTriple>> functionMap = new HashMap<>();
 
@@ -358,6 +359,58 @@ public class LearnVerify {
 
         return functionMap;
     }
+
+    public Set<Function> getTransitionStructure(MDP<Function> mdpParam, int s) {
+        HashSet<Function> transitions = new HashSet<>();
+        int numChoices = mdpParam.getNumChoices(s);
+        for (int i = 0 ; i < numChoices; i++) {
+            mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                transitions.add(p);
+            });
+        }
+        return transitions;
+    }
+
+    public Map<Set<Function>, List<Integer>> getSimilarStateMap(MDP<Function> mdpParam) {
+        HashMap<Set<Function>, List<Integer>> similarStateMap = new HashMap<>();
+
+        for (int s = 0; s < mdpParam.getNumStates(); s++) {
+            Set<Function> transitionStructure = getTransitionStructure(mdpParam, s);
+            if (!similarStateMap.containsKey(transitionStructure)) {
+                similarStateMap.put(transitionStructure, new ArrayList<>());
+            }
+            similarStateMap.get(transitionStructure).add(s);
+        }
+        System.out.println("Similar state map" + similarStateMap);
+        return similarStateMap;
+    }
+
+    public List<List<TransitionTriple>> getSimilarTransitions(MDP<Function> mdpParam) {
+        Map<Set<Function>, List<Integer>> similarStateMap = getSimilarStateMap(mdpParam);
+        List<List<TransitionTriple>> similarTransitions = new ArrayList<>();
+
+        for (List<Integer> similarStates : similarStateMap.values()) {
+            Map<Function, List<TransitionTriple>> transitions = new HashMap<>();
+
+            for (int s : similarStates) {
+                int numChoices = mdpParam.getNumChoices(s);
+                for (int i = 0 ; i < numChoices; i++) {
+                    String action = getActionString(mdpParam, s, i);
+                    mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                        if (!transitions.containsKey(p)) {
+                            transitions.put(p, new ArrayList<>());
+                        }
+                        transitions.get(p).add(new TransitionTriple(sFrom, action, sTo));
+                    });
+                }
+            }
+
+            similarTransitions.addAll(transitions.values());
+        }
+        System.out.println("Similar Transitions: " + similarTransitions);
+        return similarTransitions;
+    }
+
     public void compareSamplingStrategiesUncertain(String label, Experiment ex, EstimatorConstructor estimatorConstructor, List<Values> uncertainParameters)
     {
         resetAll();
@@ -376,20 +429,20 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"p1","p2","p3","p4"};
-            String[] paramLowerBounds = new String[]{"0","0","0","0"};
-            String[] paramUpperBounds = new String[]{"1","1","1","1"};
+            String[] paramNames = new String[]{"r","q"};
+            String[] paramLowerBounds = new String[]{"0","0"};
+            String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
             MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
 
+            List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
+
             Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
             for (Function f : functionMap.keySet()){
                 System.out.println("function:" + f + functionMap.get(f));
             }
-
-            System.out.println("Num states:"+mdpParam.getNumStates());
 
             // Instantiate parametric model
             Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5),BigRational.from(0.5),BigRational.from(0.5) ,BigRational.from(0.5)});
@@ -399,12 +452,11 @@ public class LearnVerify {
             // Then revert to original model
             this.prism.setParametricOff();
 
-
-
         for (Values values : uncertainParameters){
             ex.values = values;
             Estimator estimator = estimatorConstructor.get(this.prism, ex);
             estimator.setFunctionMap(functionMap);
+            estimator.setSimilarTransitions(similarTransitions);
             estimator.set_experiment(ex);
 
             String directoryPath = makeOutputDirectory(ex);
@@ -478,7 +530,7 @@ public class LearnVerify {
                     estimator.setObservationMaps(observationSampler.getSamplesMap(), observationSampler.getSampleSizeMap());
                     samplingStrategy = estimator.buildStrategy();
                     currentResults = estimator.getCurrentResults();
-                    observationSampler.resetObservationSequence();
+                    observationSampler.incrementAccumulatedSamples();
                     if (this.verbose) System.out.println("New performance " + currentResults[1]);
                     if (this.verbose) System.out.println("New robust guarantee " + currentResults[0]);
                     results.add(new DataPoint(samples, i+1, currentResults));

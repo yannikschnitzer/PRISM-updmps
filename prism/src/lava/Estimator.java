@@ -52,6 +52,8 @@ public class Estimator {
     protected HashMap<TransitionTriple, Interval<Double>> intervalsMap;
     private Map<Function, List<TransitionTriple>> functionMap;
 
+    private List<List<TransitionTriple>> similarTransitions;
+
     protected Map<TransitionTriple, Double> constantMap;
 
     protected ModulesFile modulesFile;
@@ -543,6 +545,14 @@ public class Estimator {
 
     public void setFunctionMap(Map<Function, List<TransitionTriple>> functionMap) {
         this.functionMap = functionMap;
+    }
+
+    public List<List<TransitionTriple>> getSimilarTransitions() {
+        return similarTransitions;
+    }
+
+    public void setSimilarTransitions(List<List<TransitionTriple>> similarTransitions) {
+        this.similarTransitions = similarTransitions;
     }
 }
 

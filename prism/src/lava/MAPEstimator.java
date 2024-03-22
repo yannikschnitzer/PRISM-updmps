@@ -68,24 +68,25 @@ public class MAPEstimator extends Estimator
     }
 
 	public Double mode(TransitionTriple t) {
-		int num = dirichletPriorsMap.get(t)-1;
-		int denum = 0;
-		int count = 0;
+//		int num = dirichletPriorsMap.get(t)-1;
+//		int denum = 0;
+//		int count = 0;
 		StateActionPair sa = t.getStateAction();
-		HashSet<Integer> successors = successorStatesMap.get(sa);
-		for (int successor : successors) {
-			TransitionTriple sas = new TransitionTriple(sa.getState(), sa.getAction(), successor);
-			int alpha = dirichletPriorsMap.get(sas);
-			//System.out.println(alpha);
-			denum += alpha;
-			count += 1;
-		}
-		denum -= count;
-
-
-		//System.out.println("num = " + num);
-		//System.out.println("denum = " + denum);
-		return (double) num / (double) denum;
+//		HashSet<Integer> successors = successorStatesMap.get(sa);
+//		for (int successor : successors) {
+//			TransitionTriple sas = new TransitionTriple(sa.getState(), sa.getAction(), successor);
+//			int alpha = dirichletPriorsMap.get(sas);
+//			//System.out.println(alpha);
+//			denum += alpha;
+//			count += 1;
+//		}
+//		denum -= count;
+//
+//
+//		//System.out.println("num = " + num);
+//		//System.out.println("denum = " + denum);
+//		return (double) num / (double) denum;
+		return (double) this.samplesMap.get(t) / (double) this.sampleSizeMap.get(sa);
 	}
 
 	public int getTransitionCount(TransitionTriple t) {
@@ -101,13 +102,14 @@ public class MAPEstimator extends Estimator
 	}
 
 	public int getStateActionCount(StateActionPair sa) {
-		int count = 0;
-		HashSet<Integer> successors = successorStatesMap.get(sa);
-		for (int successor : successors) { 
-			TransitionTriple sas = new TransitionTriple(sa.getState(), sa.getAction(), successor);
-			count += dirichletPriorsMap.get(sas);
-		}
-		return count;
+//		int count = 0;
+//		HashSet<Integer> successors = successorStatesMap.get(sa);
+//		for (int successor : successors) {
+//			TransitionTriple sas = new TransitionTriple(sa.getState(), sa.getAction(), successor);
+//			count += dirichletPriorsMap.get(sas);
+//		}
+//		return count;
+		return this.sampleSizeMap.get(sa);
 	}
 
 
