@@ -49,6 +49,8 @@ public class ObservationSampler {
 
 	private boolean tiedParameters;
 
+	private int multiplier;
+
     public ObservationSampler(Prism prism, MDP<Double> sul, HashSet<Integer> terminatingStates) throws PrismException{
 		this.sampleSizeMap = new HashMap<>();
 		this.samplesMap = new HashMap<>();
@@ -179,7 +181,7 @@ public class ObservationSampler {
 	}
 
 	public boolean collectedEnoughSamples() {
-		return this.collectedEnoughSamples(4);
+		return this.collectedEnoughSamples(multiplier);
 	}
 
 	public boolean collectedEnoughSamples(float ratio) {
@@ -405,6 +407,14 @@ public class ObservationSampler {
 
 	public void setTiedParameters(boolean tiedParameters) {
 		this.tiedParameters = tiedParameters;
+	}
+
+	public int getMultiplier() {
+		return multiplier;
+	}
+
+	public void setMultiplier(int multiplier) {
+		this.multiplier = multiplier;
 	}
 }
 

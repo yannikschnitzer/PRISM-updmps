@@ -79,7 +79,9 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(20, 10_000, seed, true, true).info(id));
+//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, true,4).info(id));
+//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
+//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(200, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(80, 1_00_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(300, 1_00_000, seed, false).info(id));
@@ -87,28 +89,31 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
         // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, false).info(id));
+        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, true,4).info(id));
+        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,4).info(id));
+        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 10).info(id));
+        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false).info(id));
         //run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed).stratWeight(0.9).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, true, 2).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
+ //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
         //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1000000, seed, true).info(id));
+//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, true, 1).info(id));
+//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, false, 1).info(id));
+//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, false, false, 4).info(id));
         //run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
         String postfix = String.format("_seed_%d", ex.seed);
-        postfix += (ex.optimizations ? "_opt" : "_naive");
+        postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 //        compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
         compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
 //        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
@@ -268,8 +273,8 @@ public class LearnVerify {
 
         List<Values> values = new ArrayList<>();
 
-        double rangeMin1 = 0.6;
-        double rangeMax1 = 0.8;
+        double rangeMin1 = 0.7;
+        double rangeMax1 = 0.9;
 
         double rangeMin2 = 0.4;
         double rangeMax2 = 0.6;
@@ -289,7 +294,7 @@ public class LearnVerify {
             double s = rangeMin3 + (rangeMax3 - rangeMin3) * r.nextDouble();
             double t = rangeMin4 + (rangeMax4 - rangeMin4) * r.nextDouble();
             v.addValue("r", p);
-            v.addValue("p2", q);
+            v.addValue("q", 1-p);
             v.addValue("p3", s);
             v.addValue("p4", t);
             values.add(v);
@@ -428,7 +433,7 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"r","p2","p3","p4"};
+            String[] paramNames = new String[]{"r","q","p3","p4"};
             String[] paramLowerBounds = new String[]{"0","0","0","0"};
             String[] paramUpperBounds = new String[]{"1","1","1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
@@ -511,6 +516,7 @@ public class LearnVerify {
             ObservationSampler observationSampler = new ObservationSampler(this.prism, SUL, estimator.getTerminatingStates());
             observationSampler.setTransitionsOfInterest(estimator.getTransitionsOfInterest());
             observationSampler.setTiedParameters(ex.tieParameters);
+            observationSampler.setMultiplier(ex.multiplier);
 
             double[] currentResults = estimator.getInitialResults();
 
