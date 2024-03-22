@@ -88,6 +88,11 @@ public class MAPEstimator extends Estimator
 		return (double) num / (double) denum;
 	}
 
+	public Double modeTied(TransitionTriple t) {
+		StateActionPair sa = t.getStateAction();
+		return (double) this.samplesMap.get(t) / (double) this.sampleSizeMap.get(sa);
+	}
+
 	public int getTransitionCount(TransitionTriple t) {
 		return dirichletPriorsMap.get(t);
 	}
@@ -110,8 +115,9 @@ public class MAPEstimator extends Estimator
 		return count;
 	}
 
-
-
+	public int getStateActionCountTied(StateActionPair sa) {
+		return this.sampleSizeMap.get(sa);
+	}
 
 	public void updatePriors() {
 		boolean needsNormalization = false;

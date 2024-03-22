@@ -1,8 +1,8 @@
 mdp
 
 
-const int maxX = 30;
-const int maxY = 5;
+const int maxX = 20;
+const int maxY = 4;
 const double r;// = 0.5; // pilot response factor
 
 const double p = 0.19; // prob of adversary moving up or down, ensure 2p <= 1

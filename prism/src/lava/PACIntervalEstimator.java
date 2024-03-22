@@ -14,6 +14,8 @@ import java.util.*;
 public class PACIntervalEstimator extends MAPEstimator {
 
 	protected double error_tolerance;
+	protected HashMap<TransitionTriple, Double> tiedModes = new HashMap<>();
+	protected HashMap<TransitionTriple, Integer> tiedStateActionCounts = new HashMap<>();
 
     public PACIntervalEstimator(Prism prism, Experiment ex) {
 		super(prism, ex);
@@ -21,17 +23,50 @@ public class PACIntervalEstimator extends MAPEstimator {
 		this.name = "PAC";
     }
 
+	/**
+	 * Combine transition-triple and state-action pair counts for similar transitions, i.e., tie the parameters.
+	 */
+	public void tieParameters() {
+		List<List<TransitionTriple>> similarTransitions = this.getSimilarTransitions();
+
+		for (List<TransitionTriple> transitions : similarTransitions) {
+			// Compute mode and count over all similar transitions
+			int num = 0;
+			int denum = 0;
+
+			for (TransitionTriple t : transitions) {
+				StateActionPair sa = t.getStateAction();
+				num += samplesMap.getOrDefault(t, 0);
+				denum += sampleSizeMap.getOrDefault(sa, 0);
+			}
+
+			for (TransitionTriple t : transitions) {
+				double mode = (double) num / (double) denum;
+				tiedModes.put(t, mode);
+				tiedStateActionCounts.put(t, denum);
+			}
+		}
+
+	}
+
 	@Override
 	protected Interval<Double> getTransitionInterval(TransitionTriple t) {
-		double point = mode(t);
-		//System.out.println("Point = " + point);
-		double confidence_interval = confidenceInterval(t);
-		//System.out.println("confidence_interval = " + confidence_interval);
 		double precision = 1e-8;
+		double point;
+
+		if (!this.ex.tieParameters) {
+			point = mode(t);
+		} else {
+			if (!this.samplesMap.containsKey(t)){
+				return new Interval<>(precision, 1-precision);
+			}
+			point = tiedModes.get(t);
+		}
+
+		double confidence_interval = confidenceInterval(t);
 		double lower_bound = Math.max(point - confidence_interval, precision);
 		double upper_bound = Math.min(point + confidence_interval, 1-precision);
-		//System.out.println("confidence interval: " + confidence_interval);
-		//System.out.println("[l, u]: [" + lower_bound +", "+  upper_bound+ "]")
+
 		return new Interval<>(lower_bound, upper_bound);
 	}
 
@@ -71,6 +106,7 @@ public class PACIntervalEstimator extends MAPEstimator {
 		imdp.setConstantValues(mdp.getConstantValues());
 		imdp.setIntervalEvaluator(Evaluator.forDoubleInterval());
 
+		tieParameters();
 		Map<TransitionTriple, Interval<Double>> minIntervals = computeMinIntervals();
 
 		for (int s = 0; s < numStates; s++) {
@@ -102,6 +138,7 @@ public class PACIntervalEstimator extends MAPEstimator {
 							p = this.constantMap.get(t);
 							interval = new Interval<Double>(p, p);
 						}
+
 						distrNew.add(sTo, interval);
 						this.intervalsMap.put(t, interval);
 					}
@@ -143,8 +180,13 @@ public class PACIntervalEstimator extends MAPEstimator {
 	private Double computePACBound(TransitionTriple t) {
 		double alpha = error_tolerance; // probability of error (i.e. 1-alpha is probability of correctly specifying the interval)
 		int m = this.getNumLearnableTransitions();
-		//System.out.println("m = " + m);
-		int n = getStateActionCount(t.getStateAction());
+
+		int n;
+		if (!this.ex.tieParameters) {
+			n = getStateActionCount(t.getStateAction());
+		} else {
+			n = tiedStateActionCounts.get(t);
+		}
 		alpha = (error_tolerance*(1.0/(double) m));///((double) this.mdp.getNumChoices(t.getStateAction().getState())); // distribute error over all transitions
 
 		double delta = Math.sqrt((Math.log(2 / alpha))/(2*n));

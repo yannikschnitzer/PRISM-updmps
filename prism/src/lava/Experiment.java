@@ -63,6 +63,9 @@ public class Experiment {
     // Turn model-based optimizations on / off
     public boolean optimizations = false;
 
+    // Turn parameter tying on / off
+    public boolean tieParameters = false;
+
     public String experimentInfo = "basic";
 
     public int seed = 1;
@@ -320,6 +323,16 @@ public class Experiment {
         this.optimizations = optimizations;
         return this;
     }
+
+    public Experiment config(int max_episode_length, int iterations, int repetitions, boolean optimizations, boolean tieParameters) {
+        this.max_episode_length = max_episode_length;
+        this.iterations = iterations;
+        this.seed = repetitions;
+        this.optimizations = optimizations;
+        this.tieParameters = tieParameters;
+        return this;
+    }
+
 
     public Experiment config(int max_episode_length, int iterations, int repetitions, int lowerStrength, int upperStrength) {
         this.max_episode_length = max_episode_length;

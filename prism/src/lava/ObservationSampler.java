@@ -47,6 +47,7 @@ public class ObservationSampler {
 	private ModulesFile modulesFileIMDP;
     private ModulesFile modulesFileMDP;
 
+	private boolean tiedParameters;
 
     public ObservationSampler(Prism prism, MDP<Double> sul, HashSet<Integer> terminatingStates) throws PrismException{
 		this.sampleSizeMap = new HashMap<>();
@@ -183,9 +184,14 @@ public class ObservationSampler {
 
 	public boolean collectedEnoughSamples(float ratio) {
 		for (Map.Entry<StateActionPair, Integer> entry: this.sampleSizeMap.entrySet()){
-//			if (this.accumulatedSamples.containsKey(entry.getKey())) {
-			if (entry.getValue() >=  ratio * this.accumulatedSamples.getOrDefault(entry.getKey(), 1) ) {
-				return true;
+			if (tiedParameters) {
+				if (entry.getValue() - this.accumulatedSamples.getOrDefault(entry.getKey(), 1) >= ratio * this.accumulatedSamples.getOrDefault(entry.getKey(), 1)) {
+					return true;
+				}
+			} else {
+				if (entry.getValue() >= ratio * this.accumulatedSamples.getOrDefault(entry.getKey(), 1)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -319,7 +325,7 @@ public class ObservationSampler {
 		this.samplesMap.clear();
     }
 
-	private void incrementAccumulatedSamples() {
+	public void incrementAccumulatedSamples() {
 		this.sampleSizeMap.forEach((sa, counter) -> {
 			this.accumulatedSamples.put(sa, this.accumulatedSamples.getOrDefault(sa, 0) + counter);
 		});
@@ -393,11 +399,13 @@ public class ObservationSampler {
 	}
 
 
+	public boolean isTiedParameters() {
+		return tiedParameters;
+	}
 
-
-
-
-
+	public void setTiedParameters(boolean tiedParameters) {
+		this.tiedParameters = tiedParameters;
+	}
 }
 
 
