@@ -1,0 +1,23 @@
+modelInfo: 
+model: CROWD
+type: REACH
+goal: "Target"
+spec: Pmax=? [F "observe0Greater1" ]
+robustSpec: Pmaxmax=? [F "observe0Greater1" ]
+modelFile: models/crowd.prism
+dtmcSpec: P=? [F "observe0Greater1" ]
+experimentInfo: basic
+seed: 1650280571
+initLowerStrength: 5
+initUpperStrength: 10
+lowerStrengthBound: 2147483647
+upperStrengthBound: 2147483647
+strategyWeight: 1.0
+initGraphEpsilon: 1.0E-4
+iterations: 1000000
+max_episode_length: 100
+alpha: 10
+error_tolerance: 0.01
+trueOpt: 0.16178243292163852
+prefix: PAC_seed_1650280571_naive
+algorithm: PAC

@@ -1,0 +1,23 @@
+modelInfo: 
+model: CHAIN_LARGE
+type: REWARD
+goal: "goal"
+spec: Rmin=? [F "goal"]
+robustSpec: Rminmax=? [F "goal"]
+modelFile: models/chain_large.prism
+dtmcSpec: R=? [F "goal"]
+experimentInfo: basic
+seed: 1650280571
+initLowerStrength: 5
+initUpperStrength: 10
+lowerStrengthBound: 2147483647
+upperStrengthBound: 2147483647
+strategyWeight: 1.0
+initGraphEpsilon: 1.0E-4
+iterations: 1000000
+max_episode_length: 100
+alpha: 10
+error_tolerance: 0.01
+trueOpt: 561.7034097321546
+prefix: PAC_seed_1650280571_naive
+algorithm: PAC

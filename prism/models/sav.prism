@@ -21,7 +21,7 @@ const double pLMin=pL*(1-pLDiff);
 const double pHMin= r*(1-pHDiff);
 
 // Grid size
-const int Xsize = 20;
+const int Xsize = 30;
 const int Ysize = 10;
 // Number of tries before an error
 const int MAXTRIES = 2;

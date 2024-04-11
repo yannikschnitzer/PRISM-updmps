@@ -1,0 +1,23 @@
+modelInfo: 
+model: SAV2
+type: REACH
+goal: "Target"
+spec: Pmax=? [!("Crash") U ("Target")]
+robustSpec: Pmaxmin=? [!("Crash") U ("Target")]
+modelFile: models/sav.prism
+dtmcSpec: P=? [!("Crash") U ("Target")]
+experimentInfo: basic
+seed: 1
+initLowerStrength: 5
+initUpperStrength: 10
+lowerStrengthBound: 2147483647
+upperStrengthBound: 2147483647
+strategyWeight: 1.0
+initGraphEpsilon: 1.0E-4
+iterations: 1000000
+max_episode_length: 100
+alpha: 10
+error_tolerance: 0.01
+trueOpt: 0.8276019572002555
+prefix: PAC_seed_1_tied
+algorithm: PAC

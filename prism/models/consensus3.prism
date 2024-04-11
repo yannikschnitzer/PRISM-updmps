@@ -1,0 +1,112 @@
+//Randomised Consensus Protocol
+
+mdp
+const double p1; // in [0.2 , 0.8]
+const double p2; // in [0.2 , 0.8]
+const double p3; // in [0.2 , 0.8]
+
+const int N=3;
+const int K=2;
+const int range = 2*(K+1)*N;
+const int counter_init = (K+1)*N;
+const int left = N;
+const int right = 2*(K+1)*N - N;
+
+// shared coin
+global counter : [0..range] init counter_init;
+
+module process1
+
+	// program counter
+	pc1 : [0..3];
+	// 0 - flip
+	// 1 - write
+	// 2 - check
+	// 3 - finished
+
+	// local coin
+	coin1 : [0..1];
+
+	// flip coin
+	[a] (pc1=0)  -> p1 : (coin1'=0) & (pc1'=1) + 1 - p1 : (coin1'=1) & (pc1'=1);
+	// write tails -1  (reset coin to add regularity)
+	[a] (pc1=1) & (coin1=0) & (counter>0) -> (counter'=counter-1) & (pc1'=2) & (coin1'=0);
+	// write heads +1 (reset coin to add regularity)
+	[a] (pc1=1) & (coin1=1) & (counter<range) -> (counter'=counter+1) & (pc1'=2) & (coin1'=0);
+	// check
+	// decide tails
+	[a] (pc1=2) & (counter<=left) -> (pc1'=3) & (coin1'=0);
+	// decide heads
+	[a] (pc1=2) & (counter>=right) -> (pc1'=3) & (coin1'=1);
+	// flip again
+	[a] (pc1=2) & (counter>left) & (counter<right) -> (pc1'=0);
+	// loop (all loop together when done)
+	[done] (pc1=3) -> (pc1'=3);
+
+endmodule
+
+module process2
+
+	// program counter
+	pc2 : [0..3];
+	// 0 - flip
+	// 1 - write
+	// 2 - check
+	// 3 - finished
+
+	// local coin
+	coin2 : [0..1];
+
+	// flip coin
+	[b] (pc2=0)  -> p2 : (coin2'=0) & (pc2'=1) + 1 - p2 : (coin2'=1) & (pc2'=1);
+	// write tails -1  (reset coin to add regularity)
+	[b] (pc2=1) & (coin2=0) & (counter>0) -> (counter'=counter-1) & (pc2'=2) & (coin2'=0);
+	// write heads +1 (reset coin to add regularity)
+	[b] (pc2=1) & (coin2=1) & (counter<range) -> (counter'=counter+1) & (pc2'=2) & (coin2'=0);
+	// check
+	// decide tails
+	[b] (pc2=2) & (counter<=left) -> (pc2'=3) & (coin2'=0);
+	// decide heads
+	[b] (pc2=2) & (counter>=right) -> (pc2'=3) & (coin2'=1);
+	// flip again
+	[b] (pc2=2) & (counter>left) & (counter<right) -> (pc2'=0);
+	// loop (all loop together when done)
+	[done] (pc2=3) -> (pc2'=3);
+
+endmodule
+
+module process3
+
+	// program counter
+	pc3 : [0..3];
+	// 0 - flip
+	// 1 - write
+	// 2 - check
+	// 3 - finished
+
+	// local coin
+	coin3 : [0..1];
+
+	// flip coin
+	[c] (pc3=0)  -> p3 : (coin3'=0) & (pc3'=1) + 1 - p3 : (coin3'=1) & (pc3'=1);
+	// write tails -1  (reset coin to add regularity)
+	[c] (pc3=1) & (coin3=0) & (counter>0) -> (counter'=counter-1) & (pc3'=2) & (coin3'=0);
+	// write heads +1 (reset coin to add regularity)
+	[c] (pc3=1) & (coin3=1) & (counter<range) -> (counter'=counter+1) & (pc3'=2) & (coin3'=0);
+	// check
+	// decide tails
+	[c] (pc3=2) & (counter<=left) -> (pc3'=3) & (coin3'=0);
+	// decide heads
+	[c] (pc3=2) & (counter>=right) -> (pc3'=3) & (coin3'=1);
+	// flip again
+	[c] (pc3=2) & (counter>left) & (counter<right) -> (pc3'=0);
+	// loop (all loop together when done)
+	[done] (pc3=3) -> (pc3'=3);
+
+endmodule
+
+label "finished" = pc1=3 &pc2=3 &pc3=3;
+label "all_coins_equal_1" = coin1=1 &coin2=1 &coin3=1;
+rewards "steps"
+	true : 1;
+endrewards

@@ -1,0 +1,23 @@
+modelInfo: 
+model: BRP
+type: REACH
+goal: "Target"
+spec: Pmax=? [ true U (s=5 & T) ]
+robustSpec: Pmaxmin=? [ true U (s=5 & T) ]
+modelFile: models/brp.prism
+dtmcSpec: P=? [ true U (s=5 & T) ]
+experimentInfo: basic
+seed: 1650280571
+initLowerStrength: 5
+initUpperStrength: 10
+lowerStrengthBound: 2147483647
+upperStrengthBound: 2147483647
+strategyWeight: 1.0
+initGraphEpsilon: 1.0E-4
+iterations: 100000
+max_episode_length: 100
+alpha: 10
+error_tolerance: 0.01
+trueOpt: 0.999961472216278
+prefix: PAC_seed_1650280571_naive
+algorithm: PAC

@@ -163,7 +163,7 @@ public class Experiment {
             case CROWD:
             this.goal = "\"Target\"";
             this.spec = "Pmax=? [F \"observe0Greater1\" ]";
-            this.robustSpec = "Pmaxmin=? [F \"observe0Greater1\" ]";
+            this.robustSpec = "Pmaxmax=? [F \"observe0Greater1\" ]";
             this.optimisticSpec = "Pmaxmax=? [F \"observe0Greater1\" ]";
             this.dtmcSpec = "P=? [F \"observe0Greater1\" ]";
             this.modelFile = "models/crowd.prism";

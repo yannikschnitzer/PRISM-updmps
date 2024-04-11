@@ -24,7 +24,7 @@ const double badC;  // probability that member is untrustworthy
 // const double goodC = 0.833;  // must be 1-badC
 
 const int CrowdSize=5; // CWDSIZ: actual number of good crowd members
-const int TotalRuns=5; // Total number of protocol runs to analyze
+const int TotalRuns=3; // Total number of protocol runs to analyze
 const int MaxGood=20; // CWDMAX: maximum number of good crowd members
 
 // Process definitions

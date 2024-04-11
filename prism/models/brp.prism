@@ -4,7 +4,7 @@
 mdp
 
 // number of chunks
-const int N=256;
+const int N=32;
 // maximum number of retransmissions
 const int MAX=5;
 
