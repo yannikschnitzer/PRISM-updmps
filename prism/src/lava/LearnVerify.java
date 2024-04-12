@@ -8,19 +8,15 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
-import explicit.MDP;
-import explicit.MDPSimple;
+import explicit.*;
 import param.BigRational;
 import param.Function;
 import param.Point;
 import parser.Values;
 import parser.ast.ModulesFile;
-import prism.Evaluator;
-import prism.Pair;
-import prism.Prism;
-import prism.PrismDevNullLog;
-import prism.PrismException;
-import prism.PrismLangException;
+import parser.ast.PropertiesFile;
+import prism.*;
+import strat.MDStrategy;
 import strat.Strategy;
 
 import lava.Experiment.Model;
@@ -79,7 +75,7 @@ public class LearnVerify {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, true,4).info(id));
+        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
@@ -211,22 +207,22 @@ public class LearnVerify {
     }
 
     private void experiment_switching_environment(Experiment ex1, Experiment ex2, int switching_point) {
-        String postfix = String.format("_switching_point_%d_seed_%d", switching_point, seed);
-        compareSamplingStrategies("UCRL2_unbounded" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
-        compareSamplingStrategies("MAP_unbounded" + postfix, ex1, MAPEstimator::new, ex2);
-        compareSamplingStrategies("LUI_unbounded" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
-
-        ex1 = ex1.setStrengthBounds(200, 300, 300);
-        ex2 = ex2.setStrengthBounds(200, 300, 300);
-        compareSamplingStrategies("UCRL2_highbound" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
-        compareSamplingStrategies("MAP_highbound" + postfix, ex1, MAPEstimator::new, ex2);
-        compareSamplingStrategies("LUI_highbound" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
-
-        ex1 = ex1.setStrengthBounds(20, 30, 30);
-        ex2 = ex2.setStrengthBounds(20, 30, 30);
-        compareSamplingStrategies("UCRL2_lowbound" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
-        compareSamplingStrategies("MAP_lowbound" + postfix, ex1, MAPEstimator::new, ex2);
-        compareSamplingStrategies("LUI_lowbound" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
+//        String postfix = String.format("_switching_point_%d_seed_%d", switching_point, seed);
+//        compareSamplingStrategies("UCRL2_unbounded" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
+//        compareSamplingStrategies("MAP_unbounded" + postfix, ex1, MAPEstimator::new, ex2);
+//        compareSamplingStrategies("LUI_unbounded" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
+//
+//        ex1 = ex1.setStrengthBounds(200, 300, 300);
+//        ex2 = ex2.setStrengthBounds(200, 300, 300);
+//        compareSamplingStrategies("UCRL2_highbound" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
+//        compareSamplingStrategies("MAP_highbound" + postfix, ex1, MAPEstimator::new, ex2);
+//        compareSamplingStrategies("LUI_highbound" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
+//
+//        ex1 = ex1.setStrengthBounds(20, 30, 30);
+//        ex2 = ex2.setStrengthBounds(20, 30, 30);
+//        compareSamplingStrategies("UCRL2_lowbound" + postfix, ex1, UCRL2IntervalEstimatorOptimistic::new, ex2);
+//        compareSamplingStrategies("MAP_lowbound" + postfix, ex1, MAPEstimator::new, ex2);
+//        compareSamplingStrategies("LUI_lowbound" + postfix, ex1, BayesianEstimatorOptimistic::new, ex2);
 
         //new LearnVerify(true).compareSamplingStrategies("Bayes-SW-small" + postfix, ex1.setStrengthBounds(10, 20), BayesianEstimatorWeightedOptimistic::new, ex2.setStrengthBounds(10, 20));
         //new LearnVerify(true).compareSamplingStrategies("Bayes-SW-large" + postfix, ex1.setStrengthBounds(100, 200), BayesianEstimatorWeightedOptimistic::new, ex2.setStrengthBounds(100, 200));
@@ -281,7 +277,7 @@ public class LearnVerify {
         //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
         Random r = new Random(5599);
 
-        for (int i = 0; i < 1; i++){
+        for (int i = 0; i < 3; i++){
             Values v = new Values();
             double p = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
             v.addValue("r", p);
@@ -291,36 +287,36 @@ public class LearnVerify {
         compareSamplingStrategiesUncertain(label, ex, estimatorConstructor, values);
     }
 
-    public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor, Experiment follow_up_ex) {
-        resetAll();
-        System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
-                + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
-                + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
-
-        if (verbose)
-            System.out.printf("%s, seed %d\n", label, ex.seed);
-
-        Estimator estimator = estimatorConstructor.get(this.prism, ex);
-        String directoryPath = makeOutputDirectory(ex);
-
-        String path = directoryPath + label +".csv";
-        if (Files.exists(Paths.get(path))) {
-            System.out.printf("File %s already exists.%n", path);
-            //return;
-        }
-
-        ex.dumpConfiguration(directoryPath, label, estimator.getName());
-
-        ArrayList<DataPoint> results = runSamplingStrategyDoublingEpoch(ex, estimator);
-        if (follow_up_ex != null) {
-            estimator.set_experiment(follow_up_ex);
-            results.addAll( runSamplingStrategyDoublingEpoch(follow_up_ex, estimator, ex.iterations));
-            follow_up_ex.dumpConfiguration(directoryPath, label + "_part_2", estimator.getName());
-        }
-
-        DataProcessor dp = new DataProcessor();
-        dp.dumpRawData(directoryPath, label, results, ex);
-    }
+//    public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor, Experiment follow_up_ex) {
+//        resetAll();
+//        System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
+//                + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
+//                + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
+//
+//        if (verbose)
+//            System.out.printf("%s, seed %d\n", label, ex.seed);
+//
+//        Estimator estimator = estimatorConstructor.get(this.prism, ex);
+//        String directoryPath = makeOutputDirectory(ex);
+//
+//        String path = directoryPath + label +".csv";
+//        if (Files.exists(Paths.get(path))) {
+//            System.out.printf("File %s already exists.%n", path);
+//            //return;
+//        }
+//
+//        ex.dumpConfiguration(directoryPath, label, estimator.getName());
+//
+//        ArrayList<DataPoint> results = runSamplingStrategyDoublingEpoch(ex, estimator);
+//        if (follow_up_ex != null) {
+//            estimator.set_experiment(follow_up_ex);
+//            results.addAll( runSamplingStrategyDoublingEpoch(follow_up_ex, estimator, ex.iterations));
+//            follow_up_ex.dumpConfiguration(directoryPath, label + "_part_2", estimator.getName());
+//        }
+//
+//        DataProcessor dp = new DataProcessor();
+//        dp.dumpRawData(directoryPath, label, results, ex);
+//    }
 
     public String getActionString(MDP<Function> mdp, int s, int i) {
         String action = (String) mdp.getAction(s,i);
@@ -443,6 +439,7 @@ public class LearnVerify {
 
         List<Double> robustValues = new ArrayList<>();
         List<Double> trueValues = new ArrayList<>();
+        ArrayList<IMDP<Double>> learnedIMDPs = new ArrayList<>();
 
         try {
             ModulesFile modulesFile = prism.parseModelFile(new File(ex.modelFile));
@@ -456,6 +453,8 @@ public class LearnVerify {
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
             MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
+
+            RobustPolicySynthesizer rsynth = new RobustPolicySynthesizer(mdpParam);
 
             System.out.println("MDP Param:" + mdpParam);
 
@@ -474,35 +473,63 @@ public class LearnVerify {
             // Then revert to original model
             this.prism.setParametricOff();
 
+            for (Values values : uncertainParameters){
+                ex.values = values;
+                Estimator estimator = estimatorConstructor.get(this.prism, ex);
 
+                estimator.setFunctionMap(functionMap);
+                estimator.setSimilarTransitions(similarTransitions);
+                estimator.set_experiment(ex);
 
-        for (Values values : uncertainParameters){
-            ex.values = values;
-            Estimator estimator = estimatorConstructor.get(this.prism, ex);
-            estimator.setFunctionMap(functionMap);
-            estimator.setSimilarTransitions(similarTransitions);
-            estimator.set_experiment(ex);
+                String directoryPath = makeOutputDirectory(ex);
+                System.out.println("Exp opt: " + ex.optimizations + ex.model);
+                String path = directoryPath + label + ".csv";
+                System.out.println("Path: "+ path);
+                if (Files.exists(Paths.get(path))) {
+                    System.out.printf("File %s already exists.%n", path);
+                    //return;
+                }
+                ex.dumpConfiguration(directoryPath, label, estimator.getName());
 
-            String directoryPath = makeOutputDirectory(ex);
-            System.out.println("Exp opt: " + ex.optimizations + ex.model);
-            String path = directoryPath + label + ".csv";
-            System.out.println("Path: "+ path);
-            if (Files.exists(Paths.get(path))) {
-                System.out.printf("File %s already exists.%n", path);
-                //return;
-            }
-            ex.dumpConfiguration(directoryPath, label, estimator.getName());
+                // Iterate and run experiments for each of the sampled parameter vectors
+                System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
+                Pair<ArrayList<DataPoint>, IMDP<Double>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
+                learnedIMDPs.add(resIMDP.second);
+                ArrayList<DataPoint> results = resIMDP.first;
 
-            // Iterate and run experiments for each of the sampled parameter vectors
-            System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
-            ArrayList<DataPoint> results = runSamplingStrategyDoublingEpoch(ex, estimator);
+                robustValues.add(results.get(results.size() - 1).getEstimatedValue());
+                trueValues.add(estimator.sulOpt);
 
-            robustValues.add(results.get(results.size() - 1).getEstimatedValue());
-            trueValues.add(estimator.sulOpt);
-
-            DataProcessor dp = new DataProcessor();
-            dp.dumpRawData(directoryPath, label, results, ex);
+                //DataProcessor dp = new DataProcessor();
+                //dp.dumpRawData(directoryPath, label, results, ex);
         }
+
+            rsynth.addIMDPs(learnedIMDPs);
+            System.out.println("Learned IMDPs:" + rsynth.getImdps().size());
+
+            IMDP<Double> combinedIMDP = rsynth.combineIMDPs();
+            MDStrategy<Double> robstrat = rsynth.getRobustStrategy(prism, ex.robustSpec);
+
+            ArrayList<Double> results = new ArrayList<>();
+            for (Values values : uncertainParameters) {
+                ex.values = values;
+                Estimator estimator = estimatorConstructor.get(this.prism, ex);
+                Result res = ((MAPEstimator) estimator).checkDTMC(robstrat);
+                results.add((double) res.getResult());
+            }
+
+            for (IMDP<Double> imdp : learnedIMDPs) {
+                IDTMC<Double> inducedIDTMC = imdp.constructInducedIDTMC(robstrat);
+                System.out.println("Num TRans: "+ inducedIDTMC.getNumTransitions());
+                IDTMCModelChecker mc = new IDTMCModelChecker(this.prism);
+                mc.setErrorOnNonConverge(false);
+                mc.setGenStrat(true);
+                PropertiesFile pf = prism.parsePropertiesString(ex.spec);
+                Result result = mc.check(inducedIDTMC, pf.getProperty(0));
+                System.out.println("Result: " + result.getResult());
+            }
+
+            System.out.println("Robust True Performances:" + results);
 
         } catch (PrismException e) {
             throw new RuntimeException(e);
@@ -514,15 +541,17 @@ public class LearnVerify {
         System.out.println("Robust Lambda:" + Collections.min(robustValues));
         System.out.println("True Results" + trueValues);
         System.out.println("True Lambda:" + Collections.min(trueValues));
+
+
 //        DataProcessor dp = new DataProcessor();
 //        //dp.dumpRawData(directoryPath, label, results, ex);
     }
 
-    public ArrayList<DataPoint> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator) {
+    public Pair<ArrayList<DataPoint>, IMDP<Double>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator) {
         return runSamplingStrategyDoublingEpoch(ex, estimator, 0);
     }
 
-    public ArrayList<DataPoint> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
+    public Pair<ArrayList<DataPoint>, IMDP<Double>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
         try {
             MDP<Double> SUL = estimator.getSUL();
 
@@ -572,7 +601,7 @@ public class LearnVerify {
                 System.out.println("DONE");
             }
 
-            return results;
+            return new Pair(results, estimator.getEstimate());
 
 
         } catch (PrismException e) {

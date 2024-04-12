@@ -280,8 +280,9 @@ public class MAPEstimator extends Estimator
 			final int state = s;
 			for (int i = 0 ; i < numChoices; i++) {
 				final String action = getActionString(mdp, s, i);
-				
+
 				Distribution<Interval<Double>> distrNew = new Distribution<>(Evaluator.forDoubleInterval());
+
 				mdp.forEachDoubleTransition(s, i, (int sFrom, int sTo, double p)->{
 					TransitionTriple t = new TransitionTriple(state, action, sTo);
 					Interval<Double> interval;

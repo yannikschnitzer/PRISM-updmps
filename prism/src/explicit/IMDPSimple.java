@@ -47,8 +47,7 @@ import java.util.Map;
 /**
  * Simple explicit-state representation of an IMDP.
  */
-public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetModelSimple<Value>, IMDP<Value>
-{
+public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetModelSimple<Value>, IMDP<Value> {
 	// IMDP transitions stored internally as an MDP over intervals
 	protected MDPSimple<Interval<Value>> mdp;
 
@@ -57,8 +56,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	/**
 	 * Constructor: empty IMDP.
 	 */
-	public IMDPSimple()
-	{
+	public IMDPSimple() {
 		mdp = new MDPSimple<>();
 		createDefaultEvaluatorForMDP();
 		initialise(0);
@@ -67,8 +65,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	/**
 	 * Constructor: new IMDP with fixed number of states.
 	 */
-	public IMDPSimple(int numStates)
-	{
+	public IMDPSimple(int numStates) {
 		mdp = new MDPSimple<>(numStates);
 		createDefaultEvaluatorForMDP();
 		initialise(numStates);
@@ -77,8 +74,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	/**
 	 * Copy constructor.
 	 */
-	public IMDPSimple(IMDPSimple<Value> imdp)
-	{
+	public IMDPSimple(IMDPSimple<Value> imdp) {
 		this(imdp.numStates);
 		mdp = new MDPSimple<>(imdp.mdp);
 		copyFrom(imdp);
@@ -91,8 +87,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	 * Note: have to build new Distributions from scratch anyway to do this,
 	 * so may as well provide this functionality as a constructor.
 	 */
-	public IMDPSimple(IMDPSimple<Value> imdp, int permut[])
-	{
+	public IMDPSimple(IMDPSimple<Value> imdp, int permut[]) {
 		this(imdp.numStates);
 		mdp = new MDPSimple<>(imdp.mdp, permut);
 		copyFrom(imdp, permut);
@@ -101,43 +96,37 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	/**
 	 * Add a default (double interval) evaluator to the MDP
 	 */
-	private void createDefaultEvaluatorForMDP()
-	{
+	private void createDefaultEvaluatorForMDP() {
 		((IMDPSimple<Double>) this).setIntervalEvaluator(Evaluator.forDoubleInterval());
 	}
 
 	// Mutators (for ModelSimple)
 
 	@Override
-	public void initialise(int numStates)
-	{
+	public void initialise(int numStates) {
 		mdp.initialise(numStates);
 		super.initialise(numStates);
 	}
 
 	@Override
-	public void clearState(int s)
-	{
+	public void clearState(int s) {
 		mdp.clearState(s);
 	}
 
 	@Override
-	public int addState()
-	{
+	public int addState() {
 		addStates(1);
 		return numStates - 1;
 	}
 
 	@Override
-	public void addStates(int numToAdd)
-	{
+	public void addStates(int numToAdd) {
 		mdp.addStates(numToAdd);
 		numStates += numToAdd;
 	}
 
 	@Override
-	public void buildFromPrismExplicit(String filename) throws PrismException
-	{
+	public void buildFromPrismExplicit(String filename) throws PrismException {
 		int lineNum = 0;
 		// Open file for reading, automatic close
 		try (BufferedReader in = new BufferedReader(new FileReader(new File(filename)))) {
@@ -193,7 +182,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 						emptyDistributions--;
 					}
 					// add transition
-					if (! mdp.trans.get(source).get(choice).add(target, prob)) {
+					if (!mdp.trans.get(source).get(choice).add(target, prob)) {
 						mdp.numTransitions++;
 					} else {
 						throw new PrismException("Problem in .tra file (line " + lineNum + "): redefinition of probability for " + source + " " + choice + " " + target);
@@ -221,7 +210,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 			if (getNumTransitions() != expectedNumTransitions) {
 				throw new PrismException("Problem in .tra file: unexpected number of transitions: " + getNumTransitions());
 			}
-			assert(emptyDistributions >= 0);
+			assert (emptyDistributions >= 0);
 			if (emptyDistributions > 0) {
 				throw new PrismException("Problem in .tra file: there are " + emptyDistributions + " empty distribution, are there gaps in the choice indices?");
 			}
@@ -238,8 +227,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	 * Set an Evaluator for intervals of Value.
 	 * The default is for the (usual) case when Value is Double.
 	 */
-	public void setIntervalEvaluator(Evaluator<Interval<Value>> eval)
-	{
+	public void setIntervalEvaluator(Evaluator<Interval<Value>> eval) {
 		mdp.setEvaluator(eval);
 	}
 
@@ -248,8 +236,7 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	 * Returns the index of the (newly added) distribution.
 	 * Returns -1 in case of error.
 	 */
-	public int addChoice(int s, Distribution<Interval<Value>> udistr)
-	{
+	public int addChoice(int s, Distribution<Interval<Value>> udistr) {
 		return mdp.addChoice(s, udistr);
 	}
 
@@ -258,16 +245,14 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	 * Returns the index of the (newly added) distribution.
 	 * Returns -1 in case of error.
 	 */
-	public int addActionLabelledChoice(int s, Distribution<Interval<Value>> udistr, Object action)
-	{
+	public int addActionLabelledChoice(int s, Distribution<Interval<Value>> udistr, Object action) {
 		return mdp.addActionLabelledChoice(s, udistr, action);
 	}
 
 	/**
 	 * Set the action label for choice i in some state s.
 	 */
-	public void setAction(int s, int i, Object action)
-	{
+	public void setAction(int s, int i, Object action) {
 		mdp.setAction(s, i, action);
 	}
 
@@ -275,95 +260,86 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	 * Delimit the intervals for probabilities for the ith choice (distribution) for state s.
 	 * i.e., trim the bounds of the intervals such that at least one
 	 * possible distribution takes each of the extremal values.
+	 *
 	 * @param s The index of the state to delimit
 	 * @param i The index of the choice to delimit
 	 */
-	public void delimit(int s, int i)
-	{
+	public void delimit(int s, int i) {
 		IntervalUtils.delimit(mdp.trans.get(s).get(i), getEvaluator());
 	}
 
 	// Accessors (for Model)
 
 	@Override
-	public void findDeadlocks(boolean fix) throws PrismException
-	{
+	public void findDeadlocks(boolean fix) throws PrismException {
 		mdp.findDeadlocks(fix);
 	}
 
 	@Override
-	public void checkForDeadlocks(BitSet except) throws PrismException
-	{
+	public void checkForDeadlocks(BitSet except) throws PrismException {
 		mdp.checkForDeadlocks(except);
 	}
 
 	@Override
-	public void exportToPrismExplicitTra(PrismLog out, int precision)
-	{
+	public void exportToPrismExplicitTra(PrismLog out, int precision) {
 		mdp.exportToPrismExplicitTra(out, precision);
 	}
 
 	@Override
-	public void exportToPrismLanguage(final String filename, int precision) throws PrismException
-	{
+	public void exportToPrismLanguage(final String filename, int precision) throws PrismException {
 		mdp.exportToPrismLanguage(filename, precision);
 	}
 
 	// Accessors (for NondetModel)
 
 	@Override
-	public int getNumChoices(int s)
-	{
+	public int getNumChoices(int s) {
 		return mdp.getNumChoices(s);
 	}
 
 	@Override
-	public Object getAction(int s, int i)
-	{
+	public Object getAction(int s, int i) {
 		return mdp.getAction(s, i);
 	}
 
 	@Override
-	public boolean allSuccessorsInSet(int s, int i, BitSet set)
-	{
+	public boolean allSuccessorsInSet(int s, int i, BitSet set) {
 		return mdp.allSuccessorsInSet(s, i, set);
 	}
 
 	@Override
-	public boolean someSuccessorsInSet(int s, int i, BitSet set)
-	{
+	public boolean someSuccessorsInSet(int s, int i, BitSet set) {
 		return mdp.someSuccessorsInSet(s, i, set);
 	}
 
 	@Override
-	public Iterator<Integer> getSuccessorsIterator(final int s, final int i)
-	{
+	public Iterator<Integer> getSuccessorsIterator(final int s, final int i) {
 		return mdp.getSuccessorsIterator(s, i);
 	}
 
 	@Override
-	public SuccessorsIterator getSuccessors(final int s, final int i)
-	{
+	public SuccessorsIterator getSuccessors(final int s, final int i) {
 		return mdp.getSuccessors(s, i);
 	}
 
 	@Override
-	public int getNumTransitions(int s, int i)
-	{
+	public int getNumTransitions(int s, int i) {
 		return mdp.getNumTransitions(s, i);
 	}
 
 	@Override
-	public Model<Value> constructInducedModel(MDStrategy<Value> strat)
-	{
+	public Model<Value> constructInducedModel(MDStrategy<Value> strat) {
 		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	public IDTMC<Value> constructInducedIDTMC(MDStrategy<Value> strat) {
+		return new IDTMCFromIMDPAndMDStrategy<>(this, strat);
 	}
 
 	// Accessors (for UMDP)
 
 	@Override
-	public void checkLowerBoundsArePositive() throws PrismException
-	{
+	public void checkLowerBoundsArePositive() throws PrismException {
 		Evaluator<Interval<Value>> eval = mdp.getEvaluator();
 		int numStates = getNumStates();
 		for (int s = 0; s < numStates; s++) {
@@ -383,9 +359,9 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 			}
 		}
 	}
+
 	@Override
-	public double mvMultUncSingle(int s, int k, double vect[], MinMax minMax)
-	{
+	public double mvMultUncSingle(int s, int k, double vect[], MinMax minMax) {
 		@SuppressWarnings("unchecked")
 		DoubleIntervalDistribution did = IntervalUtils.extractDoubleIntervalDistribution(((IMDP<Double>) this).getTransitionsIterator(s, k), getNumTransitions(s, k));
 		return IDTMC.mvMultUncSingle(did, vect, minMax);
@@ -394,14 +370,18 @@ public class IMDPSimple<Value> extends ModelExplicit<Value> implements NondetMod
 	// Accessors (for IMDP)
 
 	@Override
-	public Evaluator<Interval<Value>> getIntervalEvaluator()
-	{
+	public Evaluator<Interval<Value>> getIntervalEvaluator() {
 		return mdp.getEvaluator();
 	}
 
 	@Override
-	public Iterator<Map.Entry<Integer, Interval<Value>>> getTransitionsIterator(int s, int i)
-	{
+	public Iterator<Map.Entry<Integer, Interval<Value>>> getTransitionsIterator(int s, int i) {
 		return mdp.getTransitionsIterator(s, i);
+	}
+
+	@Override
+	public String toString()
+	{
+		return mdp.toString();
 	}
 }

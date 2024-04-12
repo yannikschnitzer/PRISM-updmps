@@ -1,21 +1,114 @@
 package lava;
 
-import explicit.IMDP;
-import explicit.MDP;
+import common.Interval;
+import explicit.*;
 import param.Function;
+import parser.ast.Expression;
+import parser.ast.PropertiesFile;
+import prism.Evaluator;
+import prism.Prism;
+import prism.PrismException;
+import prism.Result;
+import strat.MDStrategy;
 
-import java.util.List;
+import java.util.*;
 
 public class RobustPolicySynthesizer {
 
     // Parametric MDP defining the structure of the underlying problem
     private MDP<Function> mdpParam;
 
+    private IMDP<Double> combinedIMDP;
+
     // List of IMDPs to extract the robust policy for
-    private List<IMDP<Double>> imdps;
+    private List<IMDP<Double>> imdps = new ArrayList<>();
+
+    // Subset of imdps used for verification
+    private List<IMDP<Double>> verificationSet = new ArrayList<>();
 
     public RobustPolicySynthesizer(MDP<Function> mdpParam) {
            this.mdpParam = mdpParam;
+    }
+
+    public IMDP<Double> combineIMDPs() {
+        int numStates = this.mdpParam.getNumStates();
+        IMDPSimple<Double> combinedIMPD = new IMDPSimple<>(numStates);
+        combinedIMPD.addInitialState(mdpParam.getFirstInitialState());
+        combinedIMPD.setStatesList(mdpParam.getStatesList());
+        combinedIMPD.setConstantValues(mdpParam.getConstantValues());
+        combinedIMPD.setIntervalEvaluator(Evaluator.forDoubleInterval());
+
+        // Iterate over learned IMDPs to build intervals for each transition
+        Map<TransitionTriple, Interval<Double>> transitionMap = new HashMap<>();
+
+        for (IMDP<Double> imdp : this.imdps) {
+            for (int s = 0; s < numStates; s++) {
+                int numChoices = imdp.getNumChoices(s);
+                for (int i = 0; i < numChoices; i++) {
+                    final String action = getActionString(imdp, s, i);
+                    imdp.forEachDoubleIntervalTransition(s, i, (int sFrom, int sTo, Interval<Double> j) -> {
+                        TransitionTriple t = new TransitionTriple(sFrom, action, sTo);
+                        if (transitionMap.containsKey(t)) {
+                            transitionMap.put(t, mergeIntervals(transitionMap.get(t), j));
+                        } else {
+                            transitionMap.put(t, j);
+                        }
+                    });
+                }
+            }
+        }
+
+        // Build a single IMDP containing all learned IMDPs
+        for (int s = 0; s < numStates; s++) {
+            int numChoices = mdpParam.getNumChoices(s);
+            final int state = s;
+            for (int i = 0; i < numChoices; i++) {
+                final String action = getActionString(mdpParam, s, i);
+                Distribution<Interval<Double>> distrNew = new Distribution<>(Evaluator.forDoubleInterval());
+
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                   TransitionTriple t = new TransitionTriple(state, action, sTo);
+                   distrNew.add(sTo, transitionMap.get(t));
+                });
+
+                combinedIMPD.addActionLabelledChoice(s, distrNew, action);
+            }
+        }
+
+        Map<String, BitSet> labels = mdpParam.getLabelToStatesMap();
+        for (Map.Entry<String, BitSet> entry : labels.entrySet()) {
+            combinedIMPD.addLabel(entry.getKey(), entry.getValue());
+        }
+
+        this.combinedIMDP = combinedIMPD;
+
+        return combinedIMPD;
+    }
+
+    public MDStrategy<Double> getRobustStrategy(Prism prism, String spec) throws PrismException {
+        UMDPModelChecker mc = new UMDPModelChecker(prism);
+        mc.setGenStrat(true);
+        mc.setErrorOnNonConverge(false);
+
+        PropertiesFile pf = prism.parsePropertiesString(spec);
+        Expression exprTarget = pf.getProperty(0);
+
+        Result result = mc.check(this.combinedIMDP, exprTarget);
+
+        MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
+        System.out.println("Robust Srategy:" + strat);
+        System.out.println("Robust Performance:" + result.getResult());
+
+        return strat;
+    }
+
+    public Result checkVerificaitonSet(MDStrategy<?> strategy) {
+        // TODO: implement IMDP -> IDTMC instantiation
+        return null;
+    }
+
+    private Interval<Double> mergeIntervals(Interval<Double> i1, Interval<Double> i2) {
+        return new Interval<>(Math.min(i1.getLower(), i2.getLower()), Math.max(i1.getUpper(), i2.getUpper()));
     }
 
     public void addIMDP(IMDP<Double> imdp) {
@@ -40,5 +133,29 @@ public class RobustPolicySynthesizer {
 
     public void setMdpParam(MDP<Function> mdpParam) {
         this.mdpParam = mdpParam;
+    }
+
+    public String getActionString(IMDP<Double> imdp, int s, int i) {
+        String action = (String) imdp.getAction(s,i);
+        if (action == null) {
+            action = "_empty";
+        }
+        return action;
+    }
+
+    public String getActionString(MDP<Function> mdp, int s, int i) {
+        String action = (String) mdp.getAction(s,i);
+        if (action == null) {
+            action = "_empty";
+        }
+        return action;
+    }
+
+    public IMDP<Double> getCombinedIMDP() {
+        return combinedIMDP;
+    }
+
+    public void setCombinedIMDP(IMDP<Double> combinedIMDP) {
+        this.combinedIMDP = combinedIMDP;
     }
 }

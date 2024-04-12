@@ -266,7 +266,7 @@ public class Experiment {
             break;
             case AIRCRAFT:
             this.goal = "\"goal\"";
-            this.spec = "Pmax=? [!collision U \"goal\"]";
+            this.spec = "Pmin=? [!collision U \"goal\"]";
             this.robustSpec = "Pmaxmin=? [!collision U \"goal\"]";
             this.optimisticSpec = "Pmaxmax=? [!collision U \"goal\"]";
             this.dtmcSpec = "P=?  [!collision U \"goal\"]";

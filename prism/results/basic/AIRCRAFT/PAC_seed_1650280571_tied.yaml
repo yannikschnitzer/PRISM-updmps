@@ -2,7 +2,7 @@ modelInfo:
 model: AIRCRAFT
 type: REACH
 goal: "goal"
-spec: Pmax=? [!collision U "goal"]
+spec: Pmin=? [!collision U "goal"]
 robustSpec: Pmaxmin=? [!collision U "goal"]
 modelFile: models/aircraft_tiny.prism
 dtmcSpec: P=?  [!collision U "goal"]
@@ -14,10 +14,10 @@ lowerStrengthBound: 2147483647
 upperStrengthBound: 2147483647
 strategyWeight: 1.0
 initGraphEpsilon: 1.0E-4
-iterations: 1000000
-max_episode_length: 100
+iterations: 100000
+max_episode_length: 10
 alpha: 10
 error_tolerance: 0.01
-trueOpt: 0.615045738129376
+trueOpt: 0.00603923633232119
 prefix: PAC_seed_1650280571_tied
 algorithm: PAC
