@@ -57,6 +57,7 @@ public class Experiment {
 	public String optimisticSpec;
 	public String modelFile;
 	public String dtmcSpec;
+    public String idtmcRobustSpec;
 
     public Values values;
 
@@ -82,6 +83,9 @@ public class Experiment {
     public int alpha = 10;
     public double error_tolerance = 0.01; // 99% correctness guarantee
     public double strategyWeight = 1.0;
+
+    public int numTrainingMDPs;
+    public int numVerificationMDPs;
 
     public InitialInterval initialInterval = InitialInterval.WIDE;
 
@@ -143,6 +147,7 @@ public class Experiment {
             case SAV2:
             this.goal = "\"Target\"";
             this.spec = "Pmax=? [!(\"Crash\") U (\"Target\")]";
+            this.idtmcRobustSpec = "Pmin=? [!(\"Crash\") U (\"Target\")]";
             this.robustSpec = "Pmaxmin=? [!(\"Crash\") U (\"Target\")]";
             this.optimisticSpec = "Pmaxmax=? [!(\"Crash\") U (\"Target\")]";
             this.dtmcSpec = "P=? [!(\"Crash\") U (\"Target\")]";
@@ -266,9 +271,10 @@ public class Experiment {
             break;
             case AIRCRAFT:
             this.goal = "\"goal\"";
-            this.spec = "Pmin=? [!collision U \"goal\"]";
+            this.spec = "Pmax=? [!collision U \"goal\"]";
             this.robustSpec = "Pmaxmin=? [!collision U \"goal\"]";
             this.optimisticSpec = "Pmaxmax=? [!collision U \"goal\"]";
+            this.idtmcRobustSpec = "Pmin=? [!collision U \"goal\"]";
             this.dtmcSpec = "P=?  [!collision U \"goal\"]";
             this.modelFile = "models/aircraft_tiny.prism";
             this.type = Type.REACH;
@@ -342,6 +348,18 @@ public class Experiment {
         this.optimizations = optimizations;
         this.tieParameters = tieParameters;
         this.multiplier = multiplier;
+        return this;
+    }
+
+    public Experiment config(int max_episode_length, int iterations, int repetitions, boolean optimizations, boolean tieParameters, int numTrainingMDPs, int numVerificationMDPs , int multiplier) {
+        this.max_episode_length = max_episode_length;
+        this.iterations = iterations;
+        this.seed = repetitions;
+        this.optimizations = optimizations;
+        this.tieParameters = tieParameters;
+        this.multiplier = multiplier;
+        this.numTrainingMDPs = numTrainingMDPs;
+        this.numVerificationMDPs = numVerificationMDPs;
         return this;
     }
 

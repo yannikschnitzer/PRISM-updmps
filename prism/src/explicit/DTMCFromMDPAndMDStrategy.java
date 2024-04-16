@@ -155,6 +155,12 @@ public class DTMCFromMDPAndMDStrategy<Value> extends DTMCExplicit<Value>
 	}
 
 	@Override
+	public BitSet getLabelStates(String name)
+	{
+		return this.mdp.getLabelStates(name);
+	}
+
+	@Override
 	public void forEachTransition(int s, TransitionConsumer<Value> c)
 	{
 		if (!strat.isChoiceDefined(s)) {

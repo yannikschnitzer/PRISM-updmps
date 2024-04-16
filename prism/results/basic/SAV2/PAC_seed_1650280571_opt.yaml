@@ -14,10 +14,10 @@ lowerStrengthBound: 2147483647
 upperStrengthBound: 2147483647
 strategyWeight: 1.0
 initGraphEpsilon: 1.0E-4
-iterations: 1000000
-max_episode_length: 100
+iterations: 20000
+max_episode_length: 30
 alpha: 10
 error_tolerance: 0.01
-trueOpt: 0.7858719967959834
+trueOpt: 0.9608207528934929
 prefix: PAC_seed_1650280571_opt
 algorithm: PAC

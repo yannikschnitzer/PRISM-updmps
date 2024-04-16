@@ -12,17 +12,17 @@ mdp
 const double pLDiff=0.9;
 const double pHDiff=0.1;
 //Scaling factor for the minimum reliability of the channels
-const double pL = 0.9;
-const double r;
+const double pL;
+const double pH;
 
 //CONSTANTS
 //The minimum reliablities
 const double pLMin=pL*(1-pLDiff);
-const double pHMin= r*(1-pHDiff);
+const double pHMin= pH*(1-pHDiff);
 
 // Grid size
-const int Xsize = 30;
-const int Ysize = 10;
+const int Xsize = 6;
+const int Ysize = 6;
 // Number of tries before an error
 const int MAXTRIES = 2;
 // Ball within the robot has to move.

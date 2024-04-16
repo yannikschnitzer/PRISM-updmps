@@ -13,7 +13,7 @@ import strat.MDStrategy;
 
 import java.util.*;
 
-public class RobustPolicySynthesizer {
+public class RobustPolicySynthesizerIMDP {
 
     // Parametric MDP defining the structure of the underlying problem
     private MDP<Function> mdpParam;
@@ -26,7 +26,7 @@ public class RobustPolicySynthesizer {
     // Subset of imdps used for verification
     private List<IMDP<Double>> verificationSet = new ArrayList<>();
 
-    public RobustPolicySynthesizer(MDP<Function> mdpParam) {
+    public RobustPolicySynthesizerIMDP(MDP<Function> mdpParam) {
            this.mdpParam = mdpParam;
     }
 
@@ -81,7 +81,6 @@ public class RobustPolicySynthesizer {
         }
 
         this.combinedIMDP = combinedIMPD;
-
         return combinedIMPD;
     }
 
@@ -96,15 +95,25 @@ public class RobustPolicySynthesizer {
         Result result = mc.check(this.combinedIMDP, exprTarget);
 
         MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
-        System.out.println("Robust Srategy:" + strat);
-        System.out.println("Robust Performance:" + result.getResult());
+        System.out.println("Robust Strategy IMDPs:" + strat);
+        System.out.println("Robust Performance IMDPs:" + result.getResult());
 
         return strat;
     }
 
-    public Result checkVerificaitonSet(MDStrategy<?> strategy) {
-        // TODO: implement IMDP -> IDTMC instantiation
-        return null;
+    public List<Double> checkVerificationSet(Prism prism, MDStrategy<Double> strategy, String spec) throws PrismException {
+        List<Double> results = new ArrayList<>();
+        for (IMDP<Double> imdp : this.verificationSet) {
+            IDTMC<Double> inducedIDTMC = imdp.constructInducedIDTMC(strategy);
+            IDTMCModelChecker mc = new IDTMCModelChecker(prism);
+            mc.setErrorOnNonConverge(false);
+            mc.setGenStrat(true);
+            PropertiesFile pf = prism.parsePropertiesString(spec);
+            Result result = mc.check(inducedIDTMC, pf.getProperty(0));
+            results.add((double) result.getResult());
+        }
+
+        return results;
     }
 
     private Interval<Double> mergeIntervals(Interval<Double> i1, Interval<Double> i2) {
@@ -117,6 +126,14 @@ public class RobustPolicySynthesizer {
 
     public void addIMDPs(List<IMDP<Double>> imdps) {
         this.imdps.addAll(imdps);
+    }
+
+    public void addVerificationIMDP(IMDP<Double> imdp) {
+        this.verificationSet.add(imdp);
+    }
+
+    public void addVerificatonIMDPs(List<IMDP<Double>> imdps) {
+        this.verificationSet.addAll(imdps);
     }
 
     public List<IMDP<Double>> getImdps() {
