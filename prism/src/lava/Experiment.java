@@ -4,10 +4,20 @@ import parser.Values;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Experiment {
 
+
+    public List<Integer> getResultIterations() {
+        return resultIterations;
+    }
+
+    public void setResultIterations(List<Integer> resultIterations) {
+        this.resultIterations = resultIterations;
+    }
 
     public static enum Type {
         REACH,
@@ -90,6 +100,9 @@ public class Experiment {
     public InitialInterval initialInterval = InitialInterval.WIDE;
 
     public double trueOpt = Double.NaN;
+
+    // Iterations at which results must be obtained (for visualization purposes)
+    private List<Integer> resultIterations = new ArrayList<>();
 
     public Experiment(Model model) {
         setModel(model);
@@ -401,6 +414,10 @@ public class Experiment {
 
     public void setTrueOpt(double opt) {
         this.trueOpt = opt;
+    }
+
+    public boolean resultIteration(int i) {
+        return this.resultIterations.contains(i);
     }
 
     public void dumpConfiguration(String pathPrefix, String file_name, String algorithm){

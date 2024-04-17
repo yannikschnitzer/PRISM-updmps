@@ -145,6 +145,14 @@ public class RobustPolicySynthesizerMDP {
         this.mdps = imdps;
     }
 
+    public void setVerificationSet(List<MDP<Double>> verificationSet) {
+        this.verificationSet = verificationSet;
+    }
+
+    public List<MDP<Double>> getVerificationSet() {
+        return this.verificationSet;
+    }
+
     public MDP<Function> getMdpParam() {
         return mdpParam;
     }

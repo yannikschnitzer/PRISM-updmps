@@ -381,6 +381,35 @@ public class DataProcessor {
         }
     }
 
+    public void dumpDataRobustPolicies(String directoryPath, String name, ArrayList<DataPointRobust> dataPoints) {
+        try {
+            //System.out.println("DEBUG \t\t (max r,max e) = (" + repetitions + ", " + iterations + ")");
+            DataPointRobust previous = null;
+
+            String path = directoryPath + name +".csv";
+            if (Files.exists(Paths.get(path)))
+                System.out.println("File" + path + "already exists");
+
+            FileWriter writer = new FileWriter(path, false);
+
+            writer.write("Episode,Robust Guarantee on IMDPs,Robust Guarantee on MDPs,Performance of IMDP policy on MDPs");
+            writer.write(System.getProperty( "line.separator" ));
+
+            for (DataPointRobust entry : dataPoints) {
+                if (!entry.equals(previous)) {
+                    String row = entry.getEpisode() + ","
+                            + entry.getImdpGuarantee() + ","
+                            + entry.getTrueMDPGuarantee() + ","
+                            + entry.getRobustIMDPPerformanceOnTrue();
+                    writer.write(row + System.getProperty("line.separator"));
+                    previous = entry;
+                }
+            }
+            writer.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
 
     public String addScatterPlot(int color, String name, ArrayList<ArrayList<DataPoint>> repeatedData, int repetitions, int iterations) {
         computeModeMinMax(repeatedData, repetitions, iterations);

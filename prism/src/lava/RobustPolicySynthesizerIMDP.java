@@ -95,8 +95,8 @@ public class RobustPolicySynthesizerIMDP {
         Result result = mc.check(this.combinedIMDP, exprTarget);
 
         MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
-        System.out.println("Robust Strategy IMDPs:" + strat);
-        System.out.println("Robust Performance IMDPs:" + result.getResult());
+//        System.out.println("Robust Strategy IMDPs:" + strat);
+//        System.out.println("Robust Performance IMDPs:" + result.getResult());
 
         return strat;
     }
@@ -134,6 +134,14 @@ public class RobustPolicySynthesizerIMDP {
 
     public void addVerificatonIMDPs(List<IMDP<Double>> imdps) {
         this.verificationSet.addAll(imdps);
+    }
+
+    public void setVerificationSet(List<IMDP<Double>> verificationSet) {
+        this.verificationSet = verificationSet;
+    }
+
+    public List<IMDP<Double>> getVerificationSet() {
+        return this.verificationSet;
     }
 
     public List<IMDP<Double>> getImdps() {

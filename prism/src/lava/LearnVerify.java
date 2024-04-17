@@ -84,7 +84,7 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
         // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-        run_basic_algorithms(new Experiment(Model.SAV2).config(30, 5000, seed, true, true,12,8,4).info(id));
+        run_basic_algorithms(new Experiment(Model.SAV2).config(30, 1_00_000, seed, true, true,12,8,4).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
@@ -110,10 +110,11 @@ public class LearnVerify {
 
     private void run_basic_algorithms(Experiment ex) {
         String postfix = String.format("_seed_%d", ex.seed);
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,10,20,30,40,70,100,500,1000,2000,4000,6000,8000,10000,15000,19000,30000,40000,50000,60000,80000,100000,200000,300000,400000,500000, 800000,900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
        // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
        //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
-        runRobustPolicyComparison("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimator::new);
+        runRobustPolicyComparisonForVis("LUITest_rpol" + postfix, ex.setErrorTol(0.01), MAPEstimator::new);
 //        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
      // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
         //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
@@ -325,6 +326,95 @@ public class LearnVerify {
        }
     }
 
+    public void runRobustPolicyComparisonForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor) {
+        try {
+            System.out.println("Result iterations:" + ex.getResultIterations());
+            System.out.println("Label: " + label);
+            // Build pMDP model
+            resetAll();
+            MDP<Function> mdpParam = buildParamModel(ex);
+
+            // Generate sample training and verification MDP parameters
+            double rangeMin1 = 0.75;
+            double rangeMax1 = 0.95;
+            List<Values> trainingParams = new ArrayList<>();
+            List<Values> verificationParams = new ArrayList<>();
+            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
+            Random r = new Random(seed);
+            for (int i = 0; i < ex.numTrainingMDPs; i++) {
+                constructValues(rangeMin1, rangeMax1, trainingParams, r);
+            }
+            for (int i = 0; i < ex.numVerificationMDPs; i++) {
+                constructValues(rangeMin1, rangeMax1, verificationParams, r);
+            }
+
+            // Get MDPs/IMDPs for training and verification set
+            Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> trainingSet = getIMDPsForVis(label, ex, estimatorConstructor, mdpParam, trainingParams);
+            Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams);
+
+            // Build robust policy and derive PAC guarantee
+            RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam);
+            RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam);
+
+            // Construction and analysis over true MDPs for result iteration i
+            robSynth.setMDPs(trainingSet.second);
+            robSynth.setVerificationSet(verificationSet.second);
+            robSynth.combineMDPs();
+            MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
+            List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
+
+            ArrayList<DataPointRobust> results = new ArrayList<>();
+            ArrayList<Integer> plottedIterations = new ArrayList<>(ex.getResultIterations());
+            plottedIterations.add(0,0);
+            plottedIterations.add(ex.iterations - 1);
+            for (int i = 0; i < trainingSet.first.get(0).size(); i++) {
+                List<IMDP<Double>> subTrainSet = new ArrayList<>();
+                List<IMDP<Double>> subVerificationSet = new ArrayList<>();
+                for (List<IMDP<Double>> iterationList : trainingSet.first) {
+                    subTrainSet.add(iterationList.get(i));
+                }
+                for (List<IMDP<Double>> iterationList : verificationSet.first) {
+                    subVerificationSet.add(iterationList.get(i));
+                }
+
+                // Construction and analysis over learned IMDPs for result iteration i
+                robSynthI.setImdps(subTrainSet);
+                robSynthI.setVerificationSet(subVerificationSet);
+                robSynthI.combineIMDPs();
+                MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
+                List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
+
+                // Analyse robust policy obtained over IMDPs on the true MDPs
+                List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
+
+                System.out.println("==============================");
+                try {
+                    System.out.println("Results after #Simulations: " + ex.getResultIterations().get(i - 1));
+                } catch (Exception ignored){
+
+                }
+                System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
+                System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
+
+                System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
+                System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
+
+                System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
+                System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
+
+                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross)}));
+
+                DataProcessor dp = new DataProcessor();
+                dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
+            }
+
+
+
+        } catch (PrismException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void constructValues(double rangeMin1, double rangeMax1, List<Values> params, Random r) {
         Values v = new Values();
         double pL = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
@@ -361,9 +451,9 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"pL", "pH"};
-            String[] paramLowerBounds = new String[]{"0", "1"};
-            String[] paramUpperBounds = new String[]{"0", "1"};
+            String[] paramNames = new String[]{"pH","pL"};
+            String[] paramLowerBounds = new String[]{"0","0"};
+            String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -405,7 +495,50 @@ public class LearnVerify {
                 estimator.set_experiment(ex);
 
                 // Iterate and run experiments for each of the sampled parameter vectors
-                Pair<ArrayList<DataPoint>, IMDP<Double>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
+                Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
+                learnedIMDPs.add(resIMDP.second.get(resIMDP.second.size() - 1));
+                mdps.add(estimator.getSUL());
+            }
+
+        } catch (PrismException | FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return new Pair<>(learnedIMDPs, mdps);
+    }
+
+    public Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> getIMDPsForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor, MDP<Function> mdpParam, List<Values> uncertainParameters)
+    {
+        resetAll();
+        System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
+                + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
+                + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
+
+        if (verbose)
+            System.out.printf("%s, seed %d\n", label, ex.seed);
+
+        ArrayList<List<IMDP<Double>>> learnedIMDPs = new ArrayList<>();
+        ArrayList<MDP<Double>> mdps = new ArrayList<>();
+
+        try {
+            ModulesFile modulesFile = prism.parseModelFile(new File(ex.modelFile));
+            prism.loadPRISMModel(modulesFile);
+            List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
+            Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
+            for (Function f : functionMap.keySet()){
+                System.out.println("function:" + f + functionMap.get(f));
+            }
+
+            for (Values values : uncertainParameters){
+                ex.values = values;
+                Estimator estimator = estimatorConstructor.get(this.prism, ex);
+                System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
+                estimator.setFunctionMap(functionMap);
+                estimator.setSimilarTransitions(similarTransitions);
+                estimator.set_experiment(ex);
+
+                // Iterate and run experiments for each of the sampled parameter vectors
+                Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
                 learnedIMDPs.add(resIMDP.second);
                 mdps.add(estimator.getSUL());
             }
@@ -623,8 +756,8 @@ public class LearnVerify {
 
                 // Iterate and run experiments for each of the sampled parameter vectors
                 System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
-                Pair<ArrayList<DataPoint>, IMDP<Double>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
-                learnedIMDPs.add(resIMDP.second);
+                Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator);
+                learnedIMDPs.add(resIMDP.second.get(resIMDP.second.size() - 1));
                 ArrayList<DataPoint> results = resIMDP.first;
 
                 robustValues.add(results.get(results.size() - 1).getEstimatedValue());
@@ -673,11 +806,11 @@ public class LearnVerify {
 //        dp.dumpRawData(directoryPath, label, results, ex);
     }
 
-    public Pair<ArrayList<DataPoint>, IMDP<Double>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator) {
+    public Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator) {
         return runSamplingStrategyDoublingEpoch(ex, estimator, 0);
     }
 
-    public Pair<ArrayList<DataPoint>, IMDP<Double>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
+    public Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> runSamplingStrategyDoublingEpoch(Experiment ex, Estimator estimator, int past_iterations) {
         try {
             MDP<Double> SUL = estimator.getSUL();
 
@@ -696,8 +829,10 @@ public class LearnVerify {
             if (this.verbose) System.out.println("Episode " + past_iterations + ". " + "Performance " + currentResults[1]);
 
             ArrayList<DataPoint> results = new ArrayList<>();
+            ArrayList<IMDP<Double>> estimates = new ArrayList<>();
             if (past_iterations == 0) {
                 results.add(new DataPoint(0, past_iterations, currentResults));
+                estimates.add(estimator.getEstimate());
             }
             int samples = 0;
             Strategy samplingStrategy = estimator.buildStrategy();
@@ -706,7 +841,7 @@ public class LearnVerify {
                 samples += sampled;
                 //System.out.println("Samples Map:" + observationSampler.getSamplesMap());
                 boolean last_iteration = i == ex.iterations + past_iterations - 1;
-                if (observationSampler.collectedEnoughSamples() || last_iteration) {
+                if (observationSampler.collectedEnoughSamples() || last_iteration || ex.resultIteration(i)) {
                     if (this.verbose) System.out.println("Episode " + i + ". Recomputing sampling strategy.");
                     estimator.setObservationMaps(observationSampler.getSamplesMap(), observationSampler.getSampleSizeMap());
                     samplingStrategy = estimator.buildStrategy();
@@ -718,7 +853,11 @@ public class LearnVerify {
                     }
                     if (this.verbose) System.out.println("New performance " + currentResults[1]);
                     if (this.verbose) System.out.println("New robust guarantee " + currentResults[0]);
-                    results.add(new DataPoint(samples, i+1, currentResults));
+
+                    if (last_iteration || ex.resultIteration(i)) {
+                        results.add(new DataPoint(samples, i + 1, currentResults));
+                        estimates.add(estimator.getEstimate());
+                    }
                 }
             }
             System.out.println("Robust" + currentResults[0]);
@@ -727,7 +866,7 @@ public class LearnVerify {
                 System.out.println("DONE");
             }
 
-            return new Pair(results, estimator.getEstimate());
+            return new Pair(results, estimates);
 
 
         } catch (PrismException e) {
