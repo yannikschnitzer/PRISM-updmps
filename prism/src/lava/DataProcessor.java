@@ -392,7 +392,7 @@ public class DataProcessor {
 
             FileWriter writer = new FileWriter(path, false);
 
-            writer.write("Episode,Robust Guarantee on IMDPs,Robust Guarantee on MDPs,Performance of IMDP policy on MDPs");
+            writer.write("Episode,Robust Guarantee on IMDPs,Robust Guarantee on MDPs,Performance of IMDP policy on MDPs,Existential Guarantee");
             writer.write(System.getProperty( "line.separator" ));
 
             for (DataPointRobust entry : dataPoints) {
@@ -400,7 +400,8 @@ public class DataProcessor {
                     String row = entry.getEpisode() + ","
                             + entry.getImdpGuarantee() + ","
                             + entry.getTrueMDPGuarantee() + ","
-                            + entry.getRobustIMDPPerformanceOnTrue();
+                            + entry.getRobustIMDPPerformanceOnTrue() + ","
+                            + entry.getExistentialGuarantee();
                     writer.write(row + System.getProperty("line.separator"));
                     previous = entry;
                 }

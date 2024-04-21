@@ -33,7 +33,7 @@ public class PACIntervalEstimator extends MAPEstimator {
 			// Compute mode and count over all similar transitions
 			int num = 0;
 			int denum = 0;
-
+			//System.out.println("Sample size map:" + samplesMap);
 			for (TransitionTriple t : transitions) {
 				StateActionPair sa = t.getStateAction();
 				num += samplesMap.getOrDefault(t, 0);

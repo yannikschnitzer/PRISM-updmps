@@ -1,14 +1,6 @@
 package lava;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Vector;
-import java.util.List;
-import java.util.BitSet;
-import java.util.Map;
-import java.util.Iterator;
+import java.util.*;
 import java.util.Map.Entry;
 
 import common.Interval;
@@ -25,6 +17,7 @@ import explicit.MDPSimple;
 import explicit.DTMC;
 import explicit.MDPExplicit;
 import explicit.DTMCModelChecker;
+import param.Function;
 import parser.ast.ModulesFile;
 import parser.ast.Property;
 import parser.ast.PropertiesFile;
@@ -73,6 +66,8 @@ public class BayesianEstimator extends Estimator {
 	public int lowerStrengthBound = Integer.MAX_VALUE;
 	public int upperStrengthBound = Integer.MAX_VALUE;
 
+	protected HashMap<TransitionTriple, Integer> tiedTripleCounts = new HashMap<>();
+	protected HashMap<StateActionPair, Integer> tiedStateActionCounts = new HashMap<>();
 
 	public BayesianEstimator(Prism prism, Experiment ex) {
 		super(prism, ex);
@@ -113,6 +108,7 @@ public class BayesianEstimator extends Estimator {
 
 	public double[] iterateIMDPandDTMC() throws PrismException {
 		//updateIntervals();
+
 		updateIntervalsSAConflict();
 		//HashMap<TransitionTriple, Interval<Double>> oldIntervals = checkValidity(validityScalingFactor, validityPrecision);
 		updateIMDP();
@@ -507,6 +503,28 @@ public class BayesianEstimator extends Estimator {
 		}
 	}
 
+	public Map<TransitionTriple, Interval<Double>> computeMinIntervals() {
+		Map<Function, List<TransitionTriple>> functionMap = this.getFunctionMap();
+		Map<TransitionTriple, Interval<Double>> minIntervalMap = new HashMap<>();
+
+		for (Function func : functionMap.keySet()){
+			List<TransitionTriple> transitions = functionMap.get(func);
+			List<Interval<Double>> intervals = new ArrayList<>();
+
+			for (TransitionTriple transition : transitions){
+				intervals.add(intervalsMap.get(transition));
+			}
+
+			Interval<Double> minInterval = Collections.min(intervals, Comparator.comparingDouble(interval -> interval.getUpper() - interval.getLower()));
+
+			for (TransitionTriple transition : transitions){
+				minIntervalMap.put(transition, minInterval);
+			}
+		}
+
+		return minIntervalMap;
+	}
+
 	public IMDP<Double> updateIMDP() {
 		int numStates = mdp.getNumStates();
 		IMDPSimple<Double> imdp = new IMDPSimple<>(numStates);
@@ -514,6 +532,9 @@ public class BayesianEstimator extends Estimator {
 		imdp.setStatesList(mdp.getStatesList());
 		imdp.setConstantValues(mdp.getConstantValues());
 		imdp.setIntervalEvaluator(Evaluator.forDoubleInterval());
+
+		Map<TransitionTriple, Interval<Double>> minIntervals = computeMinIntervals();
+
 		for (int s = 0; s < numStates; s++) {
 			int numChoices = mdp.getNumChoices(s);
 			final int state = s;
@@ -522,7 +543,17 @@ public class BayesianEstimator extends Estimator {
 				Distribution<Interval<Double>> distrNew = new Distribution<>(Evaluator.forDoubleInterval());
 				mdp.forEachDoubleTransition(s, i, (int sFrom, int sTo, double p)->{
 					final TransitionTriple t = new TransitionTriple(state, action, sTo);
-					final Interval<Double> interval = intervalsMap.get(t);
+					Interval<Double> interval;
+					if (!this.constantMap.containsKey(t)) {
+						if (ex.optimizations) {
+							interval = minIntervals.get(t);
+						} else {
+							interval = intervalsMap.get(t);
+						}
+					} else {
+						p = this.constantMap.get(t);
+						interval = new Interval<Double>(p, p);
+					}
 					distrNew.add(sTo, interval);
 				});
 				imdp.addActionLabelledChoice(s, distrNew, action);
@@ -534,7 +565,6 @@ public class BayesianEstimator extends Estimator {
    			Map.Entry<String, BitSet> entry = it.next();
     		imdp.addLabel(entry.getKey(), entry.getValue());
 		}
-
 		this.estimate = imdp;
 		return imdp;
     }
@@ -674,15 +704,40 @@ public class BayesianEstimator extends Estimator {
 		}
 	}
 
+	public void tieParameters() {
+		List<List<TransitionTriple>> similarTransitions = this.getSimilarTransitions();
+
+		for (List<TransitionTriple> transitions : similarTransitions) {
+			// Compute mode and count over all similar transitions
+			int num = 0;
+			int denum = 0;
+			//System.out.println("Sample size map:" + samplesMap);
+			for (TransitionTriple t : transitions) {
+				StateActionPair sa = t.getStateAction();
+				num += samplesMap.getOrDefault(t, 0);
+				denum += sampleSizeMap.getOrDefault(sa, 0);
+			}
+
+			for (TransitionTriple t : transitions) {
+				StateActionPair sa = t.getStateAction();
+//				System.out.println("Transitions: " + t +" Old counts: " + samplesMap.getOrDefault(t, 0) +
+//						" " + sampleSizeMap.getOrDefault(sa, 0) + " Tied Counts: " + num + " " + denum);
+				tiedTripleCounts.put(t, num);
+				tiedStateActionCounts.put(sa, denum);
+			}
+		}
+
+	}
 
 	public void updateIntervalsSAConflict() {
 		int nrStates = this.mdp.getNumStates();
+		tieParameters();
 		for (int s = 0; s < nrStates; s++) {
 			int numChoices = this.mdp.getNumChoices(s);
 			for (int i = 0 ; i < numChoices; i++) {
 				String action = getActionString(this.mdp, s,i);
 				StateActionPair sa = new StateActionPair(s, action);
-
+				//System.out.println("State action pair : " + sa);
 				// do not update posterior of deterministic state-action pairs
 				if (!sampleSizeMap.containsKey(sa)) {
 					continue;
@@ -693,8 +748,9 @@ public class BayesianEstimator extends Estimator {
 
 				boolean lbConflict = checkStateActionLBConflict(sa);
 				boolean ubConflict = checkStateActionUBConflict(sa);
+				//System.out.println("Pair: " + sa + " lbconclif:" + lbConflict + " ubconf " + ubConflict);
 
-				int sampleSize = this.sampleSizeMap.get(sa);
+				int sampleSize = this.sampleSizeMap.get(sa); //ex.tieParameters ? tiedStateActionCounts.get(sa) :this.sampleSizeMap.get(sa);
 				for (int successor = 0; successor < nrStates; successor++) {
 					TransitionTriple t = new TransitionTriple(s, action, successor);
 
@@ -704,17 +760,19 @@ public class BayesianEstimator extends Estimator {
 
 					int samples = 0;
 					if (this.samplesMap.containsKey(t)) {
-						samples = this.samplesMap.get(t);
+						samples = this.samplesMap.get(t); //ex.tieParameters ? this.tiedTripleCounts.get(t) : this.samplesMap.get(t);
 					}
 					Interval prior = this.intervalsMap.get(t);
 					Interval strength = this.strengthMap.get(t);
 
 					Interval posterior = updateIntervalSAConflict(prior, strength, samples, sampleSize, lbConflict, ubConflict);
+					Interval posterior2 = updateIntervalSAConflict(prior, strength, this.tiedTripleCounts.get(t), tiedStateActionCounts.get(sa), lbConflict, ubConflict);
 
 					Interval postStrength = updateStrength(strength, sampleSize);
 					this.intervalsMap.put(t, posterior);
 					this.strengthMap.put(t, postStrength);
-
+					//System.out.println("Triple: " + t + " old: " + (double) samples / (double) this.sampleSizeMap.get(sa) + " new " + (double) this.tiedTripleCounts.get(t) / (double) tiedStateActionCounts.get(sa));
+					//System.out.println("Triple: " + t + "OLD post:" + posterior + "strength" + strength + " new posterio" + posterior2);
 					sum_ub += (Double) posterior.getUpper();
 					sum_lb += (Double) posterior.getLower();
 				}

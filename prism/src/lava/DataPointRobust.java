@@ -10,11 +10,14 @@ public class DataPointRobust {
 
     private double robustIMDPPerformanceOnTrue;
 
+    private double existentialGuarantee;
+
     public DataPointRobust(int episode, double[] results) {
         this.episode = episode;
         this.imdpGuarantee = results[0];
         this.trueMDPGuarantee = results[1];
         this.robustIMDPPerformanceOnTrue = results[2];
+        this.existentialGuarantee = results[3];
     }
 
     @Override
@@ -68,5 +71,13 @@ public class DataPointRobust {
 
     public void setRobustIMDPPerformanceOnTrue(double robustIMDPPerformanceOnTrue) {
         this.robustIMDPPerformanceOnTrue = robustIMDPPerformanceOnTrue;
+    }
+
+    public double getExistentialGuarantee() {
+        return existentialGuarantee;
+    }
+
+    public void setExistentialGuarantee(double existentialGuarantee) {
+        this.existentialGuarantee = existentialGuarantee;
     }
 }

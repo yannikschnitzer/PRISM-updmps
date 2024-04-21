@@ -19,6 +19,15 @@ public class Experiment {
         this.resultIterations = resultIterations;
     }
 
+    public boolean isBayesian() {
+        return bayesian;
+    }
+
+    public Experiment setBayesian(boolean bayesian) {
+        this.bayesian = bayesian;
+        return this;
+    }
+
     public static enum Type {
         REACH,
         REWARD
@@ -94,6 +103,7 @@ public class Experiment {
     public double error_tolerance = 0.01; // 99% correctness guarantee
     public double strategyWeight = 1.0;
 
+    private boolean bayesian;
     public int numTrainingMDPs;
     public int numVerificationMDPs;
 
