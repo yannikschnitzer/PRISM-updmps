@@ -17,6 +17,7 @@ import parser.ast.Expression;
 import parser.ast.ModulesFile;
 import parser.ast.PropertiesFile;
 import prism.*;
+import simulator.ModulesFileModelGenerator;
 import strat.MDStrategy;
 import strat.Strategy;
 
@@ -86,7 +87,7 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
         // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(15, 1_000_000, seed, false, false,12,8,4).info(id));
+       // run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(10, 10_000, seed, true, true,12,8,4).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
@@ -96,11 +97,12 @@ public class LearnVerify {
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, true,5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, false, 5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false, false, 5).info(id));
+        run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,12,8,4).info(id));
 
         //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, true, 2).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
- //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
+   //     run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,12,8,4).info(id));
+        //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
+        //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
         //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
@@ -116,8 +118,18 @@ public class LearnVerify {
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
        // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
        //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("AIRCRAFT20x5_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-       // runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
+       // runRobustPolicyComparisonForVis("AIRCRAFT20x5_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+    //    runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+ //      runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
+//       runRobustPolicyComparisonForVis("BETTING10_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
+//        runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+//////        runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
+//        runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
+//        runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+
+           runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+        //  runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+        // runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
 //        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
      // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
         //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
@@ -278,8 +290,8 @@ public class LearnVerify {
            MDP<Function> mdpParam = buildParamModel(ex);
 
            // Generate sample training and verification MDP parameters
-           double rangeMin1 = 0.75;
-           double rangeMax1 = 0.95;
+           double rangeMin1 = 0.7;
+           double rangeMax1 = 0.9;
            List<Values> trainingParams = new ArrayList<>();
            List<Values> verificationParams = new ArrayList<>();
            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
@@ -296,8 +308,8 @@ public class LearnVerify {
            Pair<List<IMDP<Double>>, List<MDP<Double>>> verificationSet = getIMDPs(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
 
            // Build robust policy and derive PAC guarantee
-           RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam);
-           RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam);
+           RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
+           RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam, ex);
 
            // Construction and analysis over learned IMDPs
            robSynthI.addIMDPs(trainingSet.first);
@@ -338,8 +350,8 @@ public class LearnVerify {
             MDP<Function> mdpParam = buildParamModel(ex);
 
             // Generate sample training and verification MDP parameters
-            double rangeMin1 = 0.75;
-            double rangeMax1 = 0.95;
+            double rangeMin1 = 0.5;
+            double rangeMax1 = 0.7;
             List<Values> trainingParams = new ArrayList<>();
             List<Values> verificationParams = new ArrayList<>();
             //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
@@ -363,8 +375,8 @@ public class LearnVerify {
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
 
             // Build robust policy and derive PAC guarantee
-            RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam);
-            RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam);
+            RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
+            RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam, ex);
 
             // Construction and analysis over true MDPs for result iteration i
             robSynth.setMDPs(trainingSet.second);
@@ -435,8 +447,8 @@ public class LearnVerify {
         Values v = new Values();
         double pL = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
         double pH = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
-        v.addValue("r", pL);
-        v.addValue("p", 1 -pH);
+        v.addValue("PF", pL);
+        v.addValue("badC", 1 - pH);
         params.add(v);
     }
 
@@ -445,14 +457,25 @@ public class LearnVerify {
             ArrayList<Double> results = new ArrayList<>();
             MDPModelChecker mc = new MDPModelChecker(prism);
             mc.setErrorOnNonConverge(false);
+
+            ModulesFile modulesFileMDP = prism.parseModelFile(new File(ex.modelFile), ModelType.MDP);
+            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileMDP, this.prism);
+
+
             PropertiesFile pf = prism.parsePropertiesString(ex.spec);
             Expression exprTarget = pf.getProperty(0);
+
+
             for (MDP<Double> mdp : mdps) {
+                modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
+                mc.setModelCheckingInfo(modelGen, pf, modelGen);
                 Result result = mc.check(mdp, exprTarget);
                 results.add((double) result.getResult());
             }
             return results;
         } catch (PrismException e) {
+            throw new RuntimeException(e);
+        } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
@@ -483,7 +506,7 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"r","p"};
+            String[] paramNames = new String[]{"PF","badC"};
             String[] paramLowerBounds = new String[]{"0","0"};
             String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
@@ -749,7 +772,7 @@ public class LearnVerify {
             this.prism.buildModel();
             MDP<Function> mdpParam = (MDP<Function>) this.prism.getBuiltModelExplicit();
 
-            RobustPolicySynthesizerIMDP rsynth = new RobustPolicySynthesizerIMDP(mdpParam);
+            RobustPolicySynthesizerIMDP rsynth = new RobustPolicySynthesizerIMDP(mdpParam, ex);
 
             System.out.println("MDP Param:" + mdpParam);
 

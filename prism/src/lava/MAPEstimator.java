@@ -228,11 +228,13 @@ public class MAPEstimator extends Estimator
 		mc.setErrorOnNonConverge(false);
 		mc.setGenStrat(true);
 		PropertiesFile pf = prism.parsePropertiesString(ex.dtmcSpec);
+
 		ModulesFile modulesFileDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
 		modulesFileDTMC.setModelType(ModelType.DTMC);
 		ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileDTMC, this.prism);
 		modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
 		RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, mdp, strat);
+
 		mc.setModelCheckingInfo(modelGen, pf, rewGen);
 		Result result = mc.check(dtmc, pf.getProperty(0));
 		return result;

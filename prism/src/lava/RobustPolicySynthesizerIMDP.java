@@ -4,13 +4,14 @@ import common.Interval;
 import explicit.*;
 import param.Function;
 import parser.ast.Expression;
+import parser.ast.ModulesFile;
 import parser.ast.PropertiesFile;
-import prism.Evaluator;
-import prism.Prism;
-import prism.PrismException;
-import prism.Result;
+import prism.*;
+import simulator.ModulesFileModelGenerator;
 import strat.MDStrategy;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class RobustPolicySynthesizerIMDP {
@@ -26,8 +27,30 @@ public class RobustPolicySynthesizerIMDP {
     // Subset of imdps used for verification
     private List<IMDP<Double>> verificationSet = new ArrayList<>();
 
-    public RobustPolicySynthesizerIMDP(MDP<Function> mdpParam) {
+    private Experiment experiment;
+
+    protected ModulesFile modulesFileIMDP;
+    protected ModulesFile modulesFileMDP;
+
+    public RobustPolicySynthesizerIMDP(MDP<Function> mdpParam, Experiment ex) {
            this.mdpParam = mdpParam;
+           this.experiment = ex;
+    }
+
+    private void buildModulesFiles(Prism prism)  {
+        try {
+            this.modulesFileIMDP = prism.parseModelFile(new File(this.experiment.modelFile), ModelType.IMDP);
+            this.modulesFileMDP = prism.parseModelFile(new File(experiment.modelFile), ModelType.MDP);
+        } catch (FileNotFoundException e) {
+            System.out.println("Error file: " + e.getMessage());
+            System.exit(1);
+        } catch (PrismLangException e){
+            System.out.println("Error parsing file: " + e.getMessage());
+            System.exit(1);
+        } catch (NullPointerException e) {
+            System.out.println("Error null: " + e.getMessage());
+            System.exit(1);
+        }
     }
 
     public IMDP<Double> combineIMDPs() {
@@ -89,8 +112,14 @@ public class RobustPolicySynthesizerIMDP {
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
 
+        buildModulesFiles(prism);
+        ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);
+        modelGen.setSomeUndefinedConstants(this.mdpParam.getConstantValues());
+
         PropertiesFile pf = prism.parsePropertiesString(spec);
         Expression exprTarget = pf.getProperty(0);
+
+        mc.setModelCheckingInfo(modelGen, pf, modelGen);
 
         Result result = mc.check(this.combinedIMDP, exprTarget);
 
@@ -106,9 +135,20 @@ public class RobustPolicySynthesizerIMDP {
         for (IMDP<Double> imdp : this.verificationSet) {
             IDTMC<Double> inducedIDTMC = imdp.constructInducedIDTMC(strategy);
             IDTMCModelChecker mc = new IDTMCModelChecker(prism);
+
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
             PropertiesFile pf = prism.parsePropertiesString(spec);
+
+            buildModulesFiles(prism);
+            ModulesFile modulesFileIDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
+            modulesFileIDTMC.setModelType(ModelType.IDTMC);
+            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIDTMC, prism);
+            modelGen.setSomeUndefinedConstants(imdp.getConstantValues());
+            RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, imdp, strategy);
+
+            mc.setModelCheckingInfo(modelGen, pf, rewGen);
+
             Result result = mc.check(inducedIDTMC, pf.getProperty(0));
             results.add((double) result.getResult());
         }

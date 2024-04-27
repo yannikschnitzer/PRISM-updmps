@@ -151,6 +151,7 @@ public class Experiment {
             case CHAIN_LARGE:
             this.goal = "\"goal\"";
             this.spec = "Rmin=? [F \"goal\"]";
+            this.idtmcRobustSpec = "Rmax=? [F \"goal\"]";
             this.robustSpec = "Rminmax=? [F \"goal\"]";
             this.optimisticSpec = "Rminmin=? [F \"goal\"]";
             this.dtmcSpec = "R=? [F \"goal\"]";
@@ -315,6 +316,7 @@ public class Experiment {
             case BETTING_GAME_FAVOURABLE:
             this.goal = "\"done\"";
             this.spec = "Rmax=? [F \"done\"]";
+            this.idtmcRobustSpec = "Rmin=? [F \"done\"]";
             this.robustSpec = "Rmaxmin=? [F \"done\"]";
             this.optimisticSpec = "Rmaxmax=? [F \"done\"]";
             this.dtmcSpec = "R=?  [F \"done\"]";
