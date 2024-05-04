@@ -1,14 +1,11 @@
 package lava;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.Map.Entry;
-
-import explicit.*;
+import explicit.IMDP;
+import explicit.MDP;
+import explicit.MDPModelChecker;
+import explicit.MDPSimple;
+import lava.Experiment.Model;
+import org.apache.commons.rng.simple.RandomSource;
 import param.BigRational;
 import param.Function;
 import param.Point;
@@ -18,15 +15,28 @@ import parser.ast.ModulesFile;
 import parser.ast.PropertiesFile;
 import prism.*;
 import simulator.ModulesFileModelGenerator;
+import simulator.RandomNumberGenerator;
+import simulator.sampler.Sampler;
 import strat.MDStrategy;
 import strat.Strategy;
 
-import lava.Experiment.Model;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.Map.Entry;
+
+import org.apache.commons.statistics.distribution.*;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+import org.apache.commons.rng.*;
 
 public class LearnVerify {
 
     private Prism prism;
     private String modelStats = null;
+
 
     private int seed = 1650280571;
 
@@ -48,7 +58,7 @@ public class LearnVerify {
     public static void main(String[] args) {
         if (args.length > 0) {
             int seed;
-            for (String s: args) {
+            for (String s : args) {
                 try {
                     seed = Integer.parseInt(s);
                 } catch (NumberFormatException e) {
@@ -62,8 +72,7 @@ public class LearnVerify {
                 l.gridStrengthEval();
                 //l.evaluate_strength();
             }
-        }
-        else {
+        } else {
             System.out.println("running with default seed");
             LearnVerify l = new LearnVerify();
             l.basic();
@@ -73,11 +82,23 @@ public class LearnVerify {
         }
     }
 
+    public List<Integer> get_seeds(int seed, int num) {
+        ArrayList<Integer> seeds = new ArrayList<>();
+        seeds.add(seed);
+        Random r = new Random(seed);
+
+        for (int i = 0; i < num - 1; i++) {
+            seeds.add(r.nextInt(seed));
+        }
+
+        return seeds;
+    }
+
     public void basic() {
         String id = "basic";
         //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
         //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-      //  run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
+        //  run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
         //run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
@@ -87,7 +108,16 @@ public class LearnVerify {
         //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
         // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-       // run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(10, 10_000, seed, true, true,12,8,4).info(id));
+//        for (int seed : get_seeds(seed, 10)) {
+//            run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true, 12, 8, 4).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, false, 12, 8, 2).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, 12, 8, 2).info(id));
+//        }
+        for (int seed : get_seeds(seed, 10)) {
+            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, 12, 8, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, 12, 8, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, false, false, 12, 8, 2).info(id));
+        }
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
         //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
         //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
@@ -97,10 +127,10 @@ public class LearnVerify {
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, true,5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, false, 5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false, false, 5).info(id));
-        run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,12,8,4).info(id));
+        //run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,12,8,4).info(id));
 
         //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-   //     run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,12,8,4).info(id));
+        //     run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,12,8,4).info(id));
         //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
         //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
         //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
@@ -113,28 +143,45 @@ public class LearnVerify {
     }
 
     private void run_basic_algorithms(Experiment ex) {
-        String postfix = String.format("_seed_%d", ex.seed);
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,10,20,30,40,70,100,500,700,1000,1200,2000,4000,6000,8000,10000,15000,19000,30000,40000,50000,60000,80000,100000,200000,300000,400000,500000, 800000,900000)));
+        String postfix = "";//String.format("_seed_%d", ex.seed);
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
-       // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
-       //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
-       // runRobustPolicyComparisonForVis("AIRCRAFT20x5_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-    //    runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
- //      runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
+
+        // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
+        //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("LUI_uniform_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorUniform::new);
+        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true), PACIntervalEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
+        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), UCRL2IntervalEstimatorOptimistic::new);
+
+        //    runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+        //      runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
 //       runRobustPolicyComparisonForVis("BETTING10_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
 //        runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
 //////        runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
 //        runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
 //        runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
 
-           runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+        //   runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
         //  runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
         // runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
 //        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
-     // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
+        // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
         //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
         //new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
     }
+
+    private void run_basic_algorithms_pac(Experiment ex) {
+        String postfix = "";String.format("_seed_%d", ex.seed);
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
+        postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
+        if (!ex.optimizations){
+            runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), BayesianEstimatorOptimistic::new);
+        }
+        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+    }
+
 
     public void gridStrengthEval() {
         String id = "grid-strength-eval";
@@ -199,23 +246,23 @@ public class LearnVerify {
     public void switching_environment() {
         List<Double> strategyWeights = new ArrayList<>(List.of(1.0, 0.9, 0.8));
         for (Double x : strategyWeights) {
-            String id = "switching-weight-"+x;
-            List<Integer> switching_points = new ArrayList<>(List.of(100, 1000, 10000, 100000)); 
+            String id = "switching-weight-" + x;
+            List<Integer> switching_points = new ArrayList<>(List.of(100, 1000, 10000, 100000));
             for (Integer j : switching_points) {
                 experiment_switching_environment(
                         new Experiment(Model.CHAIN_LARGE).config(100, j, seed).stratWeight(x).info(id),
-                        new Experiment(Model.CHAIN_LARGE2).config(100, 1000000-j, seed).stratWeight(x).info(id),
+                        new Experiment(Model.CHAIN_LARGE2).config(100, 1000000 - j, seed).stratWeight(x).info(id),
                         j
                 );
             }
         }
         for (Double x : strategyWeights) {
-            String id = "switching-weight-"+x;
-            List<Integer> switching_points = new ArrayList<>(List.of(100, 1000, 10000, 100000)); 
+            String id = "switching-weight-" + x;
+            List<Integer> switching_points = new ArrayList<>(List.of(100, 1000, 10000, 100000));
             for (Integer j : switching_points) {
                 experiment_switching_environment(
                         new Experiment(Model.BETTING_GAME_FAVOURABLE).config(7, j, seed).stratWeight(x).info(id),
-                        new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000-j, seed).stratWeight(x).info(id),
+                        new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000 - j, seed).stratWeight(x).info(id),
                         j
                 );
             }
@@ -257,7 +304,7 @@ public class LearnVerify {
         this.prism.setGenStrat(true);
     }
 
-    public void resetAll() {
+    public void resetAll(int seed) {
         try {
             this.modelStats = null;
             initializePrism();
@@ -269,7 +316,7 @@ public class LearnVerify {
     }
 
     public String makeOutputDirectory(Experiment ex) {
-        String outputPath = String.format("results/%s/%s/", ex.experimentInfo, ex.model.toString());
+        String outputPath = String.format("results/%s/%s/Robust_Policies/%s/", ex.experimentInfo, ex.model.toString(), ex.seed);
         try {
             Files.createDirectories(Paths.get(outputPath));
         } catch (IOException e) {
@@ -284,61 +331,61 @@ public class LearnVerify {
 //    }
 
     public void runRobustPolicyComparison(String label, Experiment ex, EstimatorConstructor estimatorConstructor) {
-       try {
-           // Build pMDP model
-           resetAll();
-           MDP<Function> mdpParam = buildParamModel(ex);
+        try {
+            // Build pMDP model
+            resetAll(ex.seed);
+            MDP<Function> mdpParam = buildParamModel(ex);
 
-           // Generate sample training and verification MDP parameters
-           double rangeMin1 = 0.7;
-           double rangeMax1 = 0.9;
-           List<Values> trainingParams = new ArrayList<>();
-           List<Values> verificationParams = new ArrayList<>();
-           //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-           Random r = new Random(seed);
-           for (int i = 0; i < ex.numTrainingMDPs; i++) {
-               constructValues(rangeMin1, rangeMax1, trainingParams, r);
-           }
-           for (int i = 0; i < ex.numVerificationMDPs; i++) {
-               constructValues(rangeMin1, rangeMax1, verificationParams, r);
-           }
+            // Generate sample training and verification MDP parameters
+            double rangeMin1 = 0.75;
+            double rangeMax1 = 0.95;
+            List<Values> trainingParams = new ArrayList<>();
+            List<Values> verificationParams = new ArrayList<>();
+            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
+            Random r = new Random(ex.seed);
+            for (int i = 0; i < ex.numTrainingMDPs; i++) {
+                constructValues(rangeMin1, rangeMax1, trainingParams, r);
+            }
+            for (int i = 0; i < ex.numVerificationMDPs; i++) {
+                constructValues(rangeMin1, rangeMax1, verificationParams, r);
+            }
 
-           // Get MDPs/IMDPs for training and verification set
-           Pair<List<IMDP<Double>>, List<MDP<Double>>> trainingSet = getIMDPs(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
-           Pair<List<IMDP<Double>>, List<MDP<Double>>> verificationSet = getIMDPs(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
+            // Get MDPs/IMDPs for training and verification set
+            Pair<List<IMDP<Double>>, List<MDP<Double>>> trainingSet = getIMDPs(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
+            Pair<List<IMDP<Double>>, List<MDP<Double>>> verificationSet = getIMDPs(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
 
-           // Build robust policy and derive PAC guarantee
-           RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
-           RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam, ex);
+            // Build robust policy and derive PAC guarantee
+            RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
+            RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(mdpParam, ex);
 
-           // Construction and analysis over learned IMDPs
-           robSynthI.addIMDPs(trainingSet.first);
-           robSynthI.addVerificatonIMDPs(verificationSet.first);
-           robSynthI.combineIMDPs();
-           MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
-           List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
+            // Construction and analysis over learned IMDPs
+            robSynthI.addIMDPs(trainingSet.first);
+            robSynthI.addVerificatonIMDPs(verificationSet.first);
+            robSynthI.combineIMDPs();
+            MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
+            List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
 
-           // Construction and analysis over true MDPs
-           robSynth.addMDPs(trainingSet.second);
-           robSynth.addVerificatonMDPs(verificationSet.second);
-           robSynth.combineMDPs();
-           MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
-           List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
+            // Construction and analysis over true MDPs
+            robSynth.addMDPs(trainingSet.second);
+            robSynth.addVerificatonMDPs(verificationSet.second);
+            robSynth.combineMDPs();
+            MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
+            List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
 
-           // Analyse robust policy obtained over IMDPs on the true MDPs
-           List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
+            // Analyse robust policy obtained over IMDPs on the true MDPs
+            List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
 
-           System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
-           System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
+            System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
+            System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
 
-           System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
-           System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
+            System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
+            System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
 
-           System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
-           System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
-       } catch (PrismException e) {
-           throw new RuntimeException(e);
-       }
+            System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
+            System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
+        } catch (PrismException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void runRobustPolicyComparisonForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor) {
@@ -346,21 +393,53 @@ public class LearnVerify {
             System.out.println("Result iterations:" + ex.getResultIterations());
             System.out.println("Label: " + label);
             // Build pMDP model
-            resetAll();
+            resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
-            // Generate sample training and verification MDP parameters
-            double rangeMin1 = 0.5;
-            double rangeMax1 = 0.7;
+//            // Generate uniform sample training and verification MDP parameters
+//            /*
+//             * Range for SAV2: [0.75, 0.95]
+//             * Range for Aircraft: [0.7, 0.9]
+//             */
+//            double rangeMin1 = 0.7;
+//            double rangeMax1 = 0.9;
+//            List<Values> trainingParams = new ArrayList<>();
+//            List<Values> verificationParams = new ArrayList<>();
+//
+//            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
+//            Random r = new Random(seed);
+//            for (int i = 0; i < ex.numTrainingMDPs; i++) {
+//                constructValues(rangeMin1, rangeMax1, trainingParams, r);
+//            }
+//            for (int i = 0; i < ex.numVerificationMDPs; i++) {
+//                constructValues(rangeMin1, rangeMax1, verificationParams, r);
+//            }
+//
+//            for (Values value : trainingParams) {
+//                System.out.println(value.getValues() + ",");
+//            }
+//            for (Values value : verificationParams) {
+//                System.out.println(value.getValues() + ",");
+//            }
+
+            // Generate beta-distributed sample training and verification MDP parameters
+            /*
+             * Parametes for Aircraft: Alpha = 10, Beta = 2
+             */
+            int alpha = 10;
+            int beta = 2;
+            BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+            ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+            Iterator<Double> it = sampler.samples().iterator();
+
             List<Values> trainingParams = new ArrayList<>();
             List<Values> verificationParams = new ArrayList<>();
-            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-            Random r = new Random(seed);
+
             for (int i = 0; i < ex.numTrainingMDPs; i++) {
-                constructValues(rangeMin1, rangeMax1, trainingParams, r);
+                constructValuesBeta(trainingParams, it);
             }
             for (int i = 0; i < ex.numVerificationMDPs; i++) {
-                constructValues(rangeMin1, rangeMax1, verificationParams, r);
+                constructValuesBeta(verificationParams, it);
             }
 
             for (Values value : trainingParams) {
@@ -369,6 +448,7 @@ public class LearnVerify {
             for (Values value : verificationParams) {
                 System.out.println(value.getValues() + ",");
             }
+
 
             // Get MDPs/IMDPs for training and verification set
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> trainingSet = getIMDPsForVis(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
@@ -390,7 +470,7 @@ public class LearnVerify {
 
             ArrayList<DataPointRobust> results = new ArrayList<>();
             ArrayList<Integer> plottedIterations = new ArrayList<>(ex.getResultIterations());
-            plottedIterations.add(0,0);
+            plottedIterations.add(0, 0);
             plottedIterations.add(ex.iterations - 1);
             for (int i = 0; i < trainingSet.first.get(0).size(); i++) {
                 List<IMDP<Double>> subTrainSet = new ArrayList<>();
@@ -415,7 +495,7 @@ public class LearnVerify {
                 System.out.println("==============================");
                 try {
                     System.out.println("Results after #Simulations: " + ex.getResultIterations().get(i - 1));
-                } catch (Exception ignored){
+                } catch (Exception ignored) {
 
                 }
                 System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
@@ -436,7 +516,7 @@ public class LearnVerify {
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
             }
 
-
+            ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
 
         } catch (PrismException e) {
             throw new RuntimeException(e);
@@ -447,8 +527,25 @@ public class LearnVerify {
         Values v = new Values();
         double pL = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
         double pH = rangeMin1 + (rangeMax1 - rangeMin1) * r.nextDouble(); //r.nextGaussian();
-        v.addValue("PF", pL);
-        v.addValue("badC", 1 - pH);
+        /*
+         * SAV2: pL -> pL, pH -> pH
+         * Aircraft r -> pL, p -> 1 - pH
+         */
+        v.addValue("r", pL);
+        v.addValue("p", 1 - pH);
+        params.add(v);
+    }
+
+    private void constructValuesBeta(List<Values> params, Iterator<Double> it) {
+        Values v = new Values();
+        double pL = it.next();
+        double pH = it.next();
+        /*
+         * SAV2: pL -> pL, pH -> pH
+         * Aircraft r -> pL, p -> 1 - pH
+         */
+        v.addValue("r", pL);
+        v.addValue("p", 1 - pH);
         params.add(v);
     }
 
@@ -479,7 +576,8 @@ public class LearnVerify {
             throw new RuntimeException(e);
         }
     }
-    public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor){
+
+    public void compareSamplingStrategies(String label, Experiment ex, EstimatorConstructor estimatorConstructor) {
 
         List<Values> values = new ArrayList<>();
 
@@ -487,13 +585,13 @@ public class LearnVerify {
         double rangeMax1 = 0.95;
 
         //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-        Random r = new Random(seed);
+        Random r = new Random(ex.seed);
 
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 10; i++) {
             constructValues(rangeMin1, rangeMax1, values, r);
         }
-        resetAll();
-       // MDP<Function> mdpParam = buildParamModel(ex);
+        resetAll(ex.seed);
+        // MDP<Function> mdpParam = buildParamModel(ex);
         compareSamplingStrategiesUncertain(label, ex, estimatorConstructor, values);
 //        Pair<List<IMDP<Double>>, List<MDP<Double>>> result = getIMDPs(label, ex, estimatorConstructor, mdpParam, values);
 //        System.out.println("IMDPs: " + result.first);
@@ -506,9 +604,13 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
 
             // Temporarily get parametric model
-            String[] paramNames = new String[]{"PF","badC"};
-            String[] paramLowerBounds = new String[]{"0","0"};
-            String[] paramUpperBounds = new String[]{"1","1"};
+            /*
+             * SAV2: pL, pH
+             * Aircraft: r, p
+             */
+            String[] paramNames = new String[]{"r", "p"};
+            String[] paramLowerBounds = new String[]{"0", "0"};
+            String[] paramUpperBounds = new String[]{"1", "1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -519,9 +621,8 @@ public class LearnVerify {
         }
     }
 
-    public Pair<List<IMDP<Double>>, List<MDP<Double>>> getIMDPs(String label, Experiment ex, EstimatorConstructor estimatorConstructor, MDP<Function> mdpParam, List<Values> uncertainParameters, boolean verification)
-    {
-        resetAll();
+    public Pair<List<IMDP<Double>>, List<MDP<Double>>> getIMDPs(String label, Experiment ex, EstimatorConstructor estimatorConstructor, MDP<Function> mdpParam, List<Values> uncertainParameters, boolean verification) {
+        resetAll(ex.seed);
         System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
                 + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
                 + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
@@ -537,11 +638,11 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
             List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
             Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
-            for (Function f : functionMap.keySet()){
+            for (Function f : functionMap.keySet()) {
                 System.out.println("function:" + f + functionMap.get(f));
             }
 
-            for (Values values : uncertainParameters){
+            for (Values values : uncertainParameters) {
                 ex.values = values;
                 Estimator estimator = estimatorConstructor.get(this.prism, ex);
 
@@ -562,9 +663,8 @@ public class LearnVerify {
         return new Pair<>(learnedIMDPs, mdps);
     }
 
-    public Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> getIMDPsForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor, MDP<Function> mdpParam, List<Values> uncertainParameters, boolean verification)
-    {
-        resetAll();
+    public Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> getIMDPsForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor, MDP<Function> mdpParam, List<Values> uncertainParameters, boolean verification) {
+        resetAll(ex.seed);
         System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
                 + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
                 + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
@@ -580,11 +680,11 @@ public class LearnVerify {
             prism.loadPRISMModel(modulesFile);
             List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
             Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
-            for (Function f : functionMap.keySet()){
+            for (Function f : functionMap.keySet()) {
                 System.out.println("function:" + f + functionMap.get(f));
             }
 
-            for (Values values : uncertainParameters){
+            for (Values values : uncertainParameters) {
                 ex.values = values;
                 Estimator estimator = estimatorConstructor.get(this.prism, ex);
                 System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());
@@ -593,6 +693,7 @@ public class LearnVerify {
                 estimator.set_experiment(ex);
 
                 // Iterate and run experiments for each of the sampled parameter vectors
+                //ex.setTieParamters(verification);
                 Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator, verification);
                 learnedIMDPs.add(resIMDP.second);
                 mdps.add(estimator.getSUL());
@@ -637,27 +738,27 @@ public class LearnVerify {
 //    }
 
     public String getActionString(MDP<Function> mdp, int s, int i) {
-        String action = (String) mdp.getAction(s,i);
+        String action = (String) mdp.getAction(s, i);
         if (action == null) {
             action = "_empty";
         }
         return action;
     }
 
-    public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam){
+    public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam) {
         Map<Function, List<TransitionTriple>> functionMap = new HashMap<>();
 
         for (int s = 0; s < mdpParam.getNumStates(); s++) {
             int numChoices = mdpParam.getNumChoices(s);
-            for (int i = 0 ; i < numChoices; i++) {
+            for (int i = 0; i < numChoices; i++) {
                 //String action = (String) mdpParam.getAction(s, i);
                 String action = getActionString(mdpParam, s, i);
-                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
                     if (functionMap.containsKey(p)) {
-                        functionMap.get(p).add(new TransitionTriple(sFrom,  action, sTo));
+                        functionMap.get(p).add(new TransitionTriple(sFrom, action, sTo));
                     } else {
                         functionMap.put(p, new ArrayList<>());
-                        functionMap.get(p).add(new TransitionTriple(sFrom,  action, sTo));
+                        functionMap.get(p).add(new TransitionTriple(sFrom, action, sTo));
                     }
                 });
             }
@@ -669,8 +770,8 @@ public class LearnVerify {
     public Set<Function> getTransitionStructure(MDP<Function> mdpParam, int s) {
         HashSet<Function> transitions = new HashSet<>();
         int numChoices = mdpParam.getNumChoices(s);
-        for (int i = 0 ; i < numChoices; i++) {
-            mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+        for (int i = 0; i < numChoices; i++) {
+            mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
                 transitions.add(p);
             });
         }
@@ -679,7 +780,7 @@ public class LearnVerify {
 
     public Set<Function> getTransitionStructure(MDP<Function> mdpParam, int s, int a) {
         HashSet<Function> transitions = new HashSet<>();
-        mdpParam.forEachTransition(s, a, (int sFrom, int sTo, Function p)->{
+        mdpParam.forEachTransition(s, a, (int sFrom, int sTo, Function p) -> {
             transitions.add(p);
         });
         return transitions;
@@ -705,7 +806,7 @@ public class LearnVerify {
 
         for (int s = 0; s < mdpParam.getNumStates(); s++) {
             int numChoices = mdpParam.getNumChoices(s);
-            for (int i = 0 ; i < numChoices; i++) {
+            for (int i = 0; i < numChoices; i++) {
                 Set<Function> transitionStructure = getTransitionStructure(mdpParam, s, i);
                 if (!similarStateActionMap.containsKey(transitionStructure)) {
                     similarStateActionMap.put(transitionStructure, new ArrayList<>());
@@ -730,7 +831,7 @@ public class LearnVerify {
 
                 String action = getActionString(mdpParam, s, i);
 
-                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
                     if (!transitions.containsKey(p)) {
                         transitions.put(p, new ArrayList<>());
                     }
@@ -745,9 +846,8 @@ public class LearnVerify {
         return similarTransitions;
     }
 
-    public void compareSamplingStrategiesUncertain(String label, Experiment ex, EstimatorConstructor estimatorConstructor, List<Values> uncertainParameters)
-    {
-        resetAll();
+    public void compareSamplingStrategiesUncertain(String label, Experiment ex, EstimatorConstructor estimatorConstructor, List<Values> uncertainParameters) {
+        resetAll(ex.seed);
         System.out.println("\n\n\n\n%------\n%Compare sampling strategies on\n%  Model: " + ex.model + "\n%  max_episode_length: "
                 + ex.max_episode_length + "\n%  iterations: " + ex.iterations + "\n%  Prior strength: ["
                 + ex.initLowerStrength + ", " + ex.initUpperStrength + "]\n%------");
@@ -779,19 +879,19 @@ public class LearnVerify {
             List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
 
             Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
-            for (Function f : functionMap.keySet()){
+            for (Function f : functionMap.keySet()) {
                 System.out.println("function:" + f + functionMap.get(f));
             }
 
             // Instantiate parametric model
-            Point paramValues = new Point(new BigRational[]{ BigRational.from(0.5), BigRational.from(0.5) });
+            Point paramValues = new Point(new BigRational[]{BigRational.from(0.5), BigRational.from(0.5)});
             MDP<Double> mdpInst = new MDPSimple<>(mdpParam, f -> f.evaluate(paramValues).doubleValue(), Evaluator.forDouble());
             System.out.println(mdpInst);
 
             // Then revert to original model
             this.prism.setParametricOff();
 
-            for (Values values : uncertainParameters){
+            for (Values values : uncertainParameters) {
                 ex.values = values;
                 Estimator estimator = estimatorConstructor.get(this.prism, ex);
 
@@ -802,7 +902,7 @@ public class LearnVerify {
                 String directoryPath = makeOutputDirectory(ex);
                 System.out.println("Exp opt: " + ex.optimizations + ex.model);
                 String path = directoryPath + label + ".csv";
-                System.out.println("Path: "+ path);
+                System.out.println("Path: " + path);
                 if (Files.exists(Paths.get(path))) {
                     System.out.printf("File %s already exists.%n", path);
                     //return;
@@ -820,7 +920,7 @@ public class LearnVerify {
 
                 //DataProcessor dp = new DataProcessor();
                 //dp.dumpRawData(directoryPath, label, results, ex);
-        }
+            }
 
             // Robust Policy Synthesis
             List<List<IMDP<Double>>> imdps = new ArrayList<>();
@@ -829,7 +929,7 @@ public class LearnVerify {
             IMDP<Double> combinedIMDP = rsynth.combineIMDPs();
             rsynth.addVerificatonIMDPs(imdps.get(1));
             MDStrategy<Double> robstrat = rsynth.getRobustStrategy(prism, ex.robustSpec);
-            List<Double> robResults = rsynth.checkVerificationSet(prism,robstrat, ex.idtmcRobustSpec);
+            List<Double> robResults = rsynth.checkVerificationSet(prism, robstrat, ex.idtmcRobustSpec);
             System.out.println("Verification Results with robust strategy (on IMDPs):" + robResults);
             System.out.println("IMDP Robust Guarantee: " + Collections.min(robResults));
 
@@ -881,7 +981,8 @@ public class LearnVerify {
 
             double[] currentResults = estimator.getInitialResults();
 
-            if (this.verbose) System.out.println("Episode " + past_iterations + ". " + "Performance " + currentResults[1]);
+            if (this.verbose)
+                System.out.println("Episode " + past_iterations + ". " + "Performance " + currentResults[1]);
 
             ArrayList<DataPoint> results = new ArrayList<>();
             ArrayList<IMDP<Double>> estimates = new ArrayList<>();

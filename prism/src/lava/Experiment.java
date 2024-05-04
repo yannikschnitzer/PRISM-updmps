@@ -424,8 +424,18 @@ public class Experiment {
         return this;
     }
 
+    public Experiment setMultiplier(int multiplier){
+        this.multiplier = multiplier;
+        return this;
+    }
+
     public void setTrueOpt(double opt) {
         this.trueOpt = opt;
+    }
+
+    public Experiment setTieParamters(boolean tieParameters){
+        this.tieParameters = tieParameters;
+        return this;
     }
 
     public boolean resultIteration(int i) {
@@ -433,6 +443,40 @@ public class Experiment {
     }
 
     public void dumpConfiguration(String pathPrefix, String file_name, String algorithm){
+
+        try {
+            FileWriter writer = new FileWriter(pathPrefix + file_name + ".yaml");
+            writer.write("modelInfo: " + modelInfo + "\n");
+            writer.write("model: " + model + "\n");
+            writer.write("type: " + type + "\n");
+            writer.write("goal: " + goal + "\n");
+            writer.write("spec: " + spec + "\n");
+            writer.write("robustSpec: " + robustSpec + "\n");
+            writer.write("modelFile: " + modelFile + "\n");
+            writer.write("dtmcSpec: " + dtmcSpec + "\n");
+            writer.write("experimentInfo: " + experimentInfo + "\n");
+            writer.write("seed: " + seed + "\n");
+            writer.write("initLowerStrength: " + initLowerStrength + "\n");
+            writer.write("initUpperStrength: " + initUpperStrength + "\n");
+            writer.write("lowerStrengthBound: " + lowerStrengthBound + "\n");
+            writer.write("upperStrengthBound: " + upperStrengthBound + "\n");
+            writer.write("strategyWeight: " + strategyWeight + "\n");
+            writer.write("initGraphEpsilon: " + initGraphEpsilon + "\n");
+            writer.write("iterations: " + iterations + "\n");
+            writer.write("max_episode_length: " + max_episode_length + "\n");
+            writer.write("alpha: " + alpha + "\n");
+            writer.write("error_tolerance: " + error_tolerance + "\n");
+            writer.write("trueOpt: " + trueOpt + "\n");
+            writer.write("prefix: " + file_name + "\n");
+            writer.write("algorithm: " + algorithm + "\n");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Dump experiment setting to "+ pathPrefix);
+    }
+
+    public void dumpConfiguration(String pathPrefix, String file_name, String algorithm, Values values){
 
         try {
             FileWriter writer = new FileWriter(pathPrefix + "/"+ file_name + ".yaml");
