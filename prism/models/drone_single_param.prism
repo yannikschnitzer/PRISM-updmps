@@ -1,9 +1,9 @@
 mdp
 
 // Environment Dimensions
-const int MAXX = 10;
-const int MAXY = 10;
-const int MAXZ = 10;
+const int MAXX = 8;
+const int MAXY = 8;
+const int MAXZ = 8;
 
 // Disturbance Probability Parameter
 const double p; // must be less than 1/3
@@ -15,10 +15,10 @@ formula target = x > MAXX - 2 & y < 2 & z > MAXZ - 2;
 
 // Obstacle Regions
 formula crash = obstacle1 | obstacle2 | obstacle3 | obstacle4;
-formula obstacle1 = x >= 3 & x <= 7 & z >= 1 & z <= 3;
-formula obstacle2 = x >= 3 & x <= 7 & y >= 1 & y <= 3;
-formula obstacle3 = x >= 3 & x <= 7 & y >= 5 & y <= 7;
-formula obstacle4 = x >= 3 & x <= 7 & z >= 8 & z <= 10;
+formula obstacle1 = x >= 3 & x <= 4 & z >= 1 & z <= 2;
+formula obstacle2 = x >= 3 & x <= 4 & y >= 1 & y <= 2;
+formula obstacle3 = x >= 3 & x <= 4 & y >= 3 & y <= 5;
+formula obstacle4 = x >= 3 & x <= 4 & z >= 7 & z <= 8;
 
 module drone
 	x : [1..MAXX] init 1;

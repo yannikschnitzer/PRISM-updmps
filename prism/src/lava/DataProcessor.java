@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import java.util.List;
 
 
 public class DataProcessor {
@@ -409,6 +409,22 @@ public class DataProcessor {
             writer.close();
         } catch (IOException e) {
             System.out.println(e);
+        }
+    }
+
+    public void dumpResultList(String directoryPath, String name, List<Double> robustPolicyResults, List<Double> existentialResults) {
+        String path = directoryPath + name +"_resultlist.yaml";
+        if (Files.exists(Paths.get(path)))
+            System.out.println("File" + path + "already exists");
+
+        try {
+            FileWriter writer = new FileWriter(path, false);
+            writer.write("Robust Policy Results: " + robustPolicyResults + System.getProperty( "line.separator" ));
+            System.out.println("Dumping existential lambdas:" + existentialResults);
+            writer.write("Existential Policy Results: " + existentialResults + System.getProperty( "line.separator" ));
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

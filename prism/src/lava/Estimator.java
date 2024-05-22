@@ -109,6 +109,13 @@ public class Estimator {
         }
     }
 
+    public void set_experiment_naive(Experiment ex) {
+        this.ex = ex;
+        this.buildModulesFiles();
+        this.tryBuildSUL();
+        this.processTransitionsNaive();
+    }
+
     private void buildModulesFiles()  {
         try {
             this.modulesFile = this.prism.parseModelFile(new File(ex.modelFile));
@@ -131,6 +138,9 @@ public class Estimator {
     }
 
     public Double round(double value, int precision) {
+//        if (value > 1) {
+//            value = 1.0;
+//        }
         BigDecimal bd = BigDecimal.valueOf(value);
         bd = bd.setScale(precision, RoundingMode.HALF_UP);
         return bd.doubleValue();

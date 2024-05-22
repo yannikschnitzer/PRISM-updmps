@@ -96,50 +96,76 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        //  run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
+        int m = 30; // = 300;
+        int n = 20; // = 200;
+
+//        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
+
+//       run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
 //        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
-        //run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
+
+//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
 //        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, false, 10).info(id));
 //        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, false, false, 50).info(id));
-        //run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_0_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
-        // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
-        //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
+
+//        run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_0_000, seed, false).info(id));
+//        run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
+//        run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
+
+//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
 //        for (int seed : get_seeds(seed, 10)) {
-//            run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true, 12, 8, 4).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, false, 12, 8, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, 12, 8, 2).info(id));
+//            run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, false, m, n, 2).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
+
         for (int seed : get_seeds(seed, 10)) {
-            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, 12, 8, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, 12, 8, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, false, false, 12, 8, 2).info(id));
+            run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, m, n, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, m, n, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
         }
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
+
+//        for (int seed : get_seeds(seed, 10)) {
+//            run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
+//            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, false, m, n, 2).info(id));
+//            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGE).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
+//        }
+
+//        for (int seed : get_seeds(seed, 10)) {
+//            run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, m, n, 2).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
+//        }
+
+//        for (int seed : get_seeds(seed, 10)) {
+//            run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(20, 1_000_000, seed, true, true, m, n, 4).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, m, n, 2).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
+//        }
+//        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
+//        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
+//        run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
+//        run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
+//        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
+//        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, true,5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, false, 5).info(id));
 //        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false, false, 5).info(id));
-        //run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,12,8,4).info(id));
-
-        //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-        //     run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,12,8,4).info(id));
-        //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
-        //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
-        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,m,n,4).info(id));
+//
+//        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,m,n,4).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
+//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
+//        run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, true, 1).info(id));
 //        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, false, 1).info(id));
 //        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, false, false, 4).info(id));
-        //run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
+//        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
@@ -147,29 +173,32 @@ public class LearnVerify {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-        // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
-        //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
+//       compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
+//       compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("LUI_uniform_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorUniform::new);
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
         runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), UCRL2IntervalEstimatorOptimistic::new);
-
-        //    runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-        //      runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
+//
+//       runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+//       runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
 //       runRobustPolicyComparisonForVis("BETTING10_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-//////        runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
-//        runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+//       runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+//       runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
+//       runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
+//       runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+//
+//       runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+//       runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
+//       runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
+//       compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
+//       compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
+//       ex.initialInterval = Experiment.InitialInterval.UNIFORM;
+//       new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
+    }
 
-        //   runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-        //  runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-        // runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
-        // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
-        //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
-        //new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
+    private void evaluation() {
+
     }
 
     private void run_basic_algorithms_pac(Experiment ex) {
@@ -352,7 +381,7 @@ public class LearnVerify {
 
             // Get MDPs/IMDPs for training and verification set
             Pair<List<IMDP<Double>>, List<MDP<Double>>> trainingSet = getIMDPs(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
-            Pair<List<IMDP<Double>>, List<MDP<Double>>> verificationSet = getIMDPs(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
+            Pair<List<IMDP<Double>>, List<MDP<Double>>> verificationSet = getIMDPs(label, ex, PACIntervalEstimatorOptimistic::new, mdpParam, verificationParams, true);
 
             // Build robust policy and derive PAC guarantee
             RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
@@ -401,8 +430,8 @@ public class LearnVerify {
 //             * Range for SAV2: [0.75, 0.95]
 //             * Range for Aircraft: [0.7, 0.9]
 //             */
-//            double rangeMin1 = 0.7;
-//            double rangeMax1 = 0.9;
+//            double rangeMin1 = 0.75;
+//            double rangeMax1 = 0.95;
 //            List<Values> trainingParams = new ArrayList<>();
 //            List<Values> verificationParams = new ArrayList<>();
 //
@@ -424,7 +453,9 @@ public class LearnVerify {
 
             // Generate beta-distributed sample training and verification MDP parameters
             /*
-             * Parametes for Aircraft: Alpha = 10, Beta = 2
+             * Parameters for Aircraft: Alpha = 10, Beta = 2
+             * Parameters for Drone Single: Alpha = 2, Beta = 10
+             * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
             int alpha = 10;
             int beta = 2;
@@ -512,8 +543,17 @@ public class LearnVerify {
 
                 results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas)}));
 
+                // Eval robust policy on fresh samples
+                if (i == trainingSet.first.getFirst().size() - 1) {
+                    evaluatePolicy(robstratI, 200, ex);
+                    // Empirical Risk:
+                    computeEmpiricalRisk(robstratI,0.637, 500, ex);
+                    computeEmpiricalRisk(robstratI,0.798, 500, ex);
+                }
+
                 DataProcessor dp = new DataProcessor();
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
+                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas);
             }
 
             ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
@@ -521,6 +561,80 @@ public class LearnVerify {
         } catch (PrismException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex) throws PrismException {
+
+        int alpha = 20;
+        int beta = 2;
+        BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+        ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+        Iterator<Double> it = sampler.samples().iterator();
+
+        List<Values> evaluationParams = new ArrayList<>();
+
+        for (int i = 0; i < numEvalSamples; i++) {
+            constructValuesBeta(evaluationParams, it);
+        }
+
+        List<MDP<Double>> evalMDPs = new ArrayList<>();
+        for (Values values : evaluationParams) {
+            ex.values = values;
+            EstimatorConstructor estimatorConstructor = PACIntervalEstimator::new;
+            Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.set_experiment_naive(ex);
+
+            // Iterate and run experiments for each of the sampled parameter vectors
+            evalMDPs.add(estimator.getSUL());
+        }
+
+        List<Double> existentialLambdas = getExistentialGuarantee(prism, ex, evalMDPs);
+        System.out.println("Eval Existential Lambdas: " + existentialLambdas);
+
+        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
+        robSynth.setVerificationSet(evalMDPs);
+        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+
+        System.out.println("Eval Results with robust strategy: " + robResultsCross);
+    }
+
+    private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
+        int alpha = 20;
+        int beta = 2;
+        BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+        ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+        Iterator<Double> it = sampler.samples().iterator();
+
+        List<Values> evaluationParams = new ArrayList<>();
+
+        for (int i = 0; i < numEvalSamples; i++) {
+            constructValuesBeta(evaluationParams, it);
+        }
+
+        List<MDP<Double>> evalMDPs = new ArrayList<>();
+        for (Values values : evaluationParams) {
+            ex.values = values;
+            EstimatorConstructor estimatorConstructor = PACIntervalEstimator::new;
+            Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.set_experiment_naive(ex);
+
+            // Iterate and run experiments for each of the sampled parameter vectors
+            evalMDPs.add(estimator.getSUL());
+        }
+
+        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
+        robSynth.setVerificationSet(evalMDPs);
+        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+        System.out.println("Results for Empirical Eval:" + robResultsCross);
+        int numFail = 0;
+        for (double res : robResultsCross) {
+            if (res < guarantee) {
+                numFail++;
+            }
+        }
+        int N = robResultsCross.size();
+        double empiricalRisk = (double) numFail / (double) N;
+        System.out.println("Empirical Risk: " + (empiricalRisk) + " for N = " + N + " and guarantee " + guarantee);
     }
 
     private void constructValues(double rangeMin1, double rangeMax1, List<Values> params, Random r) {
@@ -531,8 +645,8 @@ public class LearnVerify {
          * SAV2: pL -> pL, pH -> pH
          * Aircraft r -> pL, p -> 1 - pH
          */
-        v.addValue("r", pL);
-        v.addValue("p", 1 - pH);
+        v.addValue("pL", pL);
+        v.addValue("pH", pH);
         params.add(v);
     }
 
@@ -540,9 +654,14 @@ public class LearnVerify {
         Values v = new Values();
         double pL = it.next();
         double pH = it.next();
+
+        // For Chain Benchmark, only p's and q'
         /*
          * SAV2: pL -> pL, pH -> pH
          * Aircraft r -> pL, p -> 1 - pH
+         * Drone Single p -> min(pH, 0.22), and pL commented out
+         * Betting Game p -> pH
+         * Chain Benchmark p -> ph  q -> 1 - p
          */
         v.addValue("r", pL);
         v.addValue("p", 1 - pH);
@@ -607,10 +726,13 @@ public class LearnVerify {
             /*
              * SAV2: pL, pH
              * Aircraft: r, p
+             * Drone Single: p
+             * Betting Game: p
+             * Chain Large: p, q
              */
             String[] paramNames = new String[]{"r", "p"};
-            String[] paramLowerBounds = new String[]{"0", "0"};
-            String[] paramUpperBounds = new String[]{"1", "1"};
+            String[] paramLowerBounds = new String[]{"0","0"};
+            String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -693,7 +815,7 @@ public class LearnVerify {
                 estimator.set_experiment(ex);
 
                 // Iterate and run experiments for each of the sampled parameter vectors
-                //ex.setTieParamters(verification);
+                ex.setTieParamters(verification);
                 Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator, verification);
                 learnedIMDPs.add(resIMDP.second);
                 mdps.add(estimator.getSUL());

@@ -56,6 +56,7 @@ public class Experiment {
         NAND,
         DRONE,
         CROWD,
+        DRONE_SINGLE
     }
 
 
@@ -216,6 +217,17 @@ public class Experiment {
             this.optimisticSpec = "Pmaxmax=? [F attarget ]";
             this.dtmcSpec = "P=? [F attarget ]";
             this.modelFile = "models/drone.prism";
+            this.type = Type.REACH;
+            this.optimizations = false;
+            break;
+            case DRONE_SINGLE:
+            this.goal = "\"target\"";
+            this.spec = "Pmax=? [!crash U target]";
+            this.idtmcRobustSpec = "Pmin=? [!crash U target]";
+            this.robustSpec = "Pmaxmin=? [!crash U target]";
+            this.optimisticSpec = "Pmaxmax=? [!crash U target]";
+            this.dtmcSpec = "P=? [!crash U target]";
+            this.modelFile = "models/drone_single_param.prism";
             this.type = Type.REACH;
             this.optimizations = false;
             break;
