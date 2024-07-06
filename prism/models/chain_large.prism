@@ -3,7 +3,7 @@ mdp
 const int H = 6;
 const double p;
 const double q;
-const double r; //= 1/2
+const double r = 1/2;
 module chain
 
 	s : [0..H] init 0;
