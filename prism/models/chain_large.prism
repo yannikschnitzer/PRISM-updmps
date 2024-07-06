@@ -1,6 +1,6 @@
 mdp
 
-const int H = 6;
+const int H = 10;
 const double p;
 const double q;
 const double r = 1/2;

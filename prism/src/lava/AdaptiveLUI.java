@@ -19,19 +19,22 @@ import java.util.*;
 public class AdaptiveLUI {
     private Prism prism;
 
+    // Prism objects for different models (MC states) to be used in the simulator
+    private List<Prism> simPrismEnvs = new ArrayList<>();
+
     public AdaptiveLUI() {}
 
     public static void main(String[] args) {
-        int seed = 5;
+        int seed = 551999;
         AdaptiveLUI adLUI = new AdaptiveLUI();
         String id = "basic";
 
         //TODO: currently running everything without model based optimizations, can later decide to change that for some experiments, needs to be implemented
-        Experiment ex = new Experiment(Model.CHAIN_LARGE).config(30, 1_000, seed, false, false, 3, 2, 2).info(id);
+        Experiment ex = new Experiment(Model.CHAIN_LARGE).config(100, 10, seed, false, false, 3, 2, 2).info(id);
 
         // Test Parameters, TODO: sub for proper experiment generating
-        int alpha = 10;
-        int beta = 2;
+        int alpha = 1;
+        int beta = 1;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
         Iterator<Double> it = sampler.samples().iterator();
@@ -39,6 +42,7 @@ public class AdaptiveLUI {
         for (int i = 0; i < 2; i++) {
             adLUI.constructValuesBeta(testParams, it);
         }
+        System.out.println("Model Parameters:" + testParams);
         // ------------------------
 
         Pair<List<MDP<Double>>, Estimator> me = adLUI.buildModels(ex, testParams);
@@ -58,15 +62,16 @@ public class AdaptiveLUI {
             //TODO: implement switching MC
             int MCState = switchingMC(0, models);
             MDP<Double> currModel = models.get(MCState);
+            Prism currSimPrism = simPrismEnvs.get(MCState);
 
             AdaptiveEstimator adaptiveEstimator = new AdaptiveEstimator(initialEstimator, ex, this.prism);
             Estimator activeEstimator = adaptiveEstimator.getActiveEstimate();
 
-            ObservationSampler observationSampler = getObservationsSampler(currModel, activeEstimator, ex);
+            ObservationSampler observationSampler = getObservationsSampler(currModel, currSimPrism, activeEstimator, ex);
 
             // Simulate trajectories and move generating model with switching MC
             int samples = 0;
-            Strategy samplingStrategy = activeEstimator.buildStrategy(); // This is an experiment setup, depends on whether we assume random trajectories, or active sampling access to the models
+            Strategy samplingStrategy = activeEstimator.buildUniformStrat(); // This is an experiment setup, depends on whether we assume random trajectories, or active sampling access to the models
             for (int i = 0; i < ex.iterations; i++) {
                 int sampled = observationSampler.simulateEpisode(ex.max_episode_length, samplingStrategy);
                 samples += sampled;
@@ -82,7 +87,8 @@ public class AdaptiveLUI {
 
                 // Set new generating model for next iteration
                 currModel = models.get(MCState);
-                observationSampler = getObservationsSampler(currModel, activeEstimator, ex);
+                currSimPrism = simPrismEnvs.get(MCState);
+                observationSampler = getObservationsSampler(currModel, currSimPrism, activeEstimator, ex);
             }
 
         } catch (PrismException e) {
@@ -94,15 +100,15 @@ public class AdaptiveLUI {
 
     public int switchingMC(int iterations, List<MDP<Double>> models) {
         // Model Switch after 500 iterations
-        if (iterations < 500) {
+        if (iterations < 5) {
             return 0;
         } else {
             return 1;
         }
     }
 
-    public ObservationSampler getObservationsSampler(MDP<Double> model, Estimator activeEstimator, Experiment ex) throws PrismException {
-        ObservationSampler observationSampler = new ObservationSampler(this.prism, model, activeEstimator.getTerminatingStates());
+    public ObservationSampler getObservationsSampler(MDP<Double> model, Prism simPrism, Estimator activeEstimator, Experiment ex) throws PrismException {
+        ObservationSampler observationSampler = new ObservationSampler(simPrism, model, activeEstimator.getTerminatingStates());
         observationSampler.setTransitionsOfInterest(activeEstimator.getTransitionsOfInterest());
         observationSampler.setTiedParameters(false); //TODO: for later
         observationSampler.setMultiplier(ex.multiplier);
@@ -126,10 +132,20 @@ public class AdaptiveLUI {
 
             for (Values values : parameters) {
                 ex.values = values;
+
                 Estimator estimator = estimatorConstructor.get(this.prism, ex);
                 estimator.set_experiment(ex);
+
                 models.add(estimator.getSUL());
                 initialEstmator = estimator;
+
+                // Only for initializing the Prism objects needed for simulation
+                Prism simPrism = initializeSimPrism(ex.seed);
+                ModulesFile simModulesFile = simPrism.parseModelFile(new File(ex.modelFile));
+                simPrism.loadPRISMModel(simModulesFile);
+                estimatorConstructor.get(simPrism, ex);
+                estimator.set_experiment(ex);
+                this.simPrismEnvs.add(simPrism);
             }
             System.out.println(models.size());
 
@@ -199,13 +215,21 @@ public class AdaptiveLUI {
         params.add(v);
     }
 
-
-    @SuppressWarnings("unchecked")
     public void initializePrism() throws PrismException {
         this.prism = new Prism(new PrismDevNullLog());
         this.prism.initialise();
         this.prism.setEngine(Prism.EXPLICIT);
         this.prism.setGenStrat(true);
+    }
+
+    public Prism initializeSimPrism(int seed) throws PrismException {
+        Prism simPrism = new Prism(new PrismDevNullLog());
+        simPrism.initialise();
+        simPrism.setEngine(Prism.EXPLICIT);
+        simPrism.setGenStrat(true);
+        simPrism.setSimulatorSeed(seed);
+
+        return simPrism;
     }
 
     public void resetAll(int seed) {
