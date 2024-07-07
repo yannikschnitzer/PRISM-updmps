@@ -74,10 +74,9 @@ public class BayesianEstimator extends Estimator {
 
         this.trueProbabilitiesMap = new HashMap<>();
         this.strengthMap = new HashMap<>();
-
+		double e = 0.3;
 		this.buildNewIMDP();
 		this.initializeStrengthMap(this.ex.initLowerStrength, this.ex.initUpperStrength);
-
 		this.lowerStrengthBound = ex.lowerStrengthBound;
 		this.upperStrengthBound = ex.upperStrengthBound;
 		this.name = "LUI";
@@ -145,6 +144,92 @@ public class BayesianEstimator extends Estimator {
 		return this.iterateIMDPandDTMC();
 	}
 
+	public double[] getConflicts(double distance) throws PrismException {
+		return this.checkIntervalsConflicts(distance);
+	}
+
+	public double[] checkIntervalsConflicts(double distance) {
+		int nrStates = this.mdp.getNumStates();
+		tieParameters();
+		int numDistConflicts = 0;
+		int numConflicts = 0;
+		int numSAPairs = 0;
+		for (int s = 0; s < nrStates; s++) {
+			int numChoices = this.mdp.getNumChoices(s);
+			for (int i = 0 ; i < numChoices; i++) {
+				String action = getActionString(this.mdp, s,i);
+				StateActionPair sa = new StateActionPair(s, action);
+
+				if (!sampleSizeMap.containsKey(sa)) {
+					continue;
+				}
+				numSAPairs++;
+
+				boolean lbDistConflict = checkStateActionLBConflictDist(sa, distance);
+				boolean ubDistConflict = checkStateActionUBConflictDist(sa, distance);
+
+				if (lbDistConflict || ubDistConflict) {
+					numDistConflicts++;
+				}
+
+				boolean lbConflict = checkStateActionLBConflict(sa);
+				boolean ubConflict = checkStateActionUBConflict(sa);
+
+				if (lbConflict || ubConflict) {
+					numConflicts++;
+				}
+			}
+		}
+//		System.out.println("Num Conflicts:" + numConflicts);
+//		System.out.println("Num DistConflicts:" + numDistConflicts);
+//		System.out.println("Num SAPairs:" + numSAPairs);
+		return new double[]{numDistConflicts, numConflicts, numSAPairs};
+	}
+
+	public boolean checkStateActionLBConflictDist(StateActionPair sa, double distance) {
+		int nrStates = this.mdp.getNumStates();
+		for (int successor = 0; successor < nrStates; successor++) {
+			TransitionTriple t = new TransitionTriple(sa.getState(), sa.getAction(), successor);
+			if (this.samplesMap.containsKey(t)) {
+				Interval prior = this.intervalsMap.get(t);
+				int sampleSize = this.sampleSizeMap.get(sa);
+				int samples = 0;
+				if (this.samplesMap.containsKey(t))
+					samples = this.samplesMap.get(t);
+				double pointEstimate = (double) samples / sampleSize;
+				double priorLower = (Double) prior.getLower();
+				double priorUpper = (Double) prior.getUpper();
+				if (priorLower - pointEstimate > distance) {
+					//System.out.println("Triple:" + t + "LB distance Conflict Interval:" + prior + "point estimate" + pointEstimate + "samples:" + samples + "samplesize" + sampleSize);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	public boolean checkStateActionUBConflictDist(StateActionPair sa, double distance) {
+		int nrStates = this.mdp.getNumStates();
+		for (int successor = 0; successor < nrStates; successor++) {
+			TransitionTriple t = new TransitionTriple(sa.getState(), sa.getAction(), successor);
+			if (this.samplesMap.containsKey(t)) {
+				Interval prior = this.intervalsMap.get(t);
+				int sampleSize = this.sampleSizeMap.get(sa);
+				int samples = 0;
+				if (this.samplesMap.containsKey(t))
+					samples = this.samplesMap.get(t);
+				double pointEstimate = (double) samples / sampleSize;
+				double priorLower = (Double) prior.getLower();
+				double priorUpper = (Double) prior.getUpper();
+				if (pointEstimate - priorUpper > distance) {
+					//System.out.println("Triple:" + t + "UB distance Conflict Interval:" + prior + "point estimate" + pointEstimate + "samples:" + samples + "samplesize" + sampleSize);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	
 	public void debugIntervalCheck() {
 		for (StateActionPair sa : this.sampleSizeMap.keySet()) {
@@ -586,9 +671,6 @@ public class BayesianEstimator extends Estimator {
 
 	}
 
-
-
-
 	/**
 	 * Update an interval using robust bayesian estimation
 	 * @param prior			prior probability interval (of doubles)
@@ -732,6 +814,7 @@ public class BayesianEstimator extends Estimator {
 	public void updateIntervalsSAConflict() {
 		int nrStates = this.mdp.getNumStates();
 		tieParameters();
+		int numConflicts = 0;
 		for (int s = 0; s < nrStates; s++) {
 			int numChoices = this.mdp.getNumChoices(s);
 			for (int i = 0 ; i < numChoices; i++) {
@@ -748,6 +831,10 @@ public class BayesianEstimator extends Estimator {
 
 				boolean lbConflict = checkStateActionLBConflict(sa);
 				boolean ubConflict = checkStateActionUBConflict(sa);
+
+				if (lbConflict || ubConflict) {
+					numConflicts++;
+				}
 				//System.out.println("Pair: " + sa + " lbconclif:" + lbConflict + " ubconf " + ubConflict);
 
 				int sampleSize = this.sampleSizeMap.get(sa); //ex.tieParameters ? tiedStateActionCounts.get(sa) :this.sampleSizeMap.get(sa);
@@ -766,7 +853,7 @@ public class BayesianEstimator extends Estimator {
 					Interval strength = this.strengthMap.get(t);
 
 					Interval posterior = updateIntervalSAConflict(prior, strength, samples, sampleSize, lbConflict, ubConflict);
-					Interval posterior2 = updateIntervalSAConflict(prior, strength, this.tiedTripleCounts.get(t), tiedStateActionCounts.get(sa), lbConflict, ubConflict);
+//					Interval posterior2 = updateIntervalSAConflict(prior, strength, this.tiedTripleCounts.get(t), tiedStateActionCounts.get(sa), lbConflict, ubConflict);
 
 					Interval postStrength = updateStrength(strength, sampleSize);
 					this.intervalsMap.put(t, posterior);
@@ -797,11 +884,13 @@ public class BayesianEstimator extends Estimator {
 				int samples = 0;
 				if (this.samplesMap.containsKey(t))
 					samples = this.samplesMap.get(t);
-				double pointEstimate = samples / sampleSize;
+				double pointEstimate = (double) samples / sampleSize;
 				double priorLower = (Double) prior.getLower();
 				double priorUpper = (Double) prior.getUpper();
-				if (pointEstimate < priorLower)
+				if (pointEstimate < priorLower) {
+					//System.out.println("Triple:" + t + "LB Conflict Interval:" + prior + "point estimate" + pointEstimate + "samples:" + samples + "samplesize" + sampleSize);
 					return true;
+				}
 			}
 		}
 		return false;
@@ -818,11 +907,13 @@ public class BayesianEstimator extends Estimator {
 				int samples = 0;
 				if (this.samplesMap.containsKey(t))
 					samples = this.samplesMap.get(t);
-				double pointEstimate = samples / sampleSize;
+				double pointEstimate = (double) samples / sampleSize;
 				double priorLower = (Double) prior.getLower();
 				double priorUpper = (Double) prior.getUpper();
-				if (pointEstimate > priorUpper)
+				if (pointEstimate > priorUpper) {
+					//System.out.println("Triple:" + t + "UB Conflict Interval:" + prior + "point estimate" + pointEstimate + "samples:" + samples + "samplesize" + sampleSize);
 					return true;
+				}
 			}
 		}
 		return false;

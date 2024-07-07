@@ -498,6 +498,10 @@ public class Estimator {
         throw new UnsupportedOperationException("can't get results from estimator");
     }
 
+    public double[] getConflicts(double distance) throws PrismException {
+        throw new UnsupportedOperationException("can't get conflicts from estimator");
+    }
+
     public double[] getInitialResults() throws PrismException {
         throw new UnsupportedOperationException("can't get results from estimator");
     }

@@ -19,8 +19,10 @@ import java.util.*;
 public class AdaptiveLUI {
     private Prism prism;
 
+    private static final int MC_INIT = -1;
+
     // Prism objects for different models (MC states) to be used in the simulator
-    private List<Prism> simPrismEnvs = new ArrayList<>();
+    private final List<Prism> simPrismEnvs = new ArrayList<>();
 
     public AdaptiveLUI() {}
 
@@ -30,7 +32,7 @@ public class AdaptiveLUI {
         String id = "basic";
 
         //TODO: currently running everything without model based optimizations, can later decide to change that for some experiments, needs to be implemented
-        Experiment ex = new Experiment(Model.CHAIN_LARGE).config(100, 10, seed, false, false, 3, 2, 2).info(id);
+        Experiment ex = new Experiment(Model.CHAIN_LARGE).config(200, 2000, seed, false, false, 3, 2, 2).info(id);
 
         // Test Parameters, TODO: sub for proper experiment generating
         int alpha = 1;
@@ -60,7 +62,7 @@ public class AdaptiveLUI {
     public void runAdaptiveLUI(Experiment ex, List<MDP<Double>> models, Estimator initialEstimator){
         try {
             //TODO: implement switching MC
-            int MCState = switchingMC(0, models);
+            int MCState = switchingMC(0, -1, models);
             MDP<Double> currModel = models.get(MCState);
             Prism currSimPrism = simPrismEnvs.get(MCState);
 
@@ -75,20 +77,31 @@ public class AdaptiveLUI {
             for (int i = 0; i < ex.iterations; i++) {
                 int sampled = observationSampler.simulateEpisode(ex.max_episode_length, samplingStrategy);
                 samples += sampled;
-                System.out.println("Sampled in Iteration " + i + ": " + sampled);
 
                 //TODO: Do computations in adaptiveEstimator
-                System.out.println("Generating trajectories from model:" + MCState);
-                System.out.println("Samples Map: " + observationSampler.getSamplesMap());
-                System.out.println("Sample Size Map: " +  observationSampler.getSampleSizeMap());
-                System.out.println("-----------");
+                adaptiveEstimator.addTrajectory(observationSampler.getSamplesMap(), observationSampler.getSampleSizeMap());
+
+                if (i % 50 == 0) {
+                    System.out.println("Iteration " + i + " of " + ex.iterations);
+                    adaptiveEstimator.checkBufferAgreement();
+                    adaptiveEstimator.clearObservationMaps();
+                    System.out.println("Generating trajectories from model:" + MCState);
+                    //System.out.println("Samples Map: " + observationSampler.getSamplesMap());
+                    //System.out.println("Sample Size Map: " +  observationSampler.getSampleSizeMap());
+                    System.out.println("-----------");
+                }
+
                 // Progress MC
-                MCState = switchingMC(i, models);
+                MCState = switchingMC(i, MCState, models);
 
                 // Set new generating model for next iteration
                 currModel = models.get(MCState);
                 currSimPrism = simPrismEnvs.get(MCState);
                 observationSampler = getObservationsSampler(currModel, currSimPrism, activeEstimator, ex);
+            }
+
+            for (Estimator e : adaptiveEstimator.getEstimators()) {
+                System.out.println("Model Estimate: " + e.getEstimate());
             }
 
         } catch (PrismException e) {
@@ -98,9 +111,14 @@ public class AdaptiveLUI {
 
     }
 
-    public int switchingMC(int iterations, List<MDP<Double>> models) {
-        // Model Switch after 500 iterations
-        if (iterations < 5) {
+    public int switchingMC(int iterations, int MCState, List<MDP<Double>> models) {
+        // Initial State
+        if (MCState == MC_INIT) {
+            return 0;
+        }
+
+        // Transition Probability Matrix
+        if (iterations < 1000) {
             return 0;
         } else {
             return 1;
@@ -123,6 +141,9 @@ public class AdaptiveLUI {
         resetAll(ex.seed);
         List<MDP<Double>> models = new ArrayList<>();
         MDP<Function> mdpParam = buildParamModel(ex); // Needed if we want to do model based opts
+        List<List<TransitionTriple>> similarTransitions = getSimilarTransitions(mdpParam);
+        Map<Function, List<TransitionTriple>> functionMap = getFunctionMap(mdpParam);
+
         Estimator initialEstmator = null;
 
         try {
@@ -134,6 +155,8 @@ public class AdaptiveLUI {
                 ex.values = values;
 
                 Estimator estimator = estimatorConstructor.get(this.prism, ex);
+                estimator.setFunctionMap(functionMap);
+                estimator.setSimilarTransitions(similarTransitions);
                 estimator.set_experiment(ex);
 
                 models.add(estimator.getSUL());
@@ -240,6 +263,90 @@ public class AdaptiveLUI {
             System.out.println("PrismException in LearnVerify.resetAll()  :  " + e.getMessage());
             System.exit(1);
         }
+    }
+
+    // Optimization Stuff copied from LearnVerify, not used yet
+    public Set<Function> getTransitionStructure(MDP<Function> mdpParam, int s, int a) {
+        HashSet<Function> transitions = new HashSet<>();
+        mdpParam.forEachTransition(s, a, (int sFrom, int sTo, Function p) -> {
+            transitions.add(p);
+        });
+        return transitions;
+    }
+
+    public Map<Set<Function>, List<Pair<Integer, Integer>>> getSimilarStateActionMap(MDP<Function> mdpParam) {
+        HashMap<Set<Function>, List<Pair<Integer, Integer>>> similarStateActionMap = new HashMap<>();
+
+        for (int s = 0; s < mdpParam.getNumStates(); s++) {
+            int numChoices = mdpParam.getNumChoices(s);
+            for (int i = 0; i < numChoices; i++) {
+                Set<Function> transitionStructure = getTransitionStructure(mdpParam, s, i);
+                if (!similarStateActionMap.containsKey(transitionStructure)) {
+                    similarStateActionMap.put(transitionStructure, new ArrayList<>());
+                }
+                similarStateActionMap.get(transitionStructure).add(new Pair<>(s, i));
+            }
+        }
+        System.out.println("Similar state action map" + similarStateActionMap);
+        return similarStateActionMap;
+    }
+
+    public List<List<TransitionTriple>> getSimilarTransitions(MDP<Function> mdpParam) {
+        Map<Set<Function>, List<Pair<Integer, Integer>>> similarStateMap = getSimilarStateActionMap(mdpParam);
+        List<List<TransitionTriple>> similarTransitions = new ArrayList<>();
+
+        for (List<Pair<Integer, Integer>> similarStateActions : similarStateMap.values()) {
+            Map<Function, List<TransitionTriple>> transitions = new HashMap<>();
+
+            for (Pair<Integer, Integer> sa : similarStateActions) {
+                int s = sa.first;
+                int i = sa.second;
+
+                String action = getActionString(mdpParam, s, i);
+
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
+                    if (!transitions.containsKey(p)) {
+                        transitions.put(p, new ArrayList<>());
+                    }
+                    transitions.get(p).add(new TransitionTriple(sFrom, action, sTo));
+                });
+
+            }
+
+            similarTransitions.addAll(transitions.values());
+        }
+        System.out.println("Similar Transitions: " + similarTransitions);
+        return similarTransitions;
+    }
+
+    public Map<Function, List<TransitionTriple>> getFunctionMap(MDP<Function> mdpParam) {
+        Map<Function, List<TransitionTriple>> functionMap = new HashMap<>();
+
+        for (int s = 0; s < mdpParam.getNumStates(); s++) {
+            int numChoices = mdpParam.getNumChoices(s);
+            for (int i = 0; i < numChoices; i++) {
+                //String action = (String) mdpParam.getAction(s, i);
+                String action = getActionString(mdpParam, s, i);
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
+                    if (functionMap.containsKey(p)) {
+                        functionMap.get(p).add(new TransitionTriple(sFrom, action, sTo));
+                    } else {
+                        functionMap.put(p, new ArrayList<>());
+                        functionMap.get(p).add(new TransitionTriple(sFrom, action, sTo));
+                    }
+                });
+            }
+        }
+
+        return functionMap;
+    }
+
+    public String getActionString(MDP<Function> mdp, int s, int i) {
+        String action = (String) mdp.getAction(s, i);
+        if (action == null) {
+            action = "_empty";
+        }
+        return action;
     }
 }
 
