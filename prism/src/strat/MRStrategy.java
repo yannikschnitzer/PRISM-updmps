@@ -95,28 +95,19 @@ public class MRStrategy extends StrategyExplicit<Double>
 	@Override
 	public void exportInducedModel(PrismLog out, StrategyExportOptions options) throws PrismException
 	{
-		throw new PrismNotSupportedException("Not yet implemented");
-		/*
 		ConstructInducedModel cim = new ConstructInducedModel();
 		cim.setMode(options.getMode()).setReachOnly(options.getReachOnly());
 		Model<Double> inducedModel = cim.constructInducedModel(model, this);
 		inducedModel.exportToPrismExplicitTra(out, options.getModelPrecision());
-
-		// NB: for reach=false (and MDPs), it would be slightly cheaper to use:
-		//Model<Value> inducedModel = model.constructInducedModel(this);
-		*/
 	}
 
 	@Override
 	public void exportDotFile(PrismLog out, StrategyExportOptions options) throws PrismException
 	{
-		throw new PrismNotSupportedException("Not yet implemented");
-		/*
 		ConstructInducedModel cim = new ConstructInducedModel();
 		cim.setMode(options.getMode()).setReachOnly(options.getReachOnly());
 		Model<Double> inducedModel = cim.constructInducedModel(model, this);
 		inducedModel.exportToDotFile(out, null, options.getShowStates(), options.getModelPrecision());
-		*/
 	}
 
 	@Override
