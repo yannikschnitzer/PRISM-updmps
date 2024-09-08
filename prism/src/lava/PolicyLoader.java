@@ -15,7 +15,6 @@ public class PolicyLoader {
 
     public MRStrategy loadAircraftPolicy(String policyFile, MDP<Double> model) {
         File policyJson = new File(policyFile);
-
         try {
             List<List<List<List<List<Double>>>>> policyList = mapper.readValue(policyJson, List.class);
 
