@@ -1,5 +1,6 @@
 package lava;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import explicit.IMDP;
 import explicit.MDP;
 import explicit.MDPModelChecker;
@@ -9,6 +10,7 @@ import org.apache.commons.rng.simple.RandomSource;
 import param.BigRational;
 import param.Function;
 import param.Point;
+import parser.State;
 import parser.Values;
 import parser.ast.Expression;
 import parser.ast.ModulesFile;
@@ -18,6 +20,7 @@ import simulator.ModulesFileModelGenerator;
 import simulator.RandomNumberGenerator;
 import simulator.sampler.Sampler;
 import strat.MDStrategy;
+import strat.MRStrategy;
 import strat.Strategy;
 
 import java.io.File;
@@ -29,6 +32,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.commons.statistics.distribution.*;
+import org.apache.commons.statistics.distribution.NormalDistribution;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.rng.*;
 
@@ -42,6 +46,7 @@ public class LearnVerify {
 
     private boolean verbose = true;
 
+    public MRStrategy rlStrat;
 
     public LearnVerify() {
     }
@@ -66,16 +71,20 @@ public class LearnVerify {
                     continue;
                 }
                 System.out.println("running with seed " + s);
-                LearnVerify l = new LearnVerify(seed);
-                l.basic();
-                l.switching_environment();
-                l.gridStrengthEval();
+                //LearnVerify l = new LearnVerify(seed);
+                //l.basic();
+                //l.switching_environment();
+                //l.gridStrengthEval();
+
                 //l.evaluate_strength();
             }
         } else {
             System.out.println("running with default seed");
             LearnVerify l = new LearnVerify();
             l.basic();
+            NormalDistribution distribution = NormalDistribution.of(0, 1);
+            double outcomeRisk = distribution.inverseCumulativeProbability(0.975);
+            System.out.println(outcomeRisk);
 //            l.switching_environment();
 //            l.gridStrengthEval();
 //            l.evaluate_strength();
@@ -122,10 +131,10 @@ public class LearnVerify {
 //            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
 
-        for (int seed : get_seeds(seed, 10)) {
-            run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, true, true, m, n, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, true, false, m, n, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, false, false, m, n, 2).info(id));
+        for (int seed : get_seeds(seed, 2)) {
+            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, true, true, m, n, 2).info(id));
+            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
         }
 
 //        for (int seed : get_seeds(seed, 10)) {
@@ -209,7 +218,7 @@ public class LearnVerify {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
         if (!ex.optimizations){
-            runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), BayesianEstimatorOptimistic::new);
+            //runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), BayesianEstimatorOptimistic::new);
         }
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
     }
@@ -497,7 +506,9 @@ public class LearnVerify {
             robSynth.setVerificationSet(verificationSet.second);
             robSynth.combineMDPs();
             MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
+
             List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
+            //List<Double> rLResults = robSynth.checkVerificationSet(prism, rlStrat, ex.dtmcSpec);
 
             // Get Existential Guarantee over true MDPs
             List<Double> existentialLambdas = getExistentialGuarantee(prism, ex, verificationSet.second);
@@ -739,6 +750,12 @@ public class LearnVerify {
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
+            MDP<Function> model = (MDP<Function>) this.prism.getBuiltModelExplicit();
+//            System.out.println("Model states values" + model.getStatesList().getFirst());
+//            System.out.println("Action 0:" + model.getAction(0,0));
+//            System.out.println("Action 1:" + model.getAction(0,1));
+//            System.out.println("Action 2:" + model.getAction(0,2));
+
             return (MDP<Function>) this.prism.getBuiltModelExplicit();
 
         } catch (PrismException | FileNotFoundException e) {
@@ -816,6 +833,9 @@ public class LearnVerify {
                 estimator.setFunctionMap(functionMap);
                 estimator.setSimilarTransitions(similarTransitions);
                 estimator.set_experiment(ex);
+
+                PolicyLoader p = new PolicyLoader();
+                rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", estimator.getSUL());
 
                 // Iterate and run experiments for each of the sampled parameter vectors
                 ex.setTieParamters(verification);

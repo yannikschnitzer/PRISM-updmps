@@ -5,6 +5,7 @@ import explicit.Distribution;
 import explicit.IMDP;
 import explicit.IMDPSimple;
 import explicit.MDP;
+import org.apache.commons.statistics.distribution.NormalDistribution;
 import param.Function;
 import prism.Evaluator;
 import prism.Prism;
@@ -16,6 +17,8 @@ public class PACIntervalEstimator extends MAPEstimator {
 	protected double error_tolerance;
 	protected HashMap<TransitionTriple, Double> tiedModes = new HashMap<>();
 	protected HashMap<TransitionTriple, Integer> tiedStateActionCounts = new HashMap<>();
+
+	NormalDistribution distribution = NormalDistribution.of(0, 1);
 
     public PACIntervalEstimator(Prism prism, Experiment ex) {
 		super(prism, ex);
@@ -53,21 +56,30 @@ public class PACIntervalEstimator extends MAPEstimator {
 	protected Interval<Double> getTransitionInterval(TransitionTriple t) {
 		double precision = 1e-8;
 		double point;
+		int n;
+
 
 		if (!this.ex.tieParameters) {
 			point = mode(t);
+			n = getStateActionCount(t.getStateAction());
 		} else {
 			if (!this.samplesMap.containsKey(t)){
 				return new Interval<>(precision, 1-precision);
 			}
 			point = tiedModes.get(t);
+			n = tiedStateActionCounts.get(t);
 		}
 
 		double confidence_interval = confidenceInterval(t);
 		double lower_bound = Math.max(point - confidence_interval, precision);
 		double upper_bound = Math.min(point + confidence_interval, 1-precision);
 
-		return new Interval<>(lower_bound, upper_bound);
+		int m = this.getNumLearnableTransitions();
+		Interval<Double> wcc_interval = computeWilsonCC((double) n, point, error_tolerance/ (double) m);
+
+		return wcc_interval;
+
+		//return new Interval<>(lower_bound, upper_bound);
 	}
 
 	/**
@@ -190,6 +202,23 @@ public class PACIntervalEstimator extends MAPEstimator {
 		alpha = (error_tolerance*(1.0/(double) m));///((double) this.mdp.getNumChoices(t.getStateAction().getState())); // distribute error over all transitions
 
 		double delta = Math.sqrt((Math.log(2 / alpha))/(2*n));
+
+		Interval<Double> wccinterval = computeWilsonCC((double) n, mode(t), alpha);
+		if (n < -10000) {
+			System.out.println("Transition:" + t + " n : " + n);
+			System.out.println("Hoeffdings-Interval: " + new Interval<Double>(mode(t) - delta, mode(t) + delta));
+			System.out.println("Wilson-Interval: " + wccinterval);
+		}
+
 		return delta;
+	}
+
+	private Interval<Double> computeWilsonCC(double n, double p, double delta) {
+		double z = distribution.inverseCumulativeProbability(1 - delta / 2.0);
+
+		double pWCCLower = Math.max(0, (2 * n * p + z * z - z * Math.sqrt(z * z - (1.0 / n) + 4 * n * p *(1-p) + 4 * p - 2 - 1)) / (2*(n + z * z)));
+		double pWCCUpper = Math.min(1, (2 * n * p + z * z + z * Math.sqrt(z * z - (1.0 / n) + 4 * n * p *(1-p) - 4 * p + 2 + 1)) / (2*(n + z * z)));
+
+		return new Interval<>(pWCCLower, pWCCUpper);
 	}
 }
