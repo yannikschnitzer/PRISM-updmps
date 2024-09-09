@@ -9,6 +9,8 @@ import parser.ast.PropertiesFile;
 import prism.*;
 import simulator.ModulesFileModelGenerator;
 import strat.MDStrategy;
+import strat.MRStrategy;
+import strat.StrategyExportOptions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -152,6 +154,40 @@ public class RobustPolicySynthesizerMDP {
 
             Result result = mc.check(inducedDTMC, pf.getProperty(0));
             results.add((double) result.getResult());
+        }
+
+        return results;
+    }
+
+    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec) throws PrismException {
+        List<Double> results = new ArrayList<>();
+        for (MDP<Double> mdp : this.verificationSet) {
+            PolicyLoader p = new PolicyLoader();
+            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);
+
+            StrategyExportOptions options = new StrategyExportOptions();
+            options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
+            DTMC<Double> inducedDTMC = (DTMC<Double>) rlStrat.constructInducedModel(options);
+
+            DTMCModelChecker mc = new DTMCModelChecker(prism);
+            mc.setErrorOnNonConverge(false);
+            mc.setGenStrat(true);
+            PropertiesFile pf = prism.parsePropertiesString(spec);
+
+            buildModulesFiles(prism);
+            ModulesFile modulesFileDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
+            modulesFileDTMC.setModelType(ModelType.DTMC);
+            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileDTMC, prism);
+            modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
+            //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, mdp, rlStrat);
+
+            mc.setModelCheckingInfo(modelGen, pf, null);
+
+            Result result = mc.check(inducedDTMC, pf.getProperty(0));
+            results.add((double) result.getResult());
+
+            //System.out.println("Induced Model: " + rlStrat.constructInducedModel(options));
+
         }
 
         return results;

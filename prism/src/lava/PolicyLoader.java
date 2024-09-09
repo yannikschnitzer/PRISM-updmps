@@ -2,6 +2,8 @@ package lava;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import explicit.MDP;
+import explicit.Model;
+import explicit.NondetModel;
 import parser.State;
 import strat.MRStrategy;
 
@@ -13,7 +15,7 @@ public class PolicyLoader {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public MRStrategy loadAircraftPolicy(String policyFile, MDP<Double> model) {
+    public MRStrategy loadAircraftPolicy(String policyFile, NondetModel<Double> model) {
         File policyJson = new File(policyFile);
         try {
             List<List<List<List<List<Double>>>>> policyList = mapper.readValue(policyJson, List.class);
@@ -31,11 +33,12 @@ public class PolicyLoader {
                     strat.setChoiceProbability(state_index, i, policyList.get(x).get(y).get(ax).get(ay).get(i));
                 }
 
-                System.out.println("State " + s + " Actions " + policyList.get(x).get(y).get(ax).get(ay));
+                //System.out.println("State " + s + " Actions " + policyList.get(x).get(y).get(ax).get(ay));
 
             }
 
-            System.out.println("Strategy " + strat);
+            //System.out.println("Strategy " + strat);
+            //System.out.println("Model " + model);
 
             return strat;
 

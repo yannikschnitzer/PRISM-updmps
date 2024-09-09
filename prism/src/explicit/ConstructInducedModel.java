@@ -26,6 +26,7 @@
 
 package explicit;
 
+import common.Interval;
 import parser.State;
 import prism.ModelType;
 import prism.PrismException;
@@ -117,17 +118,21 @@ public class ConstructInducedModel
 		ModelSimple<Value> inducedModel = (ModelSimple<Value>) ModelSimple.forModelType(inducedModelType);
 		
 		// Attach evaluator and copy variable info
-		((ModelExplicit<Value>) inducedModel).setEvaluator(model.getEvaluator());
+		if (modelType == ModelType.IMDP) {
+		} else {
+			((ModelExplicit<Value>) inducedModel).setEvaluator(model.getEvaluator());
+		}
 		((ModelExplicit<Value>) inducedModel).setVarList(model.getVarList());
 
 		// Now do the actual induced model construction
 		// This is a separate method so that we can alter the model type if needed,
 		// e.g. construct an IMDP<Value> product as one over an MDP<Interval<Value>>
 		switch (modelType) {
-			case IMDP:
-				inducedModelType = (mode == InducedModelMode.REDUCE) ? ModelType.DTMC : ModelType.MDP;
-				return doConstructInducedModel(ModelType.MDP, inducedModelType, inducedModel, model, strat);
+//			case IMDP:
+//				inducedModelType = (mode == InducedModelMode.REDUCE) ? ModelType.DTMC : ModelType.MDP;
+//				return doConstructInducedModel(ModelType.MDP, inducedModelType, inducedModel, model, strat);
 			default:
+				//System.out.println("Model type:" + modelType  + " induced model type:" + inducedModelType);
 				return doConstructInducedModel(modelType, inducedModelType, inducedModel, model, strat);
 		}
 	}
@@ -246,58 +251,75 @@ public class ConstructInducedModel
 				if (strat.isRandomised()) {
 					stratChoiceProb = strat.getChoiceActionProbability(decision, act);
 				}
-				// Go through transitions of original model
-				Iterator<Map.Entry<Integer, Value>> iter;
-				switch (modelType) {
-					case MDP:
-						iter = ((MDP<Value>) model).getTransitionsIterator(s, j);
-						break;
-					case POMDP:
-						iter = ((POMDP<Value>) model).getTransitionsIterator(s, j);
-						break;
-					case STPG:
-						iter = ((STPG<Value>) model).getTransitionsIterator(s, j);
-						break;
-					default:
-						throw new PrismNotSupportedException("Induced model construction not implemented for " + modelType + "s");
-				}
-				Distribution<Value> prodDistr = null;
-				if (inducedModelType.nondeterministic()) {
-					prodDistr = new Distribution<>(model.getEvaluator());
-				}
-				while (iter.hasNext()) {
-					Map.Entry<Integer, Value> e = iter.next();
-					int s_2 = e.getKey();
-					Value prob = e.getValue();
-					if (strat.isRandomised()) {
-						prob = model.getEvaluator().multiply(prob, stratChoiceProb);
+
+				if (modelType == ModelType.IMDP && mode == InducedModelMode.REDUCE) {
+					Iterator<Map.Entry<Integer, Interval<Value>>> iter = ((IMDP<Value>) model).getTransitionsIterator(s, j);
+
+					while (iter.hasNext()) {
+						Map.Entry<Integer, Interval<Value>> entry = iter.next();
+						//System.out.println("Entry: " + entry.getKey() + " -> " + entry.getValue());
+						int s_2 = entry.getKey();
+						Interval<Value> probInt = entry.getValue();
+						//System.out.println("Prob Int:" + probInt);
+						//System.out.println("Strat Prob: " + stratChoiceProb);
+						if (strat.isRandomised()) {
+							probInt = ((IMDP<Value>) model).getIntervalEvaluator().multiply(new Interval<>(stratChoiceProb, stratChoiceProb), probInt);
+						}
+						//System.out.println("Prob Int after:" + probInt);
+
+						if (inducedModelType == ModelType.IDTMC) {
+							((IDTMCSimple<Value>)inducedModel).addToProbability(map[s], map[s_2], probInt);
+						} else {
+							throw new PrismException("Induced model type does not match.");
+						}
 					}
-					// Add transition to model
+				} else {
+					// Go through transitions of original model
+					Iterator<Map.Entry<Integer, Value>> iter = switch (modelType) {
+                        case MDP -> ((MDP<Value>) model).getTransitionsIterator(s, j);
+                        case POMDP -> ((POMDP<Value>) model).getTransitionsIterator(s, j);
+                        case STPG -> ((STPG<Value>) model).getTransitionsIterator(s, j);
+                        default ->
+                                throw new PrismNotSupportedException("Induced model construction not implemented for " + modelType + "s");
+                    };
+                    Distribution<Value> prodDistr = null;
+					if (inducedModelType.nondeterministic()) {
+						prodDistr = new Distribution<>(model.getEvaluator());
+					}
+					while (iter.hasNext()) {
+						Map.Entry<Integer, Value> e = iter.next();
+						int s_2 = e.getKey();
+						Value prob = e.getValue();
+						if (strat.isRandomised()) {
+							prob = model.getEvaluator().multiply(prob, stratChoiceProb);
+						}
+						// Add transition to model
+						switch (inducedModelType) {
+							case DTMC:
+								((DTMCSimple<Value>) inducedModel).addToProbability(map[s], map[s_2], prob);
+								break;
+							case MDP:
+							case POMDP:
+							case STPG:
+								prodDistr.set(map[s_2], prob);
+								break;
+							default:
+								throw new PrismNotSupportedException("Induced model construction not implemented for " + modelType + "s");
+						}
+					}
 					switch (inducedModelType) {
-						case DTMC:
-							((DTMCSimple<Value>) inducedModel).setProbability(map[s], map[s_2], prob);
-							break;
 						case MDP:
+							((MDPSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((MDP<Value>) model).getAction(s, j));
+							break;
 						case POMDP:
+							((POMDPSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((POMDP<Value>) model).getAction(s, j));
+							break;
 						case STPG:
-							prodDistr.set(map[s_2], prob);
+							((STPGSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((STPG<Value>) model).getAction(s, j));
 							break;
 						default:
-							throw new PrismNotSupportedException("Induced model construction not implemented for " + modelType + "s");
+							break;
 					}
-				}
-				switch (inducedModelType) {
-					case MDP:
-						((MDPSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((MDP<Value>) model).getAction(s, j));
-						break;
-					case POMDP:
-						((POMDPSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((POMDP<Value>) model).getAction(s, j));
-						break;
-					case STPG:
-						((STPGSimple<Value>) inducedModel).addActionLabelledChoice(map[s], prodDistr, ((STPG<Value>) model).getAction(s, j));
-						break;
-					default:
-						break;
 				}
 			}
 		}

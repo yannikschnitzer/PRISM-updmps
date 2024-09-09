@@ -58,4 +58,8 @@ public abstract class StrategyExplicit<Value> extends StrategyWithStates<Value>
 	{
 		return model.getEvaluator();
 	}
+
+	public NondetModel<Value> getModel() {
+		return model;
+	}
 }

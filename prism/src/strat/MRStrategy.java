@@ -128,4 +128,9 @@ public class MRStrategy extends StrategyExplicit<Double>
 				.mapToObj(s -> s + "=" + getChoiceActionString(s, -1))
 				.collect(Collectors.joining(",")) + "]";
 	}
+
+	@Override
+	public boolean isRandomised() {
+		return true;
+	}
 }

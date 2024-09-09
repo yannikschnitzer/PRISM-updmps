@@ -2,6 +2,7 @@ package lava;
 
 import common.Interval;
 import explicit.*;
+import explicit.Model;
 import param.Function;
 import parser.ast.Expression;
 import parser.ast.ModulesFile;
@@ -9,6 +10,8 @@ import parser.ast.PropertiesFile;
 import prism.*;
 import simulator.ModulesFileModelGenerator;
 import strat.MDStrategy;
+import strat.MRStrategy;
+import strat.StrategyExportOptions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -151,6 +154,44 @@ public class RobustPolicySynthesizerIMDP {
 
             Result result = mc.check(inducedIDTMC, pf.getProperty(0));
             results.add((double) result.getResult());
+        }
+
+        return results;
+    }
+
+    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec) throws PrismException {
+        List<Double> results = new ArrayList<>();
+        for (IMDP<Double> imdp : this.verificationSet) {
+            PolicyLoader p = new PolicyLoader();
+            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+
+
+            StrategyExportOptions options = new StrategyExportOptions();
+            options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
+            Model<Double> inducedIDTMC = rlStrat.constructInducedModel(options);
+
+
+            //System.out.println("induced model rl strat imdp:" + inducedIDTMC);
+
+            IDTMCModelChecker mc = new IDTMCModelChecker(prism);
+            mc.setErrorOnNonConverge(false);
+            mc.setGenStrat(true);
+            PropertiesFile pf = prism.parsePropertiesString(spec);
+
+            buildModulesFiles(prism);
+            ModulesFile modulesFileIDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
+            modulesFileIDTMC.setModelType(ModelType.IDTMC);
+            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIDTMC, prism);
+            modelGen.setSomeUndefinedConstants(imdp.getConstantValues());
+            //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, imdp, strategy);
+
+            mc.setModelCheckingInfo(modelGen, pf, null);
+
+            Result result = mc.check(inducedIDTMC, pf.getProperty(0));
+            results.add((double) result.getResult());
+
+            System.out.println("Induced IDTMC Model: " + rlStrat.constructInducedModel(options));
+
         }
 
         return results;

@@ -1,10 +1,7 @@
 package lava;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import explicit.IMDP;
-import explicit.MDP;
-import explicit.MDPModelChecker;
-import explicit.MDPSimple;
+import explicit.*;
 import lava.Experiment.Model;
 import org.apache.commons.rng.simple.RandomSource;
 import param.BigRational;
@@ -35,6 +32,7 @@ import org.apache.commons.statistics.distribution.*;
 import org.apache.commons.statistics.distribution.NormalDistribution;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.rng.*;
+import strat.StrategyExportOptions;
 
 public class LearnVerify {
 
@@ -74,20 +72,13 @@ public class LearnVerify {
                 //LearnVerify l = new LearnVerify(seed);
                 //l.basic();
                 //l.switching_environment();
-                //l.gridStrengthEval();
-
+                //l.gridStrengthEval();x
                 //l.evaluate_strength();
             }
         } else {
-            System.out.println("running with default seed");
+            System.out.println("Starting Learning and Verification");
             LearnVerify l = new LearnVerify();
             l.basic();
-            NormalDistribution distribution = NormalDistribution.of(0, 1);
-            double outcomeRisk = distribution.inverseCumulativeProbability(0.975);
-            System.out.println(outcomeRisk);
-//            l.switching_environment();
-//            l.gridStrengthEval();
-//            l.evaluate_strength();
         }
     }
 
@@ -105,7 +96,7 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 3; // = 300;
+        int m = 1; // = 300;
         int n = 2; // = 200;
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
@@ -131,7 +122,7 @@ public class LearnVerify {
 //            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
 
-        for (int seed : get_seeds(seed, 2)) {
+        for (int seed : get_seeds(seed, 1)) {
             //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
             run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, true, true, m, n, 2).info(id));
             //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
@@ -155,63 +146,19 @@ public class LearnVerify {
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, false, m, n, 2).info(id));
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(15, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
-
-//        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
-//        run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
-//        run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
-//        run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
-//        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
-//        run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, true,5).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, false, 5).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false, false, 5).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,m,n,4).info(id));
-//
-//        run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,m,n,4).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, true, 1).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, false, 1).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, false, false, 4).info(id));
-//        run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
-        String postfix = "";//String.format("_seed_%d", ex.seed);
+        String postfix = "";
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-//       compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
-//       compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
         runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), UCRL2IntervalEstimatorOptimistic::new);
-//
-//       runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-//       runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
-//       runRobustPolicyComparisonForVis("BETTING10_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//       runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-//       runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//       runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
-//       runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-//
-//       runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-//       runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-//       runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//       compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
-//       compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
-//       ex.initialInterval = Experiment.InitialInterval.UNIFORM;
-//       new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
     }
 
-    private void evaluation() {
-
-    }
 
     private void run_basic_algorithms_pac(Experiment ex) {
         String postfix = "";String.format("_seed_%d", ex.seed);
@@ -485,9 +432,11 @@ public class LearnVerify {
                 constructValuesBeta(verificationParams, it);
             }
 
+            System.out.println("Training Parameters:");
             for (Values value : trainingParams) {
                 System.out.println(value.getValues() + ",");
             }
+            System.out.println("Verification Parameters:");
             for (Values value : verificationParams) {
                 System.out.println(value.getValues() + ",");
             }
@@ -508,7 +457,6 @@ public class LearnVerify {
             MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
 
             List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
-            //List<Double> rLResults = robSynth.checkVerificationSet(prism, rlStrat, ex.dtmcSpec);
 
             // Get Existential Guarantee over true MDPs
             List<Double> existentialLambdas = getExistentialGuarantee(prism, ex, verificationSet.second);
@@ -533,9 +481,11 @@ public class LearnVerify {
                 robSynthI.combineIMDPs();
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
+                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec); //TODO: finish this
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
+                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec);
 
                 System.out.println("==============================");
                 try {
@@ -546,11 +496,18 @@ public class LearnVerify {
                 System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
                 System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
 
+                System.out.println("Verification Results with RL strategy (on IMDPs):" + robResultsIRL);
+                System.out.println("RL IMDP Robust Guarantee: " + Collections.min(robResultsIRL));
+
                 System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
                 System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
 
                 System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
                 System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
+
+                System.out.println("RLRL Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCrossRL);
+                System.out.println("RLRL True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCrossRL));
+
 
                 System.out.println("Existential Results on true MDPs:" + existentialLambdas);
                 System.out.println("Existential Guarantee: " + Collections.min(existentialLambdas));
@@ -833,9 +790,6 @@ public class LearnVerify {
                 estimator.setFunctionMap(functionMap);
                 estimator.setSimilarTransitions(similarTransitions);
                 estimator.set_experiment(ex);
-
-                PolicyLoader p = new PolicyLoader();
-                rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", estimator.getSUL());
 
                 // Iterate and run experiments for each of the sampled parameter vectors
                 ex.setTieParamters(verification);
