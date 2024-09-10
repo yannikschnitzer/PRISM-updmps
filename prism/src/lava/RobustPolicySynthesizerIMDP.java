@@ -163,7 +163,9 @@ public class RobustPolicySynthesizerIMDP {
         List<Double> results = new ArrayList<>();
         for (IMDP<Double> imdp : this.verificationSet) {
             PolicyLoader p = new PolicyLoader();
-            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+
+            MRStrategy rlStrat = p.loadDronePolicy("policies/drone/policy_single_500k.json", imdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
@@ -186,8 +188,7 @@ public class RobustPolicySynthesizerIMDP {
             Result result = mc.check(inducedIDTMC, pf.getProperty(0));
             results.add((double) result.getResult());
 
-            System.out.println("Induced IDTMC Model: " + rlStrat.constructInducedModel(options));
-
+            //System.out.println("Induced IDTMC Model: " + rlStrat.constructInducedModel(options));
         }
 
         return results;

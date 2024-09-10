@@ -25,32 +25,32 @@ module drone
 	y : [1..MAXY] init 1;
 	z : [1..MAXZ] init 1;
 
-	[front] x < MAXX -> 1 - 3 * p: (x' = x + 1) 
-				+ p : (x' = x + 1) & (y' = max(y - 1,1))
-				+ p : (x' = x + 1) & (y' = min(y + 1, MAXY))
+	[front] true -> 1 - 3 * p: (x' = min(x + 1, MAXX))
+				+ p : (x' = min(x + 1, MAXX)) & (y' = max(y - 1,1))
+				+ p : (x' = min(x + 1, MAXX)) & (y' = min(y + 1, MAXY))
 				+ p : (x' = x) & (y' = max(y - 2, 1));
 
-	[back] x > 1 -> 1 - 3 * p: (x' = x - 1) 
-				+ p : (x' = x - 1) & (y' = max(y - 1,1))
-				+ p : (x' = x - 1) & (y' = min(y + 1, MAXY))
+	[back] true -> 1 - 3 * p: (x' = max(x - 1, 1))
+				+ p : (x' = max(x - 1, 1)) & (y' = max(y - 1,1))
+				+ p : (x' = max(x - 1, 1)) & (y' = min(y + 1, MAXY))
 				+ p : (x' = x) & (y' = max(y - 2, 1));
 
-	[right] y < MAXY -> 1 - 2 * p: (y' = y + 1) 
+	[right] true -> 1 - 2 * p: (y' = min(y + 1, MAXY))
 				+ p: (y' = min(y + 2, MAXY))
 				+ p: (y' = max(y - 1, 1));
 
-	[left] y > 1 -> 1 - 2 * p: (y' = y - 1) 
+	[left] true -> 1 - 2 * p: (y' = max(y - 1, 1))
 				+ p: (y' = max(y - 2, 1))
 				+ p: (y' = min(y + 1, MAXY));
 
-	[up] z < MAXZ  -> 1 - 3 * p: (z' = z + 1) 
-				+ p : (z' = z + 1) & (y' = max(y - 1,1))
-				+ p : (z' = z + 1) & (y' = min(y + 1, MAXY))
+	[up] true -> 1 - 3 * p: (z' = min(z + 1, MAXZ))
+				+ p : (z' = min(z + 1, MAXZ)) & (y' = max(y - 1,1))
+				+ p : (z' = min(z + 1, MAXZ)) & (y' = min(y + 1, MAXY))
 				+ p : (z' = z) & (y' = max(y - 2, 1));
 
-	[down] z > 1 -> 1 - 3 * p: (z' = z - 1) 
-				+ p : (z' = z - 1) & (y' = max(y - 1,1))
-				+ p : (z' = z - 1) & (y' = min(y + 1, MAXY))
+	[down] true -> 1 - 3 * p: (z' = max(z - 1,1))
+				+ p : (z' = max(z - 1,1)) & (y' = max(y - 1,1))
+				+ p : (z' = max(z - 1,1)) & (y' = min(y + 1, MAXY))
 				+ p : (z' = z) & (y' = max(y - 2, 1));
 
 endmodule 

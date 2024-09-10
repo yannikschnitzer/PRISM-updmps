@@ -96,8 +96,8 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 20; // = 300;
-        int n = 10; // = 200;
+        int m = 3; // = 300;
+        int n = 2; // = 200;
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
@@ -122,17 +122,17 @@ public class LearnVerify {
 //            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
 
-        for (int seed : get_seeds(seed, 1)) {
-            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, m, n, 2).info(id));
-            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
-        }
-
-//        for (int seed : get_seeds(seed, 10)) {
-//            run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
-//            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, false, m, n, 2).info(id));
-//            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGE).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
+//        for (int seed : get_seeds(seed, 1)) {
+//            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
+//            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, m, n, 2).info(id));
+//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
 //        }
+
+        for (int seed : get_seeds(seed, 1)) {
+            //run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_0_000, seed, true, true, m, n, 2).info(id));
+            //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGE).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
+        }
 
 
 //        for (int seed : get_seeds(seed, 10)) {
@@ -416,8 +416,8 @@ public class LearnVerify {
              * Parameters for Drone Single: Alpha = 2, Beta = 10
              * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
-            int alpha = 10;
-            int beta = 2;
+            int alpha = 2;
+            int beta = 10;
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
             ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
             Iterator<Double> it = sampler.samples().iterator();
@@ -623,7 +623,7 @@ public class LearnVerify {
 
     private void constructValuesBeta(List<Values> params, Iterator<Double> it) {
         Values v = new Values();
-        double pL = it.next();
+        //double pL = it.next();
         double pH = it.next();
 
         // For Chain Benchmark, only p's and q'
@@ -634,8 +634,8 @@ public class LearnVerify {
          * Betting Game p -> pH
          * Chain Benchmark p -> ph  q -> 1 - p
          */
-        v.addValue("r", pL);
-        v.addValue("p", 1 - pH);
+        //v.addValue("r", pL);
+        v.addValue("p", Math.min(0.22,pH));
         params.add(v);
     }
 
