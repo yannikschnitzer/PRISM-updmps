@@ -165,13 +165,9 @@ public class RobustPolicySynthesizerIMDP {
             PolicyLoader p = new PolicyLoader();
             MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
 
-
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
             Model<Double> inducedIDTMC = rlStrat.constructInducedModel(options);
-
-
-            //System.out.println("induced model rl strat imdp:" + inducedIDTMC);
 
             IDTMCModelChecker mc = new IDTMCModelChecker(prism);
             mc.setErrorOnNonConverge(false);
@@ -185,7 +181,7 @@ public class RobustPolicySynthesizerIMDP {
             modelGen.setSomeUndefinedConstants(imdp.getConstantValues());
             //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, imdp, strategy);
 
-            mc.setModelCheckingInfo(modelGen, pf, null);
+            mc.setModelCheckingInfo(modelGen, pf, modelGen);
 
             Result result = mc.check(inducedIDTMC, pf.getProperty(0));
             results.add((double) result.getResult());

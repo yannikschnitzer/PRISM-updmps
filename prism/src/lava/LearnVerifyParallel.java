@@ -93,69 +93,12 @@ public class LearnVerifyParallel {
 
     public void basic() {
         String id = "basic";
-        //run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
-        //  run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
-//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
-//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
-        //run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
-//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, false, 10).info(id));
-//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, false, false, 50).info(id));
-        //run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_0_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
-        // run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
-        //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-//        for (int seed : get_seeds(seed, 10)) {
+
         System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
 
-    //run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, samplingSeed, true, true, 12, 8, 4).info(id));
-
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, true, true, 12, 10, 4).info(id));
-        //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
+        run_basic_algorithms(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, true, true, 12, 10, 4).info(id));
+        run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
         run_basic_algorithms_naive(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, false, false, 12, 10, 2).info(id));
-//        }
-//        for (int seed : get_seeds(seed, 10)) {
-          //  run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, samplingSeed, true, true, 12, 8, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, false, 12, 8, 2).info(id));
-            //run_basic_algorithms_naive(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, samplingSeed, false, false, 12, 8, 2).info(id));
-//        }
-        //for (int seed : get_seeds(seed, 10)) {
-//        System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, samplingSeed, true, true, 12, 8, 4).info(id));
-//        //run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
-         //run_basic_algorithms_naive(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, samplingSeed, false, false, 12, 8, 2).info(id));
-////        //}
-   //     for (int seed : get_seeds(seed, 10)) {
-        //    System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
-        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, true, true, 12, 8, 4).info(id));
-        //run_basic_algorithms_pac(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
-        //run_basic_algorithms_pac(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, false, false, 12, 8, 2).info(id));
-        //run_basic_algorithms_naive(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, false, false, 12, 8, 2).info(id));
-        //run_basic_algorithms_naive_uniform(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
-        //run_basic_algorithms_naive_uniform(new Experiment(Model.CHAIN_LARGE).config(40, 1_000_000, samplingSeed, false, false, 12, 8, 2).info(id));
-      //  }
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, true, false,5).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(100, 1_000_000, seed, false, false, 50).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(20, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS2).config(100, 1_000_000, seed, true).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, false).info(id));
-        //run_basic_algorithms(new Experiment(Model.CONSENSUS4).config(100, 1_000_000, seed, true).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, true,5).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, true, false, 5).info(id));
-//        run_basic_algorithms(new Experiment(Model.CROWD).config(100, 1_000_000, seed, false, false, 5).info(id));
-        //run_basic_algorithms(new Experiment(Model.CROWD).config(20, 1_000, seed, true, true,12,8,4).info(id));
-
-        //run_basic_algorithms(new Experiment(Model.BANDIT).config(100, 1000000, seed).stratWeight(0.9).info(id));
-        //     run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(10, 100_000, seed, false, false,12,8,4).info(id));
-        //        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, true, false, 2).info(id));
-        //       run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(30, 1_000_000, seed, false, false,10).info(id));
-        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(7, 1000000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.TINY).config(2, 50000, seed).info(id));
-        //run_basic_algorithms(new Experiment(Model.TINY2).config(2, 50000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, true, 1).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, true, false, 1).info(id));
-//        run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(100, 1_000_000, seed, false, false, 4).info(id));
-        //run_basic_algorithms(new Experiment(Model.GRID).config(200, 1000000, seed, 20, 30).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
@@ -163,35 +106,14 @@ public class LearnVerifyParallel {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-        // compareSamplingStrategies("UCRL2" + postfix, ex.setErrorTol(0.01), UCRL2IntervalEstimatorOptimistic::new);
-        //compareSamplingStrategies("PAC" + postfix, ex.setErrorTol(0.01), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false).stratWeight(0.9), BayesianEstimatorOptimistic::new);
-        //runRobustPolicyComparisonForVis("LUI_uniform_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false), BayesianEstimatorUniform::new);
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
-        //runRobustPolicyComparisonForVis("PAC_uniform_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true), PACIntervalEstimator::new);
         runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
         runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
-        //runRobustPolicyComparisonForVis("UCRL_uniform__rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), UCRL2IntervalEstimator::new);
-
-        //    runRobustPolicyComparisonForVis("BETTING10_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-        //      runRobustPolicyComparisonForVis("BETTING10_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
-//       runRobustPolicyComparisonForVis("BETTING10_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        runRobustPolicyComparisonForVis("BETTING10_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-//////        runRobustPolicyComparisonForVis("CHAIN5_MAP_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        runRobustPolicyComparisonForVis("CHAIN5_LUI_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), BayesianEstimatorOptimistic::new);
-//        runRobustPolicyComparisonForVis("CHAIN5_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-
-        //   runRobustPolicyComparisonForVis("CROWDS5x3_PAC_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-        //  runRobustPolicyComparisonForVis("CHAIN30_UCRL2_rpol" + postfix, ex.setErrorTol(0.01).setBayesian(true), UCRL2IntervalEstimator::new);
-        // runRobustPolicyComparisonForVis("MAP_rpol2" + postfix, ex.setErrorTol(0.01).setBayesian(false), MAPEstimator::new);
-//        compareSamplingStrategies("MAP_uni" + postfix, ex, MAPEstimator::new);
-        // compareSamplingStrategies("LUI" + postfix, ex, BayesianEstimatorOptimistic::new);
-        //ex.initialInterval = Experiment.InitialInterval.UNIFORM;
-        //new LearnVerify(ex.seed).compareSamplingStrategies("Bayes(uniform prior)", ex, BayesianEstimatorOptimistic::new);
     }
 
     private void run_basic_algorithms_pac(Experiment ex) {
-        String postfix = "";String.format("_seed_%d", ex.seed);
+        String postfix = "";//String.format("_seed_%d", ex.seed);
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
         if (!ex.optimizations){
@@ -201,7 +123,7 @@ public class LearnVerifyParallel {
     }
 
     private void run_basic_algorithms_naive(Experiment ex) {
-        String postfix = "";String.format("_seed_%d", ex.seed);
+        String postfix = "";//String.format("_seed_%d", ex.seed);
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
         runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85), MAPEstimator::new);

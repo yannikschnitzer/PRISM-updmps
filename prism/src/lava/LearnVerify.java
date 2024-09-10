@@ -96,8 +96,8 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 1; // = 300;
-        int n = 2; // = 200;
+        int m = 20; // = 300;
+        int n = 10; // = 200;
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
@@ -124,7 +124,7 @@ public class LearnVerify {
 
         for (int seed : get_seeds(seed, 1)) {
             //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000, seed, true, true, m, n, 2).info(id));
+            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, m, n, 2).info(id));
             //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
         }
 
@@ -304,7 +304,7 @@ public class LearnVerify {
     }
 
     public String makeOutputDirectory(Experiment ex) {
-        String outputPath = String.format("results/%s/%s/Robust_Policies/%s/", ex.experimentInfo, ex.model.toString(), ex.seed);
+        String outputPath = String.format("results/%s/%s/Robust_Policies_WCC/%s/", ex.experimentInfo, ex.model.toString(), ex.seed);
         try {
             Files.createDirectories(Paths.get(outputPath));
         } catch (IOException e) {
@@ -481,7 +481,7 @@ public class LearnVerify {
                 robSynthI.combineIMDPs();
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
-                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec); //TODO: finish this
+                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec);
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
@@ -512,7 +512,7 @@ public class LearnVerify {
                 System.out.println("Existential Results on true MDPs:" + existentialLambdas);
                 System.out.println("Existential Guarantee: " + Collections.min(existentialLambdas));
 
-                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas)}));
+                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
 
                 // Eval robust policy on fresh samples
                 if (i == trainingSet.first.getFirst().size() - 1) {

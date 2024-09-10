@@ -181,7 +181,7 @@ public class RobustPolicySynthesizerMDP {
             modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
             //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, mdp, rlStrat);
 
-            mc.setModelCheckingInfo(modelGen, pf, null);
+            mc.setModelCheckingInfo(modelGen, pf, modelGen);
 
             Result result = mc.check(inducedDTMC, pf.getProperty(0));
             results.add((double) result.getResult());
