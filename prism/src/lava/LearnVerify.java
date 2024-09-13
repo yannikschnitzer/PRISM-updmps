@@ -96,8 +96,8 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 3; // = 300;
-        int n = 2; // = 200;
+        int m = 5; // = 300;
+        int n = 30; // = 200;
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
@@ -123,14 +123,14 @@ public class LearnVerify {
 //        }
 
 //        for (int seed : get_seeds(seed, 1)) {
-//            //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true, m, n, 2).info(id));
-//            run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_000_000, seed, true, true, m, n, 2).info(id));
+            run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
+ //           run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_0_000, seed, true, true, m, n, 2).info(id));
 //            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
 //        }
 
         for (int seed : get_seeds(seed, 1)) {
             //run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
-            run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_0_000, seed, true, true, m, n, 2).info(id));
+            //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_0_000, seed, true, true, m, n, 2).info(id));
             //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGE).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
         }
 
@@ -416,8 +416,8 @@ public class LearnVerify {
              * Parameters for Drone Single: Alpha = 2, Beta = 10
              * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
-            int alpha = 2;
-            int beta = 10;
+            int alpha = 10;
+            int beta = 2;
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
             ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
             Iterator<Double> it = sampler.samples().iterator();
@@ -487,39 +487,40 @@ public class LearnVerify {
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
                 List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec);
 
-                System.out.println("==============================");
+                System.out.println("\n" + "==============================");
                 try {
                     System.out.println("Results after #Simulations: " + ex.getResultIterations().get(i - 1));
                 } catch (Exception ignored) {
 
                 }
-                System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
-                System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
+                System.out.println("Verification Results with IMDP strategy on IMDPs:" + robResultsI);
+                System.out.println("IMDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsI));
 
-                System.out.println("Verification Results with RL strategy (on IMDPs):" + robResultsIRL);
-                System.out.println("RL IMDP Robust Guarantee: " + Collections.min(robResultsIRL));
+                System.out.println("Verification Results with RL strategy on IMDPs:" + robResultsIRL);
+                System.out.println("IMDP Robust Guarantee with RL strategy: " + Collections.min(robResultsIRL));
 
-                System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
-                System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
+                System.out.println("Verification Results with MDP strategy on true MDPs:" + robResults);
+                System.out.println("True MDP Robust Guarantee with true MDP strategy: " + Collections.min(robResults));
 
-                System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
-                System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
+                System.out.println("Verification Results with IMDP strategy on true MDPs:" + robResultsCross);
+                System.out.println("True MDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsCross));
 
-                System.out.println("RLRL Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCrossRL);
-                System.out.println("RLRL True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCrossRL));
+                System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
+                System.out.println("True MDP Robust Guarantee with RL strategy: " + Collections.min(robResultsCrossRL));
 
 
                 System.out.println("Existential Results on true MDPs:" + existentialLambdas);
-                System.out.println("Existential Guarantee: " + Collections.min(existentialLambdas));
+                System.out.println("Existential Guarantee (Badings et al.): " + Collections.min(existentialLambdas));
 
                 results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
 
                 // Eval robust policy on fresh samples
                 if (i == trainingSet.first.getFirst().size() - 1) {
+                    System.out.println("\n" + "==============================");
                     evaluatePolicy(robstratI, 200, ex);
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI,0.637, 500, ex);
-                    computeEmpiricalRisk(robstratI,0.798, 500, ex);
+                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 2000, ex);
+                    computeEmpiricalRisk(robstratI,0.6551633157021766, 2000 , ex);
                 }
 
                 DataProcessor dp = new DataProcessor();
@@ -536,7 +537,7 @@ public class LearnVerify {
 
     private void evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex) throws PrismException {
 
-        int alpha = 20;
+        int alpha = 10;
         int beta = 2;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
@@ -570,7 +571,7 @@ public class LearnVerify {
     }
 
     private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
-        int alpha = 20;
+        int alpha = 10;
         int beta = 2;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
@@ -623,7 +624,7 @@ public class LearnVerify {
 
     private void constructValuesBeta(List<Values> params, Iterator<Double> it) {
         Values v = new Values();
-        //double pL = it.next();
+        double pL = it.next();
         double pH = it.next();
 
         // For Chain Benchmark, only p's and q'
@@ -634,8 +635,8 @@ public class LearnVerify {
          * Betting Game p -> pH
          * Chain Benchmark p -> ph  q -> 1 - p
          */
-        //v.addValue("r", pL);
-        v.addValue("p", Math.min(0.22,pH));
+        v.addValue("r", pL);
+        v.addValue("p", Math.min(1 - pH,0.49));
         params.add(v);
     }
 

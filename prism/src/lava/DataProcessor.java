@@ -387,8 +387,8 @@ public class DataProcessor {
             DataPointRobust previous = null;
 
             String path = directoryPath + name +".csv";
-            if (Files.exists(Paths.get(path)))
-                System.out.println("File" + path + "already exists");
+//            if (Files.exists(Paths.get(path)))
+//                System.out.println("File" + path + "already exists");
 
             FileWriter writer = new FileWriter(path, false);
 
@@ -416,13 +416,13 @@ public class DataProcessor {
 
     public void dumpResultList(String directoryPath, String name, List<Double> robustPolicyResults, List<Double> existentialResults) {
         String path = directoryPath + name +"_resultlist.yaml";
-        if (Files.exists(Paths.get(path)))
-            System.out.println("File" + path + "already exists");
+//        if (Files.exists(Paths.get(path)))
+//            System.out.println("File" + path + "already exists");
 
         try {
             FileWriter writer = new FileWriter(path, false);
             writer.write("Robust Policy Results: " + robustPolicyResults + System.getProperty( "line.separator" ));
-            System.out.println("Dumping existential lambdas:" + existentialResults);
+            //System.out.println("Dumping existential lambdas:" + existentialResults);
             writer.write("Existential Policy Results: " + existentialResults + System.getProperty( "line.separator" ));
             writer.close();
         } catch (IOException e) {

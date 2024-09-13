@@ -165,7 +165,7 @@ public class RobustPolicySynthesizerIMDP {
             PolicyLoader p = new PolicyLoader();
             //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
 
-            MRStrategy rlStrat = p.loadDronePolicy("policies/drone/policy_single_500k.json", imdp);
+            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
