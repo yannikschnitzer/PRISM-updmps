@@ -39,9 +39,9 @@ import strat.MDStrategy;
  */
 public class RewardGeneratorMDStrat<Value> implements RewardGenerator<Value>
 {
-	private RewardGenerator<Value> rewGen;
-	private NondetModel<?> model;
-	private MDStrategy strat;
+	protected RewardGenerator<Value> rewGen;
+	protected NondetModel<?> model;
+	protected MDStrategy strat;
 	
 	public RewardGeneratorMDStrat(RewardGenerator<Value> rewGen, NondetModel<?> model, MDStrategy strat)
 	{
