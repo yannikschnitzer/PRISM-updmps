@@ -94,9 +94,12 @@ public class LearnVerifyParallel {
     public void basic() {
         String id = "basic";
 
+        int m = 5; // = 300;
+        int n = 30; // = 200;
+
         System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
 
-        run_basic_algorithms(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, true, true, 12, 10, 4).info(id));
+        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, samplingSeed, true, true, m, n, 2).info(id));
         run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
         run_basic_algorithms_naive(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, false, false, 12, 10, 2).info(id));
     }
@@ -266,7 +269,7 @@ public class LearnVerifyParallel {
     }
 
     public String makeOutputDirectory(Experiment ex) {
-        String outputPath = String.format("results/%s/%s/Robust_Policies/%s/", ex.experimentInfo, ex.model.toString(), ex.seed);
+        String outputPath = String.format("results/%s/%s/Robust_Policies_WCC/%s/", ex.experimentInfo, ex.model.toString(), ex.seed);
         try {
             Files.createDirectories(Paths.get(outputPath));
         } catch (IOException e) {
@@ -287,7 +290,7 @@ public class LearnVerifyParallel {
             MDP<Function> mdpParam = buildParamModel(ex);
 
             // Generate sample training and verification MDP parameters
-            double rangeMin1 = 0.7;
+            double rangeMin1 = 0.75;
             double rangeMax1 = 0.95;
             List<Values> trainingParams = new ArrayList<>();
             List<Values> verificationParams = new ArrayList<>();
@@ -346,53 +349,23 @@ public class LearnVerifyParallel {
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
-            // Generate uniform sample training and verification MDP parameters
-            /*
-             * Range for SAV2: [0.75, 0.95]
-             * Range for Aircraft: [0.7, 0.9]
-             */
-            double rangeMin1 = 0.7;
-            double rangeMax1 = 0.9;
-            List<Values> trainingParams = new ArrayList<>();
-            List<Values> verificationParams = new ArrayList<>();
-
-            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
-            Random r = new Random(seed);
-            for (int i = 0; i < ex.numTrainingMDPs; i++) {
-                constructValues(rangeMin1, rangeMax1, trainingParams, r);
-            }
-            for (int i = 0; i < ex.numVerificationMDPs; i++) {
-                constructValues(rangeMin1, rangeMax1, verificationParams, r);
-            }
-
-            for (Values value : trainingParams) {
-                System.out.println(value.getValues() + ",");
-            }
-            for (Values value : verificationParams) {
-                System.out.println(value.getValues() + ",");
-            }
-
-//            // Generate beta-distributed sample training and verification MDP parameters
+//            // Generate uniform sample training and verification MDP parameters
 //            /*
-//             * Parameters for Aircraft: Alpha = 10, Beta = 2
-//             * Parameters for Drone Single: Alpha = 2, Beta = 10
-//             * Parameters for Betting Game: Alpha = 20, Beta = 2
-//             * Parameters for Chain: Alpha = 5, Beta = 2
+//             * Range for SAV2: [0.75, 0.95]
+//             * Range for Aircraft: [0.7, 0.9]
 //             */
-//            int alpha = 10;
-//            int beta = 2;
-//            BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
-//            ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
-//            Iterator<Double> it = sampler.samples().iterator();
-//
+//            double rangeMin1 = 0.75;
+//            double rangeMax1 = 0.95;
 //            List<Values> trainingParams = new ArrayList<>();
 //            List<Values> verificationParams = new ArrayList<>();
 //
+//            //double rangeMean = rangeMin + (rangeMax - rangeMin) / 2;
+//            Random r = new Random(seed);
 //            for (int i = 0; i < ex.numTrainingMDPs; i++) {
-//                constructValuesBeta(trainingParams, it);
+//                constructValues(rangeMin1, rangeMax1, trainingParams, r);
 //            }
 //            for (int i = 0; i < ex.numVerificationMDPs; i++) {
-//                constructValuesBeta(verificationParams, it);
+//                constructValues(rangeMin1, rangeMax1, verificationParams, r);
 //            }
 //
 //            for (Values value : trainingParams) {
@@ -402,10 +375,41 @@ public class LearnVerifyParallel {
 //                System.out.println(value.getValues() + ",");
 //            }
 
+            // Generate beta-distributed sample training and verification MDP parameters
+            /*
+             * Parameters for Aircraft: Alpha = 10, Beta = 2
+             * Parameters for Drone Single: Alpha = 2, Beta = 10
+             * Parameters for Betting Game: Alpha = 20, Beta = 2
+             */
+            int alpha = 10;
+            int beta = 2;
+            BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+            ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+            Iterator<Double> it = sampler.samples().iterator();
+
+            List<Values> trainingParams = new ArrayList<>();
+            List<Values> verificationParams = new ArrayList<>();
+
+            for (int i = 0; i < ex.numTrainingMDPs; i++) {
+                constructValuesBeta(trainingParams, it);
+            }
+            for (int i = 0; i < ex.numVerificationMDPs; i++) {
+                constructValuesBeta(verificationParams, it);
+            }
+
+            System.out.println("Training Parameters:");
+            for (Values value : trainingParams) {
+                System.out.println(value.getValues() + ",");
+            }
+            System.out.println("Verification Parameters:");
+            for (Values value : verificationParams) {
+                System.out.println(value.getValues() + ",");
+            }
+
 
             // Get MDPs/IMDPs for training and verification set
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> trainingSet = getIMDPsForVis(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
-            Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimatorOptimistic::new, mdpParam, verificationParams, true);
+            Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
 
             // Build robust policy and derive PAC guarantee
             RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
@@ -416,6 +420,7 @@ public class LearnVerifyParallel {
             robSynth.setVerificationSet(verificationSet.second);
             robSynth.combineMDPs();
             MDStrategy<Double> robstrat = robSynth.getRobustStrategy(prism, ex.robustSpec);
+
             List<Double> robResults = robSynth.checkVerificationSet(prism, robstrat, ex.dtmcSpec);
 
             // Get Existential Guarantee over true MDPs
@@ -441,29 +446,47 @@ public class LearnVerifyParallel {
                 robSynthI.combineIMDPs();
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
+                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec);
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
+                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec);
 
-                System.out.println("==============================");
+                System.out.println("\n" + "==============================");
                 try {
                     System.out.println("Results after #Simulations: " + ex.getResultIterations().get(i - 1));
                 } catch (Exception ignored) {
 
                 }
-                System.out.println("Verification Results with robust strategy (on IMDPs):" + robResultsI);
-                System.out.println("IMDP Robust Guarantee: " + Collections.min(robResultsI));
+                System.out.println("Verification Results with IMDP strategy on IMDPs:" + robResultsI);
+                System.out.println("IMDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsI));
 
-                System.out.println("Verification Results with robust strategy (on true MDPs):" + robResults);
-                System.out.println("True MDP Robust Guarantee: " + Collections.min(robResults));
+                System.out.println("Verification Results with RL strategy on IMDPs:" + robResultsIRL);
+                System.out.println("IMDP Robust Guarantee with RL strategy: " + Collections.min(robResultsIRL));
 
-                System.out.println("Verification Results with robust strategy from IMDPs on true MDPs:" + robResultsCross);
-                System.out.println("True MDP Robust Guarantee with strategy from IMDPs: " + Collections.min(robResultsCross));
+                System.out.println("Verification Results with MDP strategy on true MDPs:" + robResults);
+                System.out.println("True MDP Robust Guarantee with true MDP strategy: " + Collections.min(robResults));
+
+                System.out.println("Verification Results with IMDP strategy on true MDPs:" + robResultsCross);
+                System.out.println("True MDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsCross));
+
+                System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
+                System.out.println("True MDP Robust Guarantee with RL strategy: " + Collections.min(robResultsCrossRL));
+
 
                 System.out.println("Existential Results on true MDPs:" + existentialLambdas);
-                System.out.println("Existential Guarantee: " + Collections.min(existentialLambdas));
+                System.out.println("Existential Guarantee (Badings et al.): " + Collections.min(existentialLambdas));
 
-                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas)}));
+                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
+
+                // Eval robust policy on fresh samples
+                if (i == trainingSet.first.getFirst().size() - 1) {
+                    System.out.println("\n" + "==============================");
+                    evaluatePolicy(robstratI, 200, ex);
+                    // Empirical Risk:
+                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 2000, ex);
+                    computeEmpiricalRisk(robstratI,0.6551633157021766, 2000 , ex);
+                }
 
                 DataProcessor dp = new DataProcessor();
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
@@ -477,13 +500,78 @@ public class LearnVerifyParallel {
         }
     }
 
-    private void evaluatePolicy(MDStrategy<Double> strat, int numEvalMDPs) {
+    private void evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex) throws PrismException {
 
+        int alpha = 10;
+        int beta = 2;
+        BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+        ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+        Iterator<Double> it = sampler.samples().iterator();
 
+        List<Values> evaluationParams = new ArrayList<>();
+
+        for (int i = 0; i < numEvalSamples; i++) {
+            constructValuesBeta(evaluationParams, it);
+        }
+
+        List<MDP<Double>> evalMDPs = new ArrayList<>();
+        for (Values values : evaluationParams) {
+            ex.values = values;
+            EstimatorConstructor estimatorConstructor = PACIntervalEstimator::new;
+            Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.set_experiment_naive(ex);
+
+            // Iterate and run experiments for each of the sampled parameter vectors
+            evalMDPs.add(estimator.getSUL());
+        }
+
+        List<Double> existentialLambdas = getExistentialGuarantee(prism, ex, evalMDPs);
+        System.out.println("Eval Existential Lambdas: " + existentialLambdas);
+
+        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
+        robSynth.setVerificationSet(evalMDPs);
+        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+
+        System.out.println("Eval Results with robust strategy: " + robResultsCross);
     }
 
-    private void checkEmpiricalRisk(MDStrategy<Double> strat, int numMDPSamples) {
+    private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
+        int alpha = 10;
+        int beta = 2;
+        BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
+        ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
+        Iterator<Double> it = sampler.samples().iterator();
 
+        List<Values> evaluationParams = new ArrayList<>();
+
+        for (int i = 0; i < numEvalSamples; i++) {
+            constructValuesBeta(evaluationParams, it);
+        }
+
+        List<MDP<Double>> evalMDPs = new ArrayList<>();
+        for (Values values : evaluationParams) {
+            ex.values = values;
+            EstimatorConstructor estimatorConstructor = PACIntervalEstimator::new;
+            Estimator estimator = estimatorConstructor.get(this.prism, ex);
+            estimator.set_experiment_naive(ex);
+
+            // Iterate and run experiments for each of the sampled parameter vectors
+            evalMDPs.add(estimator.getSUL());
+        }
+
+        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
+        robSynth.setVerificationSet(evalMDPs);
+        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+        System.out.println("Results for Empirical Eval:" + robResultsCross);
+        int numFail = 0;
+        for (double res : robResultsCross) {
+            if (res < guarantee) {
+                numFail++;
+            }
+        }
+        int N = robResultsCross.size();
+        double empiricalRisk = (double) numFail / (double) N;
+        System.out.println("Empirical Risk: " + (empiricalRisk) + " for N = " + N + " and guarantee " + guarantee);
     }
 
     private void constructValues(double rangeMin1, double rangeMax1, List<Values> params, Random r) {
@@ -508,14 +596,12 @@ public class LearnVerifyParallel {
         /*
          * SAV2: pL -> pL, pH -> pH
          * Aircraft r -> pL, p -> 1 - pH
-         * Drone Single p -> pH * 0.3, and pL commented out
-         * Betting Game p -> pH // pL commented out
-         * Chain Benchmark p -> ph  q -> 1 - p, r -> 1/2
+         * Drone Single p -> min(pH, 0.22), and pL commented out
+         * Betting Game p -> pH
+         * Chain Benchmark p -> ph  q -> 1 - p
          */
-        //v.addValue("r", pL);
         v.addValue("r", pL);
-        v.addValue("p", 1 - pH);
-     //   v.addValue("p", 1.0/2.0);
+        v.addValue("p", Math.min(1 - pH,0.49));
         params.add(v);
     }
 
@@ -579,14 +665,20 @@ public class LearnVerifyParallel {
              * Aircraft: r, p
              * Drone Single: p
              * Betting Game: p
-             * Chain Large: p, q, r
+             * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"pL","pH"};
+            String[] paramNames = new String[]{"r", "p"};
             String[] paramLowerBounds = new String[]{"0","0"};
             String[] paramUpperBounds = new String[]{"1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
+            MDP<Function> model = (MDP<Function>) this.prism.getBuiltModelExplicit();
+//            System.out.println("Model states values" + model.getStatesList().getFirst());
+//            System.out.println("Action 0:" + model.getAction(0,0));
+//            System.out.println("Action 1:" + model.getAction(0,1));
+//            System.out.println("Action 2:" + model.getAction(0,2));
+
             return (MDP<Function>) this.prism.getBuiltModelExplicit();
 
         } catch (PrismException | FileNotFoundException e) {
@@ -666,7 +758,7 @@ public class LearnVerifyParallel {
                 estimator.set_experiment(ex);
 
                 // Iterate and run experiments for each of the sampled parameter vectors
-                //ex.setTieParamters(verification);
+                ex.setTieParamters(verification);
                 Pair<ArrayList<DataPoint>, ArrayList<IMDP<Double>>> resIMDP = runSamplingStrategyDoublingEpoch(ex, estimator, verification);
                 learnedIMDPs.add(resIMDP.second);
                 mdps.add(estimator.getSUL());

@@ -43,5 +43,10 @@ module adversary
 
 endmodule
 
+rewards
+	[up] true : 1;
+	[down] true : 1;
+	[stay] true : 1;
+endrewards
 
 label "goal" = x=maxX;
