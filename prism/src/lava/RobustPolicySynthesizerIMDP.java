@@ -159,13 +159,14 @@ public class RobustPolicySynthesizerIMDP {
         return results;
     }
 
-    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec) throws PrismException {
+    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec, int iteration) throws PrismException {
         List<Double> results = new ArrayList<>();
         for (IMDP<Double> imdp : this.verificationSet) {
             PolicyLoader p = new PolicyLoader();
-            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
 
-            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+            //MRStrategy rlStrat = p.loadBettingPolicy("policies/betting/policy_single_betting.json", imdp);
+            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)),imdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
@@ -179,11 +180,11 @@ public class RobustPolicySynthesizerIMDP {
             buildModulesFiles(prism);
             ModulesFile modulesFileIDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
             modulesFileIDTMC.setModelType(ModelType.IDTMC);
-            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIDTMC, prism);
+            ModulesFileModelGenerator<Double> modelGen = (ModulesFileModelGenerator<Double>) ModulesFileModelGenerator.create(modulesFileIDTMC, prism);
             modelGen.setSomeUndefinedConstants(imdp.getConstantValues());
-            //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, imdp, strategy);
+            RewardGeneratorMRStrat<Double> rewGen = new RewardGeneratorMRStrat<>(modelGen, imdp, rlStrat);
 
-            mc.setModelCheckingInfo(modelGen, pf, modelGen);
+            mc.setModelCheckingInfo(modelGen, pf, rewGen);
 
             Result result = mc.check(inducedIDTMC, pf.getProperty(0));
             results.add((double) result.getResult());

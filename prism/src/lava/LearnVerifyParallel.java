@@ -53,7 +53,7 @@ public class LearnVerifyParallel {
 
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-        if (args.length > 0) {
+        if (false) {
             int seed;
             for (String s : args) {
                 try {
@@ -94,14 +94,14 @@ public class LearnVerifyParallel {
     public void basic() {
         String id = "basic";
 
-        int m = 5; // = 300;
-        int n = 30; // = 200;
+        int m = 10; // = 300;
+        int n = 10; // = 200;
 
         System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
-
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, samplingSeed, true, true, m, n, 2).info(id));
-        run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
-        run_basic_algorithms_naive(new Experiment(Model.SAV2).config(60, 1_000_000, samplingSeed, false, false, 12, 10, 2).info(id));
+        System.out.println("Running Drone with 50 episodes");
+        //run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, samplingSeed, true, true, m, n, 8).info(id));
+        //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
+        run_basic_algorithms_naive(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, samplingSeed, false, false, m, n, 8).info(id));
     }
 
     private void run_basic_algorithms(Experiment ex) {
@@ -111,7 +111,7 @@ public class LearnVerifyParallel {
 
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false).stratWeight(0.9), BayesianEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
+        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false).stratWeight(0.9), MAPEstimator::new);
         runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
     }
 
@@ -129,11 +129,10 @@ public class LearnVerifyParallel {
         String postfix = "";//String.format("_seed_%d", ex.seed);
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
-        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85), MAPEstimator::new);
-        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85), UCRL2IntervalEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85), PACIntervalEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.85), BayesianEstimatorOptimistic::new);
-
+        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85).setMultiplier(3), PACIntervalEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.85).setMultiplier(3), BayesianEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85).setMultiplier(3), MAPEstimator::new);
+        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85).setMultiplier(3), UCRL2IntervalEstimatorOptimistic::new);
     }
 
     public void gridStrengthEval() {
@@ -349,6 +348,8 @@ public class LearnVerifyParallel {
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
+
+
 //            // Generate uniform sample training and verification MDP parameters
 //            /*
 //             * Range for SAV2: [0.75, 0.95]
@@ -381,8 +382,8 @@ public class LearnVerifyParallel {
              * Parameters for Drone Single: Alpha = 2, Beta = 10
              * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
-            int alpha = 10;
-            int beta = 2;
+            int alpha = 2;
+            int beta = 10;
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
             ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
             Iterator<Double> it = sampler.samples().iterator();
@@ -407,9 +408,23 @@ public class LearnVerifyParallel {
             }
 
 
-            // Get MDPs/IMDPs for training and verification set
+            long startTime = System.currentTimeMillis();
+
+            // Get MDPs/IMDPs for training
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> trainingSet = getIMDPsForVis(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
+
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            double elapsedTimeinSecondsTraining = elapsedTime / 1000.0;
+
+            startTime = System.currentTimeMillis();
+
+            // Get MDPs/IMDPs for verification
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
+
+            endTime = System.currentTimeMillis();
+            elapsedTime = endTime - startTime;
+            double elapsedTimeinSecondsVerification = elapsedTime / 1000.0;
 
             // Build robust policy and derive PAC guarantee
             RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
@@ -430,6 +445,7 @@ public class LearnVerifyParallel {
             ArrayList<Integer> plottedIterations = new ArrayList<>(ex.getResultIterations());
             plottedIterations.add(0, 0);
             plottedIterations.add(ex.iterations - 1);
+
             for (int i = 0; i < trainingSet.first.get(0).size(); i++) {
                 List<IMDP<Double>> subTrainSet = new ArrayList<>();
                 List<IMDP<Double>> subVerificationSet = new ArrayList<>();
@@ -439,18 +455,22 @@ public class LearnVerifyParallel {
                 for (List<IMDP<Double>> iterationList : verificationSet.first) {
                     subVerificationSet.add(iterationList.get(i));
                 }
+                try {
+                    System.out.println("Result iteration: " + ex.getResultIterations().get(i - 1));
+                } catch (Exception ignored) {
 
+                }
                 // Construction and analysis over learned IMDPs for result iteration i
                 robSynthI.setImdps(subTrainSet);
                 robSynthI.setVerificationSet(subVerificationSet);
                 robSynthI.combineIMDPs();
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
-                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec);
+                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec, plottedIterations.get(i));
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
-                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec);
+                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, plottedIterations.get(i));
 
                 System.out.println("\n" + "==============================");
                 try {
@@ -473,24 +493,29 @@ public class LearnVerifyParallel {
                 System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
                 System.out.println("True MDP Robust Guarantee with RL strategy: " + Collections.min(robResultsCrossRL));
 
-
                 System.out.println("Existential Results on true MDPs:" + existentialLambdas);
                 System.out.println("Existential Guarantee (Badings et al.): " + Collections.min(existentialLambdas));
 
                 results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
 
+                List<Double> evalResIMDP = List.of();
+                List<Double> evalResRL = List.of();
                 // Eval robust policy on fresh samples
                 if (i == trainingSet.first.getFirst().size() - 1) {
                     System.out.println("\n" + "==============================");
-                    evaluatePolicy(robstratI, 200, ex);
+
+                    // Evaluation on 200 fresh samples for RL and IMDP policy
+                    evalResIMDP = evaluatePolicy(robstratI, 3200, ex, false, plottedIterations.get(i));
+                    evalResRL = evaluatePolicy(null, 3200, ex, true, plottedIterations.get(i));
+
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 2000, ex);
-                    computeEmpiricalRisk(robstratI,0.6551633157021766, 2000 , ex);
+                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 200, ex);
+                    computeEmpiricalRisk(robstratI,0.6551633157021766, 200 , ex);
                 }
 
                 DataProcessor dp = new DataProcessor();
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
-                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas);
+                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas, evalResIMDP, evalResRL, elapsedTimeinSecondsTraining, elapsedTimeinSecondsVerification);
             }
 
             ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
@@ -500,10 +525,10 @@ public class LearnVerifyParallel {
         }
     }
 
-    private void evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex) throws PrismException {
+    private List<Double> evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex, boolean isRL, int iteration) throws PrismException {
 
-        int alpha = 10;
-        int beta = 2;
+        int alpha = 2;
+        int beta = 10;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
         Iterator<Double> it = sampler.samples().iterator();
@@ -530,14 +555,20 @@ public class LearnVerifyParallel {
 
         RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
         robSynth.setVerificationSet(evalMDPs);
-        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+        List<Double> robResultsCross = !isRL ?
+             robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec)
+        :
+             robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, iteration);
+
 
         System.out.println("Eval Results with robust strategy: " + robResultsCross);
+
+        return robResultsCross;
     }
 
     private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
-        int alpha = 10;
-        int beta = 2;
+        int alpha = 2;
+        int beta = 10;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
         Iterator<Double> it = sampler.samples().iterator();
@@ -589,7 +620,7 @@ public class LearnVerifyParallel {
 
     private void constructValuesBeta(List<Values> params, Iterator<Double> it) {
         Values v = new Values();
-        double pL = it.next();
+        //double pL = it.next();
         double pH = it.next();
 
         // For Chain Benchmark, only p's and q'
@@ -600,8 +631,8 @@ public class LearnVerifyParallel {
          * Betting Game p -> pH
          * Chain Benchmark p -> ph  q -> 1 - p
          */
-        v.addValue("r", pL);
-        v.addValue("p", Math.min(1 - pH,0.49));
+        //v.addValue("r", pL);
+        v.addValue("p", Math.min(pH,0.22));
         params.add(v);
     }
 
@@ -667,9 +698,9 @@ public class LearnVerifyParallel {
              * Betting Game: p
              * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"r", "p"};
-            String[] paramLowerBounds = new String[]{"0","0"};
-            String[] paramUpperBounds = new String[]{"1","1"};
+            String[] paramNames = new String[]{"p"};
+            String[] paramLowerBounds = new String[]{"0"};
+            String[] paramUpperBounds = new String[]{"1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -879,6 +910,8 @@ public class LearnVerifyParallel {
                 similarStateActionMap.get(transitionStructure).add(new Pair<>(s, i));
             }
         }
+        System.out.println("paramstatelsit" + mdpParam.getStatesList());
+
         System.out.println("Similar state action map" + similarStateActionMap);
         return similarStateActionMap;
     }

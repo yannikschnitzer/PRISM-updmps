@@ -80,4 +80,34 @@ public class PolicyLoader {
         }
 
     }
+
+    public MRStrategy loadBettingPolicy(String policyFile, NondetModel<Double> model) {
+        File policyJson = new File(policyFile);
+        try {
+            List<List<List<Double>>> policyList = mapper.readValue(policyJson, List.class);
+
+            MRStrategy strat = new MRStrategy(model);
+            for (State s : model.getStatesList()) {
+                int money = (int) s.varValues[0];
+                int steps = (int) s.varValues[1];
+
+                int state_index = model.getStatesList().indexOf(s);
+                for (int i = 0; i < model.getNumChoices(state_index); i++) {
+                    strat.setChoiceProbability(state_index, i, policyList.get(money).get(steps).get(i));
+                }
+
+                //System.out.println("State " + s + " Actions " + policyList.get(money).get(steps));
+
+            }
+
+            //System.out.println("Strategy " + strat);
+            //System.out.println("Model " + model);
+
+            return strat;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

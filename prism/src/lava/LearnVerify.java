@@ -96,8 +96,8 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 5; // = 300;
-        int n = 30; // = 200;
+        int m = 1; // = 300;
+        int n = 1; // = 200;
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
@@ -123,7 +123,7 @@ public class LearnVerify {
 //        }
 
 //        for (int seed : get_seeds(seed, 1)) {
-            run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
+         //   run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
  //           run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_0_000, seed, true, true, m, n, 2).info(id));
 //            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
 //        }
@@ -142,7 +142,7 @@ public class LearnVerify {
 //        }
 //
 //        for (int seed : get_seeds(seed, 10)) {
-//            run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, true, m, n, 4).info(id));
+            run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_00, seed, true, true, m, n, 4).info(id));
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, false, m, n, 2).info(id));
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(15, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
@@ -416,7 +416,7 @@ public class LearnVerify {
              * Parameters for Drone Single: Alpha = 2, Beta = 10
              * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
-            int alpha = 10;
+            int alpha = 20;
             int beta = 2;
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
             ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
@@ -442,9 +442,23 @@ public class LearnVerify {
             }
 
 
-            // Get MDPs/IMDPs for training and verification set
+            long startTime = System.currentTimeMillis();
+
+            // Get MDPs/IMDPs for training
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> trainingSet = getIMDPsForVis(label, ex, estimatorConstructor, mdpParam, trainingParams, false);
+
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            double elapsedTimeinSecondsTraining = elapsedTime / 1000.0;
+
+            startTime = System.currentTimeMillis();
+
+            // Get MDPs/IMDPs for verification
             Pair<List<List<IMDP<Double>>>, List<MDP<Double>>> verificationSet = getIMDPsForVis(label, ex, PACIntervalEstimator::new, mdpParam, verificationParams, true);
+
+            endTime = System.currentTimeMillis();
+            elapsedTime = endTime - startTime;
+            double elapsedTimeinSecondsVerification = elapsedTime / 1000.0;
 
             // Build robust policy and derive PAC guarantee
             RobustPolicySynthesizerIMDP robSynthI = new RobustPolicySynthesizerIMDP(mdpParam, ex);
@@ -481,11 +495,11 @@ public class LearnVerify {
                 robSynthI.combineIMDPs();
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
-                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec);
+                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec, plottedIterations.get(i));
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
-                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec);
+                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, plottedIterations.get(i));
 
                 System.out.println("\n" + "==============================");
                 try {
@@ -514,18 +528,24 @@ public class LearnVerify {
 
                 results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
 
+                List<Double> evalResIMDP = List.of();
+                List<Double> evalResRL = List.of();
                 // Eval robust policy on fresh samples
                 if (i == trainingSet.first.getFirst().size() - 1) {
                     System.out.println("\n" + "==============================");
-                    evaluatePolicy(robstratI, 200, ex);
+
+                    // Evaluation on 200 fresh samples for RL and IMDP policy
+                    evalResIMDP = evaluatePolicy(robstratI, 200, ex, false, plottedIterations.get(i));
+                    evalResRL = evaluatePolicy(null, 200, ex, true, plottedIterations.get(i));
+
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 2000, ex);
-                    computeEmpiricalRisk(robstratI,0.6551633157021766, 2000 , ex);
+                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 200, ex);
+                    computeEmpiricalRisk(robstratI,0.6551633157021766, 200 , ex);
                 }
 
                 DataProcessor dp = new DataProcessor();
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
-                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas);
+                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas, evalResIMDP, evalResRL, elapsedTimeinSecondsTraining, elapsedTimeinSecondsVerification);
             }
 
             ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
@@ -535,10 +555,10 @@ public class LearnVerify {
         }
     }
 
-    private void evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex) throws PrismException {
+    private List<Double> evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex, boolean isRL, int iteration) throws PrismException {
 
-        int alpha = 10;
-        int beta = 2;
+        int alpha = 2;
+        int beta = 10;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
         Iterator<Double> it = sampler.samples().iterator();
@@ -565,9 +585,15 @@ public class LearnVerify {
 
         RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
         robSynth.setVerificationSet(evalMDPs);
-        List<Double> robResultsCross = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec);
+        List<Double> robResultsCross = !isRL ?
+                robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec)
+                :
+                robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, iteration);
+
 
         System.out.println("Eval Results with robust strategy: " + robResultsCross);
+
+        return robResultsCross;
     }
 
     private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
@@ -636,7 +662,7 @@ public class LearnVerify {
          * Chain Benchmark p -> ph  q -> 1 - p
          */
         v.addValue("r", pL);
-        v.addValue("p", Math.min(1 - pH,0.49));
+        v.addValue("p", pH);
         params.add(v);
     }
 
@@ -702,9 +728,9 @@ public class LearnVerify {
              * Betting Game: p
              * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"r", "p"};
-            String[] paramLowerBounds = new String[]{"0","0"};
-            String[] paramUpperBounds = new String[]{"1","1"};
+            String[] paramNames = new String[]{"p"};
+            String[] paramLowerBounds = new String[]{"0"};
+            String[] paramUpperBounds = new String[]{"1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -914,6 +940,7 @@ public class LearnVerify {
                 similarStateActionMap.get(transitionStructure).add(new Pair<>(s, i));
             }
         }
+
         System.out.println("Similar state action map" + similarStateActionMap);
         return similarStateActionMap;
     }

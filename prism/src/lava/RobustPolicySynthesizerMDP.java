@@ -127,8 +127,8 @@ public class RobustPolicySynthesizerMDP {
         Result result = mc.check(this.combinedIMDP, exprTarget);
 
         MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
-        System.out.println("Robust Strategy MDPs:" + strat);
-        System.out.println("Robust Performance MDPs:" + result.getResult());
+        //System.out.println("Robust Strategy MDPs:" + strat);
+        //System.out.println("Robust Performance MDPs:" + result.getResult());
 
         return strat;
     }
@@ -159,13 +159,15 @@ public class RobustPolicySynthesizerMDP {
         return results;
     }
 
-    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec) throws PrismException {
+    public List<Double> checkVerificatonSetRLPolicy(Prism prism, String spec, int iteration) throws PrismException {
         List<Double> results = new ArrayList<>();
         for (MDP<Double> mdp : this.verificationSet) {
             PolicyLoader p = new PolicyLoader();
-            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);
 
-            MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);
+            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);
+            //MRStrategy rlStrat = p.loadBettingPolicy("policies/betting/policy_single_betting.json", mdp);
+            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)),mdp);
+
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
@@ -179,11 +181,11 @@ public class RobustPolicySynthesizerMDP {
             buildModulesFiles(prism);
             ModulesFile modulesFileDTMC = (ModulesFile) modulesFileIMDP.deepCopy();
             modulesFileDTMC.setModelType(ModelType.DTMC);
-            ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileDTMC, prism);
+            ModulesFileModelGenerator<Double> modelGen = (ModulesFileModelGenerator<Double>) ModulesFileModelGenerator.create(modulesFileDTMC, prism);
             modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
-            //RewardGeneratorMDStrat<?> rewGen = new RewardGeneratorMDStrat(modelGen, mdp, rlStrat);
+            RewardGeneratorMRStrat<Double> rewGen = new RewardGeneratorMRStrat<>(modelGen, mdp, rlStrat);
 
-            mc.setModelCheckingInfo(modelGen, pf, modelGen);
+            mc.setModelCheckingInfo(modelGen, pf, rewGen);
 
             Result result = mc.check(inducedDTMC, pf.getProperty(0));
             results.add((double) result.getResult());

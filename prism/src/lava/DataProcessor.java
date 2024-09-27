@@ -414,7 +414,7 @@ public class DataProcessor {
         }
     }
 
-    public void dumpResultList(String directoryPath, String name, List<Double> robustPolicyResults, List<Double> existentialResults) {
+    public void dumpResultList(String directoryPath, String name, List<Double> robustPolicyResults, List<Double> existentialResults, List<Double> evalResIMDP, List<Double> evalResRL, double timeTraining, double timeVerification) {
         String path = directoryPath + name +"_resultlist.yaml";
 //        if (Files.exists(Paths.get(path)))
 //            System.out.println("File" + path + "already exists");
@@ -424,6 +424,12 @@ public class DataProcessor {
             writer.write("Robust Policy Results: " + robustPolicyResults + System.getProperty( "line.separator" ));
             //System.out.println("Dumping existential lambdas:" + existentialResults);
             writer.write("Existential Policy Results: " + existentialResults + System.getProperty( "line.separator" ));
+
+            writer.write("IMDP Policy Eval Results: " + evalResIMDP + System.getProperty( "line.separator" ));
+            writer.write("RL Policy Eval Results: " + evalResRL + System.getProperty( "line.separator" ));
+
+            writer.write("Runtime Learning IMDPs: " + timeTraining + System.getProperty( "line.separator" ));
+            writer.write("Runtime Verification IMDPs: " + timeVerification + System.getProperty( "line.separator" ));
             writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);

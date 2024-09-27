@@ -141,6 +141,7 @@ public class Estimator {
 //        if (value > 1) {
 //            value = 1.0;
 //        }
+        if (value == Double.POSITIVE_INFINITY) { return 1.0; }
         BigDecimal bd = BigDecimal.valueOf(value);
         bd = bd.setScale(precision, RoundingMode.HALF_UP);
         return bd.doubleValue();
