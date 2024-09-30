@@ -48,6 +48,34 @@ public class PolicyLoader {
         }
     }
 
+    public MRStrategy loadChainPolicy(String policyFile, NondetModel<Double> model) {
+        File policyJson = new File(policyFile);
+
+        try {
+         List<List<List<Double>>> policyList = mapper.readValue(policyJson, List.class);
+
+            MRStrategy strat = new MRStrategy(model);
+
+            for (State s : model.getStatesList()) {
+                int state = (int) s.varValues[0];
+
+                int state_index = model.getStatesList().indexOf(s);
+
+                for (int i = 0; i < model.getNumChoices(state_index); i++) {
+                    strat.setChoiceProbability(state_index, i, policyList.get(state).getFirst().get(i));
+                }
+
+                //System.out.println("State " + s + " Actions " + policyList.get(x-1).get(y-1).get(z-1));
+
+            }
+
+            return strat;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public MRStrategy loadAircraftPolicy(String policyFile, NondetModel<Double> model) {
         File policyJson = new File(policyFile);
         try {

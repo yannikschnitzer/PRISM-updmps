@@ -654,10 +654,10 @@ public class BayesianEstimator extends Estimator {
 			newUpper = (strengthUpper * priorUpper + samples) / (strengthUpper + sampleSize);
 		}
 		if ((newLower <= 0.0) || (newLower >= 1.0)){
-			System.out.println("Invalid lower bound");
+			//System.out.println("Invalid lower bound");
 		}
 		if ((newUpper <= 0.0) || (newUpper >= 1.0)){
-			System.out.println("Invalid upper bound");
+			//System.out.println("Invalid upper bound");
 		}
 		Interval posterior = new Interval(newLower, newUpper);
         return posterior;

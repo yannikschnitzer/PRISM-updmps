@@ -7,8 +7,8 @@ const double r; //= 1/2
 module chain
 
 	s : [0..H] init 0;
-	
-    [a] true -> r : (s'=min(s+1,H)) + r : (s'=0);
+
+    [a] true -> 1-r : (s'=min(s+1,H)) + r : (s'=0);
 	[b] true -> p : (s'=min(s+1,H)) + 1-p : (s'=0);
     [c] true -> q : (s'=min(s+1,H)) + 1-q : (s'=0);
 

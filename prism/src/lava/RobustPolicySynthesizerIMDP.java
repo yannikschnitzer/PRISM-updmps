@@ -125,6 +125,7 @@ public class RobustPolicySynthesizerIMDP {
         mc.setModelCheckingInfo(modelGen, pf, modelGen);
 
         Result result = mc.check(this.combinedIMDP, exprTarget);
+        System.out.println("Result: " + result.getResultString());
 
         MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
 //        System.out.println("Robust Strategy IMDPs:" + strat);
@@ -166,7 +167,9 @@ public class RobustPolicySynthesizerIMDP {
 
             //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
             //MRStrategy rlStrat = p.loadBettingPolicy("policies/betting/policy_single_betting.json", imdp);
-            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)),imdp);
+            //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
+            MRStrategy rlStrat = p.loadChainPolicy("policies/chain/policy_single_6000.json", imdp);
+
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
