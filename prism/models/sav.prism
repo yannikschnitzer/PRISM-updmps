@@ -65,7 +65,7 @@ endrewards
 rewards "sendbased_upper"
   [up] true: 0.03;
   [right] true: 0.03;
-	[sendL] true: 20;
+  [sendL] true: 20;
 	[sendH] true: 24;
 endrewards
 

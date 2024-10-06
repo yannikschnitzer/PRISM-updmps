@@ -40,6 +40,7 @@ public class Experiment {
         CHAIN_SMALL2,
         CHAIN2,
         CHAIN_LARGE,
+        CHAIN_LARGE_TWO_ACTION,
         CHAIN_LARGE2,
         CHAIN_test,
         GRID,
@@ -157,6 +158,17 @@ public class Experiment {
             this.optimisticSpec = "Rminmin=? [F \"goal\"]";
             this.dtmcSpec = "R=? [F \"goal\"]";
             this.modelFile = "models/chain_large.prism";
+            this.type = Type.REWARD;
+            this.optimizations = true;
+            break;
+            case CHAIN_LARGE_TWO_ACTION:
+            this.goal = "\"goal\"";
+            this.spec = "Rmin=? [F \"goal\"]";
+            this.idtmcRobustSpec = "Rmax=? [F \"goal\"]";
+            this.robustSpec = "Rminmax=? [F \"goal\"]";
+            this.optimisticSpec = "Rminmin=? [F \"goal\"]";
+            this.dtmcSpec = "R=? [F \"goal\"]";
+            this.modelFile = "models/chain_large_twoaction.prism";
             this.type = Type.REWARD;
             this.optimizations = true;
             break;
