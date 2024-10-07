@@ -23,10 +23,11 @@ public class ParallelLearner {
         List<Integer> seeds = get_seeds(seed, 10);
         System.out.println(seeds);
         List<Thread> threads = new ArrayList<>();
-        for (int seed : seeds.subList(0, 4)) {
+        for (int seed : seeds.subList(0, 1)) {
             Thread thread = new Thread(new LearningThread(seed));
             thread.start();
             threads.add(thread);
+            System.out.println("here");
         }
         for (Thread thread : threads) {
             try {

@@ -167,8 +167,9 @@ public class RobustPolicySynthesizerIMDP {
 
             //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
             //MRStrategy rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json",(iteration)), imdp);
-            MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
+            //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
             //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), imdp);
+            MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
 
 
             StrategyExportOptions options = new StrategyExportOptions();

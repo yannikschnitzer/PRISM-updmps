@@ -119,8 +119,8 @@ public class BayesianEstimator extends Estimator {
 		double resultRobustDTMC = round((Double) checkDTMC(robustStrat).getResult());
 		double resultOptimisticDTMC = round((Double) checkDTMC(optimisticStrat).getResult());
 		double dist = round(this.averageDistanceToSUL());
-		List<Double> lbs = this.getLowerBounds();
-		List<Double> ubs = this.getUpperBounds();
+		List<Double> lbs = List.of(0.0);//this.getLowerBounds();
+		List<Double> ubs = List.of(1.0);//this.getUpperBounds();
 		//resetIntervals(oldIntervals);
 		return new double[]{resultRobustIMDP, resultRobustDTMC, dist, lbs.get(0), ubs.get(0), resultOptimisticIMDP, resultOptimisticDTMC};
 	}
@@ -134,8 +134,8 @@ public class BayesianEstimator extends Estimator {
 		double resultRobustDTMC = round((Double) checkDTMC(robustStrat).getResult());
 		double resultOptimisticDTMC = round((Double) checkDTMC(optimisticStrat).getResult());
 		double dist = round(this.averageDistanceToSUL());
-		List<Double> lbs = this.getLowerBounds();
-		List<Double> ubs = this.getUpperBounds();
+		List<Double> lbs = List.of(0.0);//this.getLowerBounds();
+		List<Double> ubs = List.of(1.0);//this.getUpperBounds();
 		return new double[]{resultRobustIMDP, resultRobustDTMC, dist, lbs.get(0), ubs.get(0), resultOptimisticIMDP, resultOptimisticDTMC};
 	}
 
