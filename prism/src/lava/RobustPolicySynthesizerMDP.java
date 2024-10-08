@@ -141,6 +141,7 @@ public class RobustPolicySynthesizerMDP {
 
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
+            //mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -168,7 +169,8 @@ public class RobustPolicySynthesizerMDP {
             //MRStrategy rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json",(iteration)),mdp);
             //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),mdp);
             //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), mdp);
-            MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), mdp);
+            //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), mdp);
+            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), mdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
@@ -177,6 +179,7 @@ public class RobustPolicySynthesizerMDP {
             DTMCModelChecker mc = new DTMCModelChecker(prism);
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
+            //mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);

@@ -114,6 +114,7 @@ public class RobustPolicySynthesizerIMDP {
         UMDPModelChecker mc = new UMDPModelChecker(prism);
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
+        //mc.setPrecomp(false);
 
         buildModulesFiles(prism);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);
@@ -142,6 +143,7 @@ public class RobustPolicySynthesizerIMDP {
 
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
+            //mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -169,8 +171,8 @@ public class RobustPolicySynthesizerIMDP {
             //MRStrategy rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json",(iteration)), imdp);
             //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
             //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), imdp);
-            MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
-
+            //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
+            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), imdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
