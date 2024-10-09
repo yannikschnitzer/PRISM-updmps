@@ -114,7 +114,7 @@ public class RobustPolicySynthesizerIMDP {
         UMDPModelChecker mc = new UMDPModelChecker(prism);
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
-        //mc.setPrecomp(false);
+        mc.setPrecomp(false);
 
         buildModulesFiles(prism);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);
@@ -143,7 +143,7 @@ public class RobustPolicySynthesizerIMDP {
 
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            //mc.setPrecomp(false);
+            mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);

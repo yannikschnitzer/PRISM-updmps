@@ -141,7 +141,7 @@ public class RobustPolicySynthesizerMDP {
 
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            //mc.setPrecomp(false);
+            mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -179,7 +179,7 @@ public class RobustPolicySynthesizerMDP {
             DTMCModelChecker mc = new DTMCModelChecker(prism);
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            //mc.setPrecomp(false);
+            mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);

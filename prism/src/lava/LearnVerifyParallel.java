@@ -94,11 +94,11 @@ public class LearnVerifyParallel {
     public void basic() {
         String id = "basic";
 
-        int m = 8; // = 300;
-        int n = 4; // = 200;
+        int m = 1; // = 300;
+        int n = 0; // = 200;
 
         System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
-        run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(100, 1_000_000, samplingSeed, true, true, m, n, 5).info(id));
+        run_basic_algorithms(new Experiment(Model.FIREWIRE).config(60, 1_000_000, samplingSeed, true, true, m, n, 5).info(id));
         //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
         //run_basic_algorithms_naive(new Experiment(Model.CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, samplingSeed, false, false, m, n, 3).info(id));
     }
@@ -382,8 +382,8 @@ public class LearnVerifyParallel {
              * Parameters for Drone Single: Alpha = 2, Beta = 10
              * Parameters for Betting Game: Alpha = 20, Beta = 2
              */
-            int alpha = 2;
-            int beta = 20;
+            int alpha = 5;
+            int beta = 5;
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
             ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
             Iterator<Double> it = sampler.samples().iterator();
@@ -399,7 +399,7 @@ public class LearnVerifyParallel {
             }
 
             Values v =  new Values();
-            v.addValue("p", 0.3150358755);
+            v.addValue("fast", 0.109280077836);
             verificationParams.add(v);
 
             System.out.println("Training Parameters:");
@@ -472,11 +472,11 @@ public class LearnVerifyParallel {
                 MDStrategy<Double> robstratI = robSynthI.getRobustStrategy(prism, ex.robustSpec);
 
                 List<Double> robResultsI = robSynthI.checkVerificationSet(prism, robstratI, ex.idtmcRobustSpec);
-                List<Double> robResultsIRL = robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec, plottedIterations.get(i));
+                List<Double> robResultsIRL = List.of(0.0);//robSynthI.checkVerificatonSetRLPolicy(prism, ex.idtmcRobustSpec, plottedIterations.get(i));
 
                 // Analyse robust policy obtained over IMDPs on the true MDPs
                 List<Double> robResultsCross = robSynth.checkVerificationSet(prism, robstratI, ex.dtmcSpec);
-                List<Double> robResultsCrossRL = robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, plottedIterations.get(i));
+                List<Double> robResultsCrossRL = List.of(0.0);//robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, plottedIterations.get(i));
 
                 System.out.println("\n" + "==============================");
                 try {
@@ -511,12 +511,12 @@ public class LearnVerifyParallel {
                     System.out.println("\n" + "==============================");
 
                     // Evaluation on 200 fresh samples for RL and IMDP policy
-                    evalResIMDP = evaluatePolicy(robstratI, 600, ex, false, plottedIterations.get(i));
-                    evalResRL = evaluatePolicy(null, 600, ex, true, plottedIterations.get(i));
+                    evalResIMDP = evaluatePolicy(robstratI, 1000, ex, false, plottedIterations.get(i));
+                    evalResRL = List.of(0.0);//evaluatePolicy(null, 600, ex, true, plottedIterations.get(i));
 
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 200, ex);
-                    computeEmpiricalRisk(robstratI,0.6551633157021766, 200 , ex);
+                    //computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 200, ex);
+                    //computeEmpiricalRisk(robstratI,0.6551633157021766, 200 , ex);
                 }
 
                 DataProcessor dp = new DataProcessor();
@@ -533,8 +533,8 @@ public class LearnVerifyParallel {
 
     private List<Double> evaluatePolicy(MDStrategy<Double> strat, int numEvalSamples, Experiment ex, boolean isRL, int iteration) throws PrismException {
 
-        int alpha = 2;
-        int beta = 20;
+        int alpha = 5;
+        int beta = 5;
         BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
         ContinuousDistribution.Sampler sampler = betaDist.createSampler(RandomSource.JDK.create(seed));
         Iterator<Double> it = sampler.samples().iterator();
@@ -547,7 +547,10 @@ public class LearnVerifyParallel {
 
         System.out.println("eval params:" + evaluationParams);
 
-        List<MDP<Double>> evalMDPs = new ArrayList<>();
+        List<Double> robResultsCross = new ArrayList<>();
+
+        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
+
         for (Values values : evaluationParams) {
             ex.values = values;
             EstimatorConstructor estimatorConstructor = PACIntervalEstimator::new;
@@ -555,21 +558,25 @@ public class LearnVerifyParallel {
             estimator.set_experiment_naive(ex);
 
             // Iterate and run experiments for each of the sampled parameter vectors
-            evalMDPs.add(estimator.getSUL());
+            robSynth.setVerificationSet(List.of(estimator.getSUL()));
+            double res = robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec).getFirst();
+            robResultsCross.add(res);
+            System.out.println("Solved MDP:" + values + "Res: " + res);
         }
 
-        List<Double> existentialLambdas = getExistentialGuarantee(prism, ex, evalMDPs);
+        List<Double> existentialLambdas = List.of(0.0);//getExistentialGuarantee(prism, ex, evalMDPs);
         System.out.println("Eval Existential Lambdas: " + existentialLambdas);
 
-        RobustPolicySynthesizerMDP robSynth = new RobustPolicySynthesizerMDP(null, ex);
-        robSynth.setVerificationSet(evalMDPs);
-        List<Double> robResultsCross = !isRL ?
-             robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec)
-        :
-             robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, iteration);
+
+
+//        List<Double> robResultsCross = !isRL ?
+//             robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec)
+//        :
+//             robSynth.checkVerificatonSetRLPolicy(prism, ex.dtmcSpec, iteration);
+
         double minres = 1.0;
         int ind = 0;
-        for (int i = 0; i < 300; i++) {
+        for (int i = 0; i < 100; i++) {
             if (robResultsCross.get(i) < minres) {
                 minres = robResultsCross.get(i);
                 ind = i;
@@ -577,8 +584,8 @@ public class LearnVerifyParallel {
         }
         System.out.println("min res:" + minres);
         System.out.println("min param" + evaluationParams.get(ind));
-        System.out.println("Eval Parameters: " + evaluationParams.subList(0,300));
-        System.out.println("Eval Results with robust strategy: " + robResultsCross.subList(0,300));
+        System.out.println("Eval Parameters: " + evaluationParams.subList(0,100));
+        System.out.println("Eval Results with robust strategy: " + robResultsCross.subList(0,100));
 
         return robResultsCross;
     }
