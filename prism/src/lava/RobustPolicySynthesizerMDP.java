@@ -170,7 +170,8 @@ public class RobustPolicySynthesizerMDP {
             //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),mdp);
             //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), mdp);
             //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), mdp);
-            MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), mdp);
+            //MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), mdp);
+            MRStrategy rlStrat = p.loadFirewirePolicy(String.format("policies/firewire/firewire_policies/policy_single_%d.json",(iteration)), mdp);
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);

@@ -136,6 +136,29 @@ public class PolicyLoader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public MRStrategy loadFirewirePolicy(String policyFile, NondetModel<Double> model) {
+        //File policyJson = new File(policyFile);
+        //List<List<List<Double>>> policyList = mapper.readValue(policyJson, List.class);
+
+        MRStrategy strat = new MRStrategy(model);
+        for (State s : model.getStatesList()) {
+
+            int state_index = model.getStatesList().indexOf(s);
+            int num_trans = model.getNumChoices(state_index);
+            for (int i = 0; i < model.getNumChoices(state_index); i++) {
+                strat.setChoiceProbability(state_index, i, 1.0 / (double) num_trans);
+            }
+
+            //System.out.println("State " + s + " Actions " + policyList.get(money).get(steps));
+
+        }
+
+        //System.out.println("Strategy " + strat);
+        //System.out.println("Model " + model);
+
+        return strat;
 
     }
 }
