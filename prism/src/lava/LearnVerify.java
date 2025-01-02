@@ -1,21 +1,17 @@
 package lava;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import explicit.*;
 import lava.Experiment.Model;
 import org.apache.commons.rng.simple.RandomSource;
 import param.BigRational;
 import param.Function;
 import param.Point;
-import parser.State;
 import parser.Values;
 import parser.ast.Expression;
 import parser.ast.ModulesFile;
 import parser.ast.PropertiesFile;
 import prism.*;
 import simulator.ModulesFileModelGenerator;
-import simulator.RandomNumberGenerator;
-import simulator.sampler.Sampler;
 import strat.MDStrategy;
 import strat.MRStrategy;
 import strat.Strategy;
@@ -29,10 +25,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.commons.statistics.distribution.*;
-import org.apache.commons.statistics.distribution.NormalDistribution;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
-import org.apache.commons.rng.*;
-import strat.StrategyExportOptions;
 
 public class LearnVerify {
 
@@ -383,6 +376,11 @@ public class LearnVerify {
             // Build pMDP model
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
+
+            Iterator<Entry<Integer, Function>> iter = mdpParam.getTransitionsIterator(43,1);
+            while(iter.hasNext()) {
+                System.out.println("Iteration: " + iter.next().getValue().getClass());
+            }
 
 //            // Generate uniform sample training and verification MDP parameters
 //            /*

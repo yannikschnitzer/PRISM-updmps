@@ -216,6 +216,10 @@ public enum ModelType
 			return true;
 		}
 	},
+	L1MDP("L1 Markov decision process") {
+		@Override
+		public boolean uncertain() { return true; }
+	},
 	UMDP("uncertain Markov decision process") {
 		@Override
 		public ModelType removeNondeterminism()

@@ -598,38 +598,68 @@ public class UMDPModelChecker extends ProbModelChecker
 	public static void main(String args[])
 	{
 		try {
+//			UMDPModelChecker mc = new UMDPModelChecker(null);
+//			Evaluator<Interval<Double>> eval = Evaluator.forDoubleInterval();
+//			IMDPSimple<Double> imdp = new IMDPSimple<>();
+//			imdp.setIntervalEvaluator(eval);
+//			imdp.addState();
+//			imdp.addState();
+//			imdp.addState();
+//			imdp.addInitialState(0);
+//			Distribution<Interval<Double>> distr;
+//			distr = new Distribution<>(eval);
+//			distr.add(1, new Interval<Double>(0.2, 0.4));
+//			distr.add(2, new Interval<Double>(0.6, 0.8));
+//			imdp.addActionLabelledChoice(0, distr, "a");
+//			distr = new Distribution<>(eval);
+//			distr.add(1, new Interval<Double>(0.1, 0.3));
+//			distr.add(2, new Interval<Double>(0.7, 0.9));
+//			imdp.addActionLabelledChoice(0, distr, "b");
+//			imdp.findDeadlocks(true);
+//			System.out.println("IMDP: " + imdp);
+//			//imdp.exportToDotFile("imdp.dot");
+//			BitSet target = new BitSet();
+//			target.set(2);
+//			ModelCheckerResult res;
+//			res = mc.computeReachProbs(imdp, target, MinMax.min().setMinUnc(true));
+//			System.out.println("minmin: " + res.soln[0]);
+//			res = mc.computeReachProbs(imdp, target, MinMax.min().setMinUnc(false));
+//			System.out.println("minmax: " + res.soln[0]);
+//			res = mc.computeReachProbs(imdp, target, MinMax.max().setMinUnc(true));
+//			System.out.println("maxmin: " + res.soln[0]);
+//			res = mc.computeReachProbs(imdp, target, MinMax.max().setMinUnc(false));
+//			System.out.println("maxmax: " + res.soln[0]);
+
 			UMDPModelChecker mc = new UMDPModelChecker(null);
-			Evaluator<Interval<Double>> eval = Evaluator.forDoubleInterval();
-			IMDPSimple<Double> imdp = new IMDPSimple<>();
-			imdp.setIntervalEvaluator(eval);
-			imdp.addState();
-			imdp.addState();
-			imdp.addState();
-			imdp.addInitialState(0);
-			Distribution<Interval<Double>> distr;
-			distr = new Distribution<>(eval);
-			distr.add(1, new Interval<Double>(0.2, 0.4));
-			distr.add(2, new Interval<Double>(0.6, 0.8));
-			imdp.addActionLabelledChoice(0, distr, "a");
-			distr = new Distribution<>(eval);
-			distr.add(1, new Interval<Double>(0.1, 0.3));
-			distr.add(2, new Interval<Double>(0.7, 0.9));
-			imdp.addActionLabelledChoice(0, distr, "b");
-			imdp.findDeadlocks(true);
-			imdp.exportToDotFile("imdp.dot");
+			L1MDPSimple<Double> l1mdp = new L1MDPSimple<>();
+			l1mdp.addStates(3);
+			l1mdp.addInitialState(0);
+			Distribution<Double> distr = new Distribution<>(new Evaluator.EvaluatorDouble());
+
+			distr.add(1, 0.3);
+			distr.add(2, 0.7);
+			l1mdp.addActionLabelledChoice(0,distr, 0.2, "a");
+
+			distr = new Distribution<>(new Evaluator.EvaluatorDouble());
+			distr.add(1, 1.0);
+			l1mdp.addActionLabelledChoice(1,distr, 0.2, "a");
+
+			distr = new Distribution<>(new Evaluator.EvaluatorDouble());
+			distr.add(0, 0.3);
+			distr.add(1, 0.7);
+			l1mdp.addActionLabelledChoice(2,distr, 0.2, "a");
+
+			l1mdp.findDeadlocks(true);
+			System.out.println("L1 MDP: " + l1mdp);
 			BitSet target = new BitSet();
 			target.set(2);
 			ModelCheckerResult res;
-			res = mc.computeReachProbs(imdp, target, MinMax.min().setMinUnc(true));
+			res = mc.computeReachProbs(l1mdp, target, MinMax.max().setMinUnc(false));
 			System.out.println("minmin: " + res.soln[0]);
-			res = mc.computeReachProbs(imdp, target, MinMax.min().setMinUnc(false));
-			System.out.println("minmax: " + res.soln[0]);
-			res = mc.computeReachProbs(imdp, target, MinMax.max().setMinUnc(true));
-			System.out.println("maxmin: " + res.soln[0]);
-			res = mc.computeReachProbs(imdp, target, MinMax.max().setMinUnc(false));
-			System.out.println("maxmax: " + res.soln[0]);
+
 		} catch (PrismException e) {
 			System.out.println(e);
 		}
 	}
+
 }
