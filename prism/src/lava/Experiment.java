@@ -110,6 +110,17 @@ public class Experiment {
     public int numTrainingMDPs;
     public int numVerificationMDPs;
 
+    // Additional information for artifact evaluation, leads to identical results but faster running times for evaluation.
+    public List<Values> presetValues;
+    public double zeroGuarantee;
+    public double fiveGuarantee;
+    public double tenGuarantee;
+    public int artifact_n;
+    public int artifact_m;
+    public int standard_n;
+    public int standard_m;
+
+
     public InitialInterval initialInterval = InitialInterval.WIDE;
 
     public double trueOpt = Double.NaN;
@@ -359,6 +370,8 @@ public class Experiment {
             this.modelFile = "models/bet_fav.prism";
             this.type = Type.REWARD;
             this.optimizations = false;
+            this.artifact_n = 2;
+            this.artifact_m = 2;
             break;
             case BETTING_GAME_UNFAVOURABLE:
             this.goal = "\"done\"";
