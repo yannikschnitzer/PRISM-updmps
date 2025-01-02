@@ -2,9 +2,9 @@ package lava;
 
 public class DataPoint {
 
-    private int accumulated_samples;
+    private final int accumulated_samples;
     private double estimated_value;
-    private double value;
+    private final double value;
     private double distance;
     private int episode;
     private double upper_bound;
@@ -49,33 +49,39 @@ public class DataPoint {
         return episode;
     }
 
-    public double getLowerBound() { return lower_bound; }
+    public double getLowerBound() {
+        return lower_bound;
+    }
 
-    public double getUpperBound() { return upper_bound; }
+    public double getUpperBound() {
+        return upper_bound;
+    }
 
-    public double getOptimisticValue() { return optimistic_value; }
+    public double getOptimisticValue() {
+        return optimistic_value;
+    }
 
-    public double getOptimisticEstimatedValue() { return optimistic_estimated_value; }
+    public double getOptimisticEstimatedValue() {
+        return optimistic_estimated_value;
+    }
 
 
     @Override
     public boolean equals(Object o) {
- 
+
         if (o == this) {
             return true;
         }
- 
 
-        if (!(o instanceof DataPoint)) {
+
+        if (!(o instanceof DataPoint d)) {
             return false;
         }
-         
 
-        DataPoint d = (DataPoint) o;
-         
+
         boolean eq = false;
         // todo implement equality on d and this
-        
+
         return eq;
     }
 }

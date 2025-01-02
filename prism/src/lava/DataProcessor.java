@@ -1,17 +1,16 @@
 package lava;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.lang.Math;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
 public class DataProcessor {
-    
+
 
     private ArrayList<DataPoint> averages;
     private ArrayList<Double> variances;
@@ -24,15 +23,15 @@ public class DataProcessor {
     private ArrayList<Double> modi;
 
     private String type = "";
-    private double optimum = 0; 
+    private double optimum = 0;
 
-    private String axis = "";
+    private final String axis = "";
     private String plots = "";
-    private String legend = "";
+    private final String legend = "";
 
-    private String[] colors = {"WildStrawberry","Cerulean","Green","BurntOrange"};
+    private final String[] colors = {"WildStrawberry", "Cerulean", "Green", "BurntOrange"};
 
-    private boolean fullDocument = true;
+    private final boolean fullDocument = true;
 
     public DataProcessor() {
         this.averages = new ArrayList<>();
@@ -72,14 +71,11 @@ public class DataProcessor {
         double z = 0.0;
         if (confidenceLevel == 90) {
             z = 1.645;
-        }
-        else if (confidenceLevel == 95) { 
+        } else if (confidenceLevel == 95) {
             z = 1.96;
-        }
-        else if (confidenceLevel == 99) { 
+        } else if (confidenceLevel == 99) {
             z = 2.58;
-        }
-        else {
+        } else {
             z = 1.645;
         }
 
@@ -94,7 +90,7 @@ public class DataProcessor {
             //System.out.println("variance = " + variance);
             double standardDeviation = Math.sqrt(variance);
             //System.out.println("std = " + standardDeviation);
-            double error = (z * standardDeviation)/(Math.sqrt(repetitions));
+            double error = (z * standardDeviation) / (Math.sqrt(repetitions));
             //System.out.println("error = " + error);
             double upper = mean + error;
             double lower = mean - error;
@@ -110,9 +106,9 @@ public class DataProcessor {
             double var = 0.0;
             for (int r = 0; r < repetitions; r++) {
                 double value = repeatedData.get(r).get(i).getValue();
-                var += Math.pow((value - averages.get(i).getValue()),2);
+                var += Math.pow((value - averages.get(i).getValue()), 2);
             }
-            var = var/repetitions;
+            var = var / repetitions;
             variances.add(var);
         }
     }
@@ -131,8 +127,8 @@ public class DataProcessor {
                 double value = repeatedData.get(r).get(i).getValue();
                 min = Double.min(value, min);
                 max = Double.max(value, max);
-                if (counts.containsKey(value)) 
-                    counts.put(value, counts.get(value)+1);
+                if (counts.containsKey(value))
+                    counts.put(value, counts.get(value) + 1);
                 else
                     counts.put(value, 1);
             }
@@ -146,16 +142,14 @@ public class DataProcessor {
                     mode = key;
                 }
             }
-            
+
             minima.add(min);
             maxima.add(max);
             modi.add(mode);
         }
 
 
-
     }
-
 
 
     public String averagesToString() {
@@ -166,7 +160,7 @@ public class DataProcessor {
         return dataPointsToString(this.upperConfidences);
     }
 
-    public String lowerConfidencesToString() { 
+    public String lowerConfidencesToString() {
         return dataPointsToString(this.lowerConfidences);
     }
 
@@ -181,12 +175,11 @@ public class DataProcessor {
 
     public String dataPointsToTikzString(ArrayList<DataPoint> data, String color, String name) {
         String str = "";
-        str += "\\addplot[color="+color+", name path="+name+"] coordinates {\n";
+        str += "\\addplot[color=" + color + ", name path=" + name + "] coordinates {\n";
         str += dataPointsToString(data);
         str += "\n};\n\n";
         return str;
     }
-
 
 
     public String processAverageToString(ArrayList<ArrayList<DataPoint>> repeatedData, int repetitions, int iterations) {
@@ -203,7 +196,7 @@ public class DataProcessor {
             }
             double average = sum / repetitions;
             observations = observations / repetitions;
-            str += "(" + observations +", " + average + ")\n";
+            str += "(" + observations + ", " + average + ")\n";
         }
         return str;
     }
@@ -250,16 +243,16 @@ public class DataProcessor {
         String str = "";
         if (this.fullDocument) {
             str += "\\documentclass{standalone}\n" +
-            "\\usepackage[dvipsnames]{xcolor}\n" +
-            "\\usepackage{pgfplots}\n" +
-            "\\pgfplotsset{compat=newest}\n" +
-            "\\usepgfplotslibrary{fillbetween}\n" +
-            "\\begin{document}\n";
+                    "\\usepackage[dvipsnames]{xcolor}\n" +
+                    "\\usepackage{pgfplots}\n" +
+                    "\\pgfplotsset{compat=newest}\n" +
+                    "\\usepgfplotslibrary{fillbetween}\n" +
+                    "\\begin{document}\n";
         }
 
         str += "\\begin{tikzpicture}\n\\begin{axis}[xlabel=Samples processed,\nlegend pos=north east,\nxmin=0,\nymin=0,";
-        str += "ylabel="+ylabel+",\n";
-        str += "xmax="+ xmax +",\nymax="+ymax+",\nrestrict y to domain=-1000:1000]\n\n";
+        str += "ylabel=" + ylabel + ",\n";
+        str += "xmax=" + xmax + ",\nymax=" + ymax + ",\nrestrict y to domain=-1000:1000]\n\n";
 
         plots = str + plots;
 
@@ -271,17 +264,17 @@ public class DataProcessor {
         String str = "";
         str += "\\addplot[dashed,color=black] coordinates {\n";
         str += "(0," + opt + ")\n";
-        str += "(" + xmax +"," + opt + ")\n};\n\n"; 
-        plots += str;    
+        str += "(" + xmax + "," + opt + ")\n};\n\n";
+        plots += str;
         return str;
     }
 
     public String sulOpt(ArrayList<ArrayList<DataPoint>> repeatedData, int repetitions, int iterations) {
-        int xmax = repeatedData.get(0).get(iterations-1).getAccumulatedSamples();
+        int xmax = repeatedData.get(0).get(iterations - 1).getAccumulatedSamples();
         String str = "";
         str += "\\addplot[dashed,color=black] coordinates {\n";
         str += "(0," + this.optimum + ")\n";
-        str += "(" + xmax +"," + this.optimum + ")\n};\n\n";     
+        str += "(" + xmax + "," + this.optimum + ")\n};\n\n";
         return str;
 
     }
@@ -290,7 +283,7 @@ public class DataProcessor {
         String str = "";
         str += "\\legend{";
         for (int i = 0; i < names.length; i++) {
-            str += names[i]+",";
+            str += names[i] + ",";
             str += " , , , ";
         }
         str += "};\n\\end{axis}\n\\end{tikzpicture}";
@@ -314,7 +307,7 @@ public class DataProcessor {
             System.out.println("Error in DataProcessor: color index > number of colors.");
             System.exit(1);
         }
-        
+
         this.averages.clear();
         this.lowerConfidences.clear();
         this.upperConfidences.clear();
@@ -323,22 +316,22 @@ public class DataProcessor {
         String str = "";
 
         str += "% averages\n";
-        str += "\\addplot[color="+colors[color]+", name path="+name+"avg] coordinates {\n";
+        str += "\\addplot[color=" + colors[color] + ", name path=" + name + "avg] coordinates {\n";
         str += averagesToString();
         str += "\n};\n\n";
 
         str += "% min confidence\n";
-        str += "\\addplot[color="+colors[color]+"!10, name path="+name+"min] coordinates {\n";
+        str += "\\addplot[color=" + colors[color] + "!10, name path=" + name + "min] coordinates {\n";
         str += lowerConfidencesToString();
         str += "\n};\n";
 
         str += "% max confidence\n";
-        str += "\\addplot[color="+colors[color]+"!10, name path="+name+"max] coordinates {\n";
+        str += "\\addplot[color=" + colors[color] + "!10, name path=" + name + "max] coordinates {\n";
         str += upperConfidencesToString();
         str += "\n};\n";
 
         str += "% fill\n";
-        str += "\\addplot["+colors[color]+"!10] fill between[of="+name+"min and "+name+"max];\n\n\n";
+        str += "\\addplot[" + colors[color] + "!10] fill between[of=" + name + "min and " + name + "max];\n\n\n";
 
         plots += str;
 
@@ -346,19 +339,19 @@ public class DataProcessor {
 
     }
 
-    public void dumpRawData(String directoryPath, String name, ArrayList<DataPoint> dataPoints, Experiment experiment){
+    public void dumpRawData(String directoryPath, String name, ArrayList<DataPoint> dataPoints, Experiment experiment) {
         try {
             //System.out.println("DEBUG \t\t (max r,max e) = (" + repetitions + ", " + iterations + ")");
             DataPoint previous = null;
 
-            String path = directoryPath + name +".csv";
+            String path = directoryPath + name + ".csv";
             if (Files.exists(Paths.get(path)))
                 System.out.println("File" + path + "already exists");
 
             FileWriter writer = new FileWriter(path, false);
 
             writer.write("Accumulated Samples,Performance,Estimated Performance,Average Distance,Lower Bound,Upper Bound,Episode,Estimated Optimistic Performance,Optimistic Performance");
-            writer.write(System.getProperty( "line.separator" ));
+            writer.write(System.getProperty("line.separator"));
 
             for (DataPoint entry : dataPoints) {
                 if (!entry.equals(previous)) {
@@ -386,14 +379,14 @@ public class DataProcessor {
             //System.out.println("DEBUG \t\t (max r,max e) = (" + repetitions + ", " + iterations + ")");
             DataPointRobust previous = null;
 
-            String path = directoryPath + name +".csv";
+            String path = directoryPath + name + ".csv";
 //            if (Files.exists(Paths.get(path)))
 //                System.out.println("File" + path + "already exists");
 
             FileWriter writer = new FileWriter(path, false);
 
             writer.write("Episode,Robust Guarantee on IMDPs,Robust Guarantee on MDPs,Performance of IMDP policy on MDPs,Existential Guarantee, Robust Guarantee on IMDPs with RL policy, Performance of RL policy on MDPs");
-            writer.write(System.getProperty( "line.separator" ));
+            writer.write(System.getProperty("line.separator"));
 
             for (DataPointRobust entry : dataPoints) {
                 if (!entry.equals(previous)) {
@@ -415,21 +408,21 @@ public class DataProcessor {
     }
 
     public void dumpResultList(String directoryPath, String name, List<Double> robustPolicyResults, List<Double> existentialResults, List<Double> evalResIMDP, List<Double> evalResRL, double timeTraining, double timeVerification) {
-        String path = directoryPath + name +"_resultlist.yaml";
+        String path = directoryPath + name + "_resultlist.yaml";
 //        if (Files.exists(Paths.get(path)))
 //            System.out.println("File" + path + "already exists");
 
         try {
             FileWriter writer = new FileWriter(path, false);
-            writer.write("Robust Policy Results: " + robustPolicyResults + System.getProperty( "line.separator" ));
+            writer.write("Robust Policy Results: " + robustPolicyResults + System.getProperty("line.separator"));
             //System.out.println("Dumping existential lambdas:" + existentialResults);
-            writer.write("Existential Policy Results: " + existentialResults + System.getProperty( "line.separator" ));
+            writer.write("Existential Policy Results: " + existentialResults + System.getProperty("line.separator"));
 
-            writer.write("IMDP Policy Eval Results: " + evalResIMDP + System.getProperty( "line.separator" ));
-            writer.write("RL Policy Eval Results: " + evalResRL + System.getProperty( "line.separator" ));
+            writer.write("IMDP Policy Eval Results: " + evalResIMDP + System.getProperty("line.separator"));
+            writer.write("RL Policy Eval Results: " + evalResRL + System.getProperty("line.separator"));
 
-            writer.write("Runtime Learning IMDPs: " + timeTraining + System.getProperty( "line.separator" ));
-            writer.write("Runtime Verification IMDPs: " + timeVerification + System.getProperty( "line.separator" ));
+            writer.write("Runtime Learning IMDPs: " + timeTraining + System.getProperty("line.separator"));
+            writer.write("Runtime Verification IMDPs: " + timeVerification + System.getProperty("line.separator"));
             writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -440,10 +433,10 @@ public class DataProcessor {
         computeModeMinMax(repeatedData, repetitions, iterations);
         String str = "";
 
-        str += "\\addplot[only marks,color="+colors[color]+"] coordinates {\n";
+        str += "\\addplot[only marks,color=" + colors[color] + "] coordinates {\n";
         // TODO
 
-        plots  += str;
+        plots += str;
         return str;
     }
 
@@ -456,14 +449,14 @@ public class DataProcessor {
 
     public String getTikzGraph(String pathPrefix) {
         String path = pathPrefix + ".tex";
-        try {    
-            FileWriter fw = new FileWriter(path);    
-            fw.write(this.plots);    
-            fw.close();    
-        } catch(Exception e) {
+        try {
+            FileWriter fw = new FileWriter(path);
+            fw.write(this.plots);
+            fw.close();
+        } catch (Exception e) {
             System.out.println(e);
-        }       
-         
+        }
+
         System.out.println("% exported to   " + path + "\n%------------\n\n\n");
 //        System.out.println(this.plots);
         return this.plots;

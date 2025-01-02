@@ -1,8 +1,8 @@
 package lava;
 
 import common.Interval;
-import explicit.*;
 import explicit.Model;
+import explicit.*;
 import param.Function;
 import parser.ast.Expression;
 import parser.ast.ModulesFile;
@@ -19,35 +19,30 @@ import java.util.*;
 
 public class RobustPolicySynthesizerIMDP {
 
-    // Parametric MDP defining the structure of the underlying problem
-    private MDP<Function> mdpParam;
-
-    private IMDP<Double> combinedIMDP;
-
-    // List of IMDPs to extract the robust policy for
-    private List<IMDP<Double>> imdps = new ArrayList<>();
-
-    // Subset of imdps used for verification
-    private List<IMDP<Double>> verificationSet = new ArrayList<>();
-
-    private Experiment experiment;
-
     protected ModulesFile modulesFileIMDP;
     protected ModulesFile modulesFileMDP;
+    // Parametric MDP defining the structure of the underlying problem
+    private MDP<Function> mdpParam;
+    private IMDP<Double> combinedIMDP;
+    // List of IMDPs to extract the robust policy for
+    private List<IMDP<Double>> imdps = new ArrayList<>();
+    // Subset of imdps used for verification
+    private List<IMDP<Double>> verificationSet = new ArrayList<>();
+    private final Experiment experiment;
 
     public RobustPolicySynthesizerIMDP(MDP<Function> mdpParam, Experiment ex) {
-           this.mdpParam = mdpParam;
-           this.experiment = ex;
+        this.mdpParam = mdpParam;
+        this.experiment = ex;
     }
 
-    private void buildModulesFiles(Prism prism)  {
+    private void buildModulesFiles(Prism prism) {
         try {
             this.modulesFileIMDP = prism.parseModelFile(new File(this.experiment.modelFile), ModelType.IMDP);
             this.modulesFileMDP = prism.parseModelFile(new File(experiment.modelFile), ModelType.MDP);
         } catch (FileNotFoundException e) {
             System.out.println("Error file: " + e.getMessage());
             System.exit(1);
-        } catch (PrismLangException e){
+        } catch (PrismLangException e) {
             System.out.println("Error parsing file: " + e.getMessage());
             System.exit(1);
         } catch (NullPointerException e) {
@@ -92,9 +87,9 @@ public class RobustPolicySynthesizerIMDP {
                 final String action = getActionString(mdpParam, s, i);
                 Distribution<Interval<Double>> distrNew = new Distribution<>(Evaluator.forDoubleInterval());
 
-                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p)->{
-                   TransitionTriple t = new TransitionTriple(state, action, sTo);
-                   distrNew.add(sTo, transitionMap.get(t));
+                mdpParam.forEachTransition(s, i, (int sFrom, int sTo, Function p) -> {
+                    TransitionTriple t = new TransitionTriple(state, action, sTo);
+                    distrNew.add(sTo, transitionMap.get(t));
                 });
 
                 combinedIMPD.addActionLabelledChoice(s, distrNew, action);
@@ -167,14 +162,20 @@ public class RobustPolicySynthesizerIMDP {
         for (IMDP<Double> imdp : this.verificationSet) {
             PolicyLoader p = new PolicyLoader();
 
-            //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
-            MRStrategy rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json",(iteration)), imdp);
-            //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
-            //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), imdp);
-            //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
-            //MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), imdp);
-            //MRStrategy rlStrat = p.loadFirewirePolicy(String.format("policies/firewire/firewire_policies/policy_single_%d.json",(iteration)), imdp);
-
+            MRStrategy rlStrat;
+            switch (experiment.model) {
+                case BETTING_GAME_FAVOURABLE ->
+                        rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json", (iteration)), imdp);
+                default -> throw new PrismException("Unsupported model type: " + experiment.model);
+            }
+//            if (experiment.model == Experiment.Model.BETTING_GAME_FAVOURABLE) {
+//                //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
+//                //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
+//                //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain/chain_policies_three_extended/policy_single_%d.json",(iteration)), imdp);
+//                //MRStrategy rlStrat = p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
+//                //MRStrategy rlStrat = p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), imdp);
+//                //MRStrategy rlStrat = p.loadFirewirePolicy(String.format("policies/firewire/firewire_policies/policy_single_%d.json",(iteration)), imdp);
+//            }
 
             StrategyExportOptions options = new StrategyExportOptions();
             options.setMode(StrategyExportOptions.InducedModelMode.REDUCE);
@@ -223,12 +224,12 @@ public class RobustPolicySynthesizerIMDP {
         this.verificationSet.addAll(imdps);
     }
 
-    public void setVerificationSet(List<IMDP<Double>> verificationSet) {
-        this.verificationSet = verificationSet;
-    }
-
     public List<IMDP<Double>> getVerificationSet() {
         return this.verificationSet;
+    }
+
+    public void setVerificationSet(List<IMDP<Double>> verificationSet) {
+        this.verificationSet = verificationSet;
     }
 
     public List<IMDP<Double>> getImdps() {
@@ -248,7 +249,7 @@ public class RobustPolicySynthesizerIMDP {
     }
 
     public String getActionString(IMDP<Double> imdp, int s, int i) {
-        String action = (String) imdp.getAction(s,i);
+        String action = (String) imdp.getAction(s, i);
         if (action == null) {
             action = "_empty";
         }
@@ -256,7 +257,7 @@ public class RobustPolicySynthesizerIMDP {
     }
 
     public String getActionString(MDP<Function> mdp, int s, int i) {
-        String action = (String) mdp.getAction(s,i);
+        String action = (String) mdp.getAction(s, i);
         if (action == null) {
             action = "_empty";
         }

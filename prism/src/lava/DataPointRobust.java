@@ -28,22 +28,20 @@ public class DataPointRobust {
 
     @Override
     public boolean equals(Object o) {
- 
+
         if (o == this) {
             return true;
         }
- 
 
-        if (!(o instanceof DataPointRobust)) {
+
+        if (!(o instanceof DataPointRobust d)) {
             return false;
         }
-         
 
-        DataPointRobust d = (DataPointRobust) o;
-         
+
         boolean eq = false;
         // todo implement equality on d and this
-        
+
         return eq;
     }
 

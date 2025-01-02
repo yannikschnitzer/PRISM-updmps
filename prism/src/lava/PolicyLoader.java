@@ -1,10 +1,6 @@
 package lava;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import explicit.MDP;
-import explicit.Model;
 import explicit.NondetModel;
 import parser.State;
 import strat.MRStrategy;
@@ -33,7 +29,7 @@ public class PolicyLoader {
                 int state_index = model.getStatesList().indexOf(s);
 
                 for (int i = 0; i < model.getNumChoices(state_index); i++) {
-                    strat.setChoiceProbability(state_index, i, policyList.get(x-1).get(y-1).get(z-1).get(i));
+                    strat.setChoiceProbability(state_index, i, policyList.get(x - 1).get(y - 1).get(z - 1).get(i));
                 }
 
                 //System.out.println("State " + s + " Actions " + policyList.get(x-1).get(y-1).get(z-1));
@@ -52,7 +48,7 @@ public class PolicyLoader {
         File policyJson = new File(policyFile);
 
         try {
-         List<List<List<Double>>> policyList = mapper.readValue(policyJson, List.class);
+            List<List<List<Double>>> policyList = mapper.readValue(policyJson, List.class);
 
             MRStrategy strat = new MRStrategy(model);
 

@@ -35,7 +35,7 @@ public class LearnVerifyParallel {
     private String modelStats = null;
 
 
-    private int seed = 1650280571;
+    private final int seed = 1650280571;
     private int samplingSeed;
     private boolean verbose = true;
 
@@ -107,7 +107,7 @@ public class LearnVerifyParallel {
     private void run_basic_algorithms(Experiment ex) {
         String postfix = "";//String.format("_seed_%d", ex.seed);
         //ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,3,5,7,9, 10, 15, 20, 30, 40, 50, 60, 80, 100, 300, 600, 700, 1000, 2000, 4000, 8000, 10000, 19000, 30000, 60000, 80000, 100000, 200000, 400000, 600000, 900000)));
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 3, 5, 7, 9, 10, 15, 20, 30, 40, 50, 60, 80, 100, 300, 600, 700, 1000, 2000, 4000, 8000, 10000, 19000, 30000, 60000, 80000, 100000, 200000, 400000, 600000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
         //runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setMultiplier(2).setTieParamters(false).stratWeight(0.9), BayesianEstimatorOptimistic::new);
@@ -118,17 +118,17 @@ public class LearnVerifyParallel {
 
     private void run_basic_algorithms_pac(Experiment ex) {
         String postfix = "";//String.format("_seed_%d", ex.seed);
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
-        if (!ex.optimizations){
+        if (!ex.optimizations) {
             runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.85), BayesianEstimatorOptimistic::new);
         }
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85), PACIntervalEstimatorOptimistic::new);
     }
 
-    private void  run_basic_algorithms_naive(Experiment ex) {
+    private void run_basic_algorithms_naive(Experiment ex) {
         String postfix = "";//String.format("_seed_%d", ex.seed);
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
         //runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.85).setMultiplier(3), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.85).setMultiplier(3), BayesianEstimatorOptimistic::new);
@@ -350,7 +350,6 @@ public class LearnVerifyParallel {
             MDP<Function> mdpParam = buildParamModel(ex);
 
 
-
 //            // Generate uniform sample training and verification MDP parameters
 //            /*
 //             * Range for SAV2: [0.75, 0.95]
@@ -399,7 +398,7 @@ public class LearnVerifyParallel {
                 constructValuesBeta(verificationParams, it);
             }
 
-            Values v =  new Values();
+            Values v = new Values();
             v.addValue("fast", 0.109280077836);
             verificationParams.add(v);
 
@@ -515,7 +514,7 @@ public class LearnVerifyParallel {
                     evalResIMDP = List.of(0.0); //evaluatePolicy(robstratI, 1000, ex, false, plottedIterations.get(i));
 
                     PolicyLoader pol = new PolicyLoader();
-                    MRStrategy rlStrat = pol.loadFirewirePolicy(String.format("policies/firewire/firewire_policies/policy_single_%d.json",(0)), robSynth.getVerificationSet().getFirst());
+                    MRStrategy rlStrat = pol.loadFirewirePolicy(String.format("policies/firewire/firewire_policies/policy_single_%d.json", (0)), robSynth.getVerificationSet().getFirst());
                     evalResRL = evaluatePolicy(null, 600, ex, true, plottedIterations.get(i));
 
                     // Empirical Risk:
@@ -528,7 +527,7 @@ public class LearnVerifyParallel {
                 dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas, evalResIMDP, evalResRL, elapsedTimeinSecondsTraining, elapsedTimeinSecondsVerification);
             }
 
-            ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
+            ex.dumpConfiguration(makeOutputDirectory(ex), label);
 
         } catch (PrismException e) {
             throw new RuntimeException(e);
@@ -577,7 +576,6 @@ public class LearnVerifyParallel {
         System.out.println("Eval Existential Lambdas: " + existentialLambdas);
 
 
-
 //        List<Double> robResultsCross = !isRL ?
 //             robSynth.checkVerificationSet(prism, strat, ex.dtmcSpec)
 //        :
@@ -593,8 +591,8 @@ public class LearnVerifyParallel {
         }
         System.out.println("min res:" + minres);
         System.out.println("min param" + evaluationParams.get(ind));
-        System.out.println("Eval Parameters: " + evaluationParams.subList(0,100));
-        System.out.println("Eval Results with robust strategy: " + robResultsCross.subList(0,100));
+        System.out.println("Eval Parameters: " + evaluationParams.subList(0, 100));
+        System.out.println("Eval Results with robust strategy: " + robResultsCross.subList(0, 100));
 
         return robResultsCross;
     }
@@ -670,7 +668,7 @@ public class LearnVerifyParallel {
          */
 
         //v.addValue("pL", pL);
-        v.addValue("p", Math.min(pH,0.32));
+        v.addValue("p", Math.min(pH, 0.32));
         params.add(v);
     }
 
@@ -736,9 +734,9 @@ public class LearnVerifyParallel {
              * Betting Game: p
              * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"pL","pH","p"}; //, "q","r"};
-            String[] paramLowerBounds = new String[]{"0","0","0"};
-            String[] paramUpperBounds = new String[]{"1","1","1"};
+            String[] paramNames = new String[]{"pL", "pH", "p"}; //, "q","r"};
+            String[] paramLowerBounds = new String[]{"0", "0", "0"};
+            String[] paramUpperBounds = new String[]{"1", "1", "1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
@@ -1043,7 +1041,7 @@ public class LearnVerifyParallel {
                     System.out.printf("File %s already exists.%n", path);
                     //return;
                 }
-                ex.dumpConfiguration(directoryPath, label, estimator.getName());
+                ex.dumpConfiguration(directoryPath, label);
 
                 // Iterate and run experiments for each of the sampled parameter vectors
                 System.out.println("Constant Values:" + estimator.getSUL().getConstantValues());

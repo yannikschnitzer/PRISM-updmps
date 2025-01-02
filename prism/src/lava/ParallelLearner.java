@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 public class ParallelLearner {
-    private static int seed = 1650280571;
+    private static final int seed = 1650280571;
 
     public static List<Integer> get_seeds(int seed, int num) {
         ArrayList<Integer> seeds = new ArrayList<>();
@@ -40,9 +40,11 @@ public class ParallelLearner {
 
     public static class LearningThread implements Runnable {
         int seed;
-        public LearningThread(int seed){
+
+        public LearningThread(int seed) {
             this.seed = seed;
         }
+
         @Override
         public void run() {
             LearnVerifyParallel learner = new LearnVerifyParallel(seed);

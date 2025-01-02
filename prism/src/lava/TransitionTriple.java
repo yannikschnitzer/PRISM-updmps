@@ -4,9 +4,9 @@ package lava;
  * Small class for transition triples (s,a,s')
  */
 public class TransitionTriple {
-    private int s;
-    private String action;
-    private int successor;
+    private final int s;
+    private final String action;
+    private final int successor;
 
     public TransitionTriple(int s, String action, int successor) {
         this.s = s;
@@ -40,13 +40,13 @@ public class TransitionTriple {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        
+
         if (o == null)
             return false;
 
         if (this.getClass() != o.getClass())
             return false;
-        
+
         TransitionTriple other = (TransitionTriple) o;
         return (this.s == other.getState() && this.action.equals(other.getAction()) && this.successor == other.getSuccessor());
     }

@@ -1,11 +1,13 @@
 package lava;
 
-import explicit.*;
+import explicit.IMDP;
+import explicit.MDP;
+import explicit.MDPModelChecker;
 import lava.Experiment.Model;
 import org.apache.commons.rng.simple.RandomSource;
-import param.BigRational;
+import org.apache.commons.statistics.distribution.BetaDistribution;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import param.Function;
-import param.Point;
 import parser.Values;
 import parser.ast.Expression;
 import parser.ast.ModulesFile;
@@ -24,20 +26,13 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
-import org.apache.commons.statistics.distribution.*;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
-
 public class LearnVerify {
 
+    public MRStrategy rlStrat;
     private Prism prism;
     private String modelStats = null;
-
-
     private int seed = 1650280571;
-
     private boolean verbose = true;
-
-    public MRStrategy rlStrat;
 
     public LearnVerify() {
     }
@@ -116,8 +111,8 @@ public class LearnVerify {
 //        }
 
 //        for (int seed : get_seeds(seed, 1)) {
-         //   run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
- //           run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_0_000, seed, true, true, m, n, 2).info(id));
+        //   run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
+        //           run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_0_000, seed, true, true, m, n, 2).info(id));
 //            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
 //        }
 
@@ -135,7 +130,7 @@ public class LearnVerify {
 //        }
 //
 //        for (int seed : get_seeds(seed, 10)) {
-            run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, true, m, n, 4).info(id));
+        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_00_000, seed, true, true, 4).info(id));
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, false, m, n, 2).info(id));
 //            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(15, 1_000_000, seed, false, false, m, n, 2).info(id));
 //        }
@@ -143,21 +138,22 @@ public class LearnVerify {
 
     private void run_basic_algorithms(Experiment ex) {
         String postfix = "";
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), BayesianEstimatorOptimistic::new);
-       // runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).setTieParamters(true), PACIntervalEstimatorOptimistic::new);
-       // runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), MAPEstimator::new);
-        //runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).setTieParamters(false), UCRL2IntervalEstimatorOptimistic::new);
+//        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+//        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), MAPEstimator::new);
+//        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), UCRL2IntervalEstimatorOptimistic::new);
     }
 
 
     private void run_basic_algorithms_pac(Experiment ex) {
-        String postfix = "";String.format("_seed_%d", ex.seed);
-        ex.setResultIterations(new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9, 10,12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
+        String postfix = "";
+        String.format("_seed_%d", ex.seed);
+        ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
-        if (!ex.optimizations){
+        if (!ex.optimizations) {
             //runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), BayesianEstimatorOptimistic::new);
         }
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
@@ -201,8 +197,8 @@ public class LearnVerify {
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
-            Iterator<Entry<Integer, Function>> iter = mdpParam.getTransitionsIterator(43,1);
-            while(iter.hasNext()) {
+            Iterator<Entry<Integer, Function>> iter = mdpParam.getTransitionsIterator(43, 1);
+            while (iter.hasNext()) {
                 System.out.println("Iteration: " + iter.next().getValue().getClass());
             }
 
@@ -254,10 +250,8 @@ public class LearnVerify {
                 constructValuesBeta(verificationParams, it);
             }
 
-            Values val = new Values();
-            val.setValue("p",0.6849641245);
-            verificationParams.add(val);
-            trainingParams.add(val);
+            trainingParams.addAll(ex.presetValuesTrain);
+            verificationParams.addAll(ex.presetValuesVer);
 
             System.out.println("Training Parameters:");
             for (Values value : trainingParams) {
@@ -334,25 +328,45 @@ public class LearnVerify {
                 } catch (Exception ignored) {
 
                 }
-                //System.out.println("Verification Results with IMDP strategy on IMDPs:" + robResultsI);
-                System.out.println("IMDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsI));
 
-                //System.out.println("Verification Results with RL strategy on IMDPs:" + robResultsIRL);
-                System.out.println("IMDP Robust Guarantee with RL strategy: " + Collections.min(robResultsIRL));
+                // Calculate minimum values and store them in auxiliary variables
+                double minIMDPRobustGuarantee = Collections.min(robResultsI); // Minimum IMDP Robust Guarantee with IMDP strategy
+                double minIMDPRobustGuaranteeRL = Collections.min(robResultsIRL); // Minimum IMDP Robust Guarantee with RL strategy
+                double minTrueMDPRobustGuarantee = Collections.min(robResults); // Minimum True MDP Robust Guarantee with true MDP strategy
+                double minTrueMDPRobustGuaranteeIMDPStrategy = Collections.min(robResultsCross); // Minimum True MDP Robust Guarantee with IMDP strategy
+                double minTrueMDPRobustGuaranteeRL = Collections.min(robResultsCrossRL); // Minimum True MDP Robust Guarantee with RL strategy
+                double minExistentialGuarantee = Collections.min(existentialLambdas); // Minimum Existential Guarantee (Badings et al.)
 
-                //System.out.println("Verification Results with MDP strategy on true MDPs:" + robResults);
-                System.out.println("True MDP Robust Guarantee with true MDP strategy: " + Collections.min(robResults));
+                // System.out.println("Verification Results with IMDP strategy on IMDPs:" + robResultsI);
+                System.out.println("IMDP Robust Guarantee with IMDP strategy: " + minIMDPRobustGuarantee);
 
-                //System.out.println("Verification Results with IMDP strategy on true MDPs:" + robResultsCross);
-                System.out.println("True MDP Robust Guarantee with IMDP strategy: " + Collections.min(robResultsCross));
+                // System.out.println("Verification Results with RL strategy on IMDPs:" + robResultsIRL);
+                System.out.println("IMDP Robust Guarantee with RL strategy: " + minIMDPRobustGuaranteeRL);
 
-                //System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
-                System.out.println("True MDP Robust Guarantee with RL strategy: " + Collections.min(robResultsCrossRL));
+                // System.out.println("Verification Results with MDP strategy on true MDPs:" + robResults);
+                System.out.println("True MDP Robust Guarantee with true MDP strategy: " + minTrueMDPRobustGuarantee);
 
-                //System.out.println("Existential Results on true MDPs:" + existentialLambdas);
-                System.out.println("Existential Guarantee (Badings et al.): " + Collections.min(existentialLambdas));
+                // System.out.println("Verification Results with IMDP strategy on true MDPs:" + robResultsCross);
+                System.out.println("True MDP Robust Guarantee with IMDP strategy: " + minTrueMDPRobustGuaranteeIMDPStrategy);
 
-                results.add(new DataPointRobust(plottedIterations.get(i), new double[]{Collections.min(robResultsI), Collections.min(robResults), Collections.min(robResultsCross), Collections.min(existentialLambdas), Collections.min(robResultsIRL), Collections.min(robResultsCrossRL)}));
+                // System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
+                System.out.println("True MDP Robust Guarantee with RL strategy: " + minTrueMDPRobustGuaranteeRL);
+
+                // System.out.println("Existential Results on true MDPs:" + existentialLambdas);
+                System.out.println("Existential Guarantee (Badings et al.): " + minExistentialGuarantee);
+
+                // Add data point to results using auxiliary variables
+                results.add(new DataPointRobust(
+                        plottedIterations.get(i),
+                        new double[]{
+                                minIMDPRobustGuarantee,
+                                minTrueMDPRobustGuarantee,
+                                minTrueMDPRobustGuaranteeIMDPStrategy,
+                                minExistentialGuarantee,
+                                minIMDPRobustGuaranteeRL,
+                                minTrueMDPRobustGuaranteeRL
+                        }
+                ));
 
                 List<Double> evalResIMDP = List.of();
                 List<Double> evalResRL = List.of();
@@ -360,25 +374,28 @@ public class LearnVerify {
                 if (i == trainingSet.first.getFirst().size() - 1) {
                     System.out.println("\n" + "==============================");
 
-                    // Evaluation on 200 fresh samples for RL and IMDP policy
-                    evalResIMDP = evaluatePolicy(robstratI, 200, ex, false, plottedIterations.get(i));
-                    evalResRL = evaluatePolicy(null, 200, ex, true, plottedIterations.get(i));
+//                    // Evaluation on 200 fresh samples for RL and IMDP policy
+//                    evalResIMDP = evaluatePolicy(robstratI, 200, ex, false, plottedIterations.get(i));
+//                    evalResRL = evaluatePolicy(null, 200, ex, true, plottedIterations.get(i));
 
                     System.out.println("\n" + "=============================");
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI,Collections.min(robResultsI), 1000, ex);
-                    computeEmpiricalRisk(robstratI,30.9, 1000 , ex);
+                    computeEmpiricalRisk(robstratI, Collections.min(robResultsI), 1000, ex);
+                    computeEmpiricalRisk(robstratI, 30.9, 1000, ex);
+
+                    double totalRuntime = (elapsedTimeTraining + elapsedTimeVerification);
+                    double runtimePer10k = totalRuntime / (ex.numTrainingMDPs + ex.numVerificationMDPs) / (ex.iterations / 10_000.0);
+                    System.out.println("Total runtime: " + totalRuntime + "sec" + ", per 10k trajectories: " + runtimePer10k + "sec");
+
+                    ex.dumpConfiguration(makeOutputDirectory(ex), label, minIMDPRobustGuarantee, minTrueMDPRobustGuarantee, minExistentialGuarantee, totalRuntime, runtimePer10k);
                 }
 
 
                 DataProcessor dp = new DataProcessor();
                 dp.dumpDataRobustPolicies(makeOutputDirectory(ex), label, results);
-                dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas, evalResIMDP, evalResRL, elapsedTimeTraining, elapsedTimeVerification);
+                //dp.dumpResultList(makeOutputDirectory(ex), label, robResultsCross, existentialLambdas, evalResIMDP, evalResRL, elapsedTimeTraining, elapsedTimeVerification);
             }
 
-            System.out.println("Total runtime: " + (elapsedTimeTraining + elapsedTimeVerification) + "sec" + ", per 10k trajectories: " + (elapsedTimeTraining + elapsedTimeVerification) / (ex.artifact_m + ex.artifact_n) / (ex.iterations / 10^4)+"sec");
-
-            ex.dumpConfiguration(makeOutputDirectory(ex), label, "");
 
         } catch (PrismException e) {
             throw new RuntimeException(e);
@@ -758,7 +775,7 @@ public class LearnVerify {
                     }
                     if (this.verbose) System.out.println("Performance on MDPs (J): " + currentResults[1]);
                     if (this.verbose) System.out.println("Performance Guarantee on IMDPs (J̃): " + currentResults[0]);
-                    if (this.verbose) System.out.println("");
+                    if (this.verbose) System.out.println();
 
                     if (last_iteration || ex.resultIteration(i)) {
                         results.add(new DataPoint(samples, i + 1, currentResults));
