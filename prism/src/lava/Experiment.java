@@ -509,6 +509,8 @@ public class Experiment {
                                   double minIMDP,
                                   double minMDP,
                                   double existential,
+                                  double minRLIMDP,
+                                  double minRLMDP,
                                   double totruntime,
                                   double runtimeper10k) {
 
@@ -529,8 +531,10 @@ public class Experiment {
             writer.write("max_episode_length: " + max_episode_length + "\n");
             writer.write("error_tolerance: " + error_tolerance + "\n");
             writer.write("prefix: " + file_name + "\n");
-            writer.write("performance on true MDPs (J): " + minMDP + "\n");
-            writer.write("performance on IMDPs (J̃): " + minIMDP + "\n");
+            writer.write("IMDP policy performance on true MDPs (J): " + minMDP + "\n");
+            writer.write("IMDP policy performance on IMDPs (J̃): " + minIMDP + "\n");
+            writer.write("RL policy performance on true MDPs (J): " + minMDP + "\n");
+            writer.write("RL policy performance on IMDPs (J̃): " + minIMDP + "\n");
             writer.write("existential guarantee: " + existential + "\n");
             writer.write("total runtime: " + totruntime + "sec\n");
             writer.write("runtime per 10k trajectories: " + runtimeper10k + "sec\n");
