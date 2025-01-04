@@ -136,7 +136,7 @@ public class RobustPolicySynthesizerMDP {
 
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            mc.setPrecomp(false);
+            mc.setPrecomp(true);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -161,11 +161,15 @@ public class RobustPolicySynthesizerMDP {
             PolicyLoader p = new PolicyLoader();
 
             MRStrategy rlStrat;
-            switch (experiment.model) {
+            rlStrat = switch (experiment.model) {
                 case BETTING_GAME_FAVOURABLE ->
-                        rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json", (iteration)), mdp);
+                        p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json", (iteration)), mdp);
+                case AIRCRAFT ->
+                        p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),mdp);
+                case SAV2 ->
+                        p.loadSavPolicy(String.format("policies/sav/sav_policies/policy_single_%d.json",(iteration)),mdp);
                 default -> throw new PrismException("Unsupported model type: " + experiment.model);
-            }
+            };
             //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);
             //MRStrategy rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json",(iteration)),mdp);
             //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),mdp);
@@ -181,7 +185,7 @@ public class RobustPolicySynthesizerMDP {
             DTMCModelChecker mc = new DTMCModelChecker(prism);
             mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            mc.setPrecomp(false);
+            mc.setPrecomp(true);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);

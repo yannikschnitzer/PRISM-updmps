@@ -62,6 +62,8 @@ public class Experiment {
         setModel(model);
     }
 
+    public boolean maximisation = true;
+
     public List<Integer> getResultIterations() {
         return resultIterations;
     }
@@ -76,6 +78,11 @@ public class Experiment {
 
     public Experiment setBayesian(boolean bayesian) {
         this.bayesian = bayesian;
+        return this;
+    }
+
+    public Experiment setMaximisation(boolean maximisation) {
+        this.maximisation = maximisation;
         return this;
     }
 
@@ -150,6 +157,15 @@ public class Experiment {
                 this.modelFile = "models/sav.prism";
                 this.type = Type.REACH;
                 this.optimizations = false;
+
+                // Preset values for artifact reproducibility in feasible runtime
+                val = new Values();
+                val.addValue("pL", 0.637039567623);
+                val.addValue("pH", 0.719682412046);
+                this.presetValuesVer.add(val);
+                this.numVerificationMDPs = 1;
+                this.numTrainingMDPs = 12;
+
                 break;
             case BRP:
                 this.goal = "\"Target\"";
@@ -181,7 +197,7 @@ public class Experiment {
                 this.type = Type.REACH;
                 this.optimizations = false;
                 break;
-            case DRONE:
+            case DRONE_OLD:
                 this.goal = "\"Target\"";
                 this.spec = "Pmax=? [F attarget ]";
                 this.robustSpec = "Pmaxmin=? [F attarget ]";
@@ -191,7 +207,7 @@ public class Experiment {
                 this.type = Type.REACH;
                 this.optimizations = false;
                 break;
-            case DRONE_SINGLE:
+            case DRONE:
                 this.goal = "\"target\"";
                 this.spec = "Pmax=? [!crash U target]";
                 this.idtmcRobustSpec = "Pmin=? [!crash U target]";
@@ -297,6 +313,15 @@ public class Experiment {
                 this.modelFile = "models/aircraft_tiny.prism";
                 this.type = Type.REACH;
                 this.optimizations = true;
+
+                // Preset values for artifact reproducibility in feasible runtime
+                val = new Values();
+                val.addValue("p", 0.175920355159);
+                val.addValue("r", 0.464605015264);
+                this.presetValuesVer.add(val);
+                this.numVerificationMDPs = 1;
+                this.numTrainingMDPs = 10;
+
                 break;
             case BANDIT:
                 this.goal = "\"goal\"";
@@ -567,9 +592,9 @@ public class Experiment {
         CONSENSUS4,
         BRP,
         NAND,
-        DRONE,
+        DRONE_OLD,
         CROWD,
-        DRONE_SINGLE,
+        DRONE,
         FIREWIRE
     }
 

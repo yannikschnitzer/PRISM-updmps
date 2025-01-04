@@ -211,7 +211,6 @@ public class MAPEstimator extends Estimator {
         MDPExplicit<Double> mdp = (MDPExplicit<Double>) this.prism.getBuiltModelExplicit();
         DTMC<Double> dtmc = (DTMC<Double>) mdp.constructInducedModel(strat);
         DTMCModelChecker mc = new DTMCModelChecker(this.prism);
-        mc.setErrorOnNonConverge(false);
         mc.setGenStrat(true);
         PropertiesFile pf = prism.parsePropertiesString(ex.dtmcSpec);
 

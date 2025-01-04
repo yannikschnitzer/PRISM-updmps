@@ -37,10 +37,10 @@ import prism.PrismNotSupportedException;
 import strat.MDStrategy;
 
 /**
-* Explicit-state representation of a DTMC, constructed (implicitly)
-* from an MDP and a memoryless deterministic (MD) adversary.
-* This class is read-only: most of the data is pointers to other model info.
-*/
+ * Explicit-state representation of a DTMC, constructed (implicitly)
+ * from an MDP and a memoryless deterministic (MD) adversary.
+ * This class is read-only: most of the data is pointers to other model info.
+ */
 public class DTMCFromMDPAndMDStrategy<Value> extends DTMCExplicit<Value>
 {
 	// Parent MDP

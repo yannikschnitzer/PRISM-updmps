@@ -105,6 +105,35 @@ public class PolicyLoader {
 
     }
 
+    public MRStrategy loadSavPolicy(String policyFile, NondetModel<Double> model) {
+        //File policyJson = new File(policyFile);
+        //List<List<List<List<List<List<Double>>>>>> policyList = mapper.readValue(policyJson, List.class);
+
+        MRStrategy strat = new MRStrategy(model);
+
+        for (State s : model.getStatesList()) {
+            int xLoc = (int) s.varValues[0];
+            int yLoc = (int) s.varValues[1];
+            int unreported = (int) s.varValues[2];
+            int hasSendNow = ((boolean) s.varValues[3]) ? 1 : 0;
+            int tries = (int) s.varValues[4];
+
+            int state_index = model.getStatesList().indexOf(s);
+            for (int i = 0; i < model.getNumChoices(state_index); i++) {
+                strat.setChoiceProbability(state_index, i, 0.2);
+            }
+
+            //System.out.println("State " + s + " Actions " + policyList.get(x).get(y).get(ax).get(ay));
+
+        }
+
+        //System.out.println("Strategy " + strat);
+        //System.out.println("Model " + model);
+
+        return strat;
+
+    }
+
     public MRStrategy loadBettingPolicy(String policyFile, NondetModel<Double> model) {
         File policyJson = new File(policyFile);
         try {

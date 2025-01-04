@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import static lava.Experiment.Model.BETTING_GAME_FAVOURABLE;
+
 public class RobustPolicySynthesizerIMDP {
 
     protected ModulesFile modulesFileIMDP;
@@ -109,7 +111,7 @@ public class RobustPolicySynthesizerIMDP {
         UMDPModelChecker mc = new UMDPModelChecker(prism);
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
-        mc.setPrecomp(false);
+        mc.setPrecomp(true);
 
         buildModulesFiles(prism);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);
@@ -136,9 +138,9 @@ public class RobustPolicySynthesizerIMDP {
             IDTMC<Double> inducedIDTMC = imdp.constructInducedIDTMC(strategy);
             IDTMCModelChecker mc = new IDTMCModelChecker(prism);
 
-            mc.setErrorOnNonConverge(false);
+            mc.setErrorOnNonConverge(true);
             mc.setGenStrat(true);
-            mc.setPrecomp(false);
+            mc.setPrecomp(true);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -163,11 +165,15 @@ public class RobustPolicySynthesizerIMDP {
             PolicyLoader p = new PolicyLoader();
 
             MRStrategy rlStrat;
-            switch (experiment.model) {
+            rlStrat = switch (experiment.model) {
                 case BETTING_GAME_FAVOURABLE ->
-                        rlStrat = p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json", (iteration)), imdp);
+                        p.loadBettingPolicy(String.format("policies/betting/betting_policies_onemore/policy_single_%d.json", (iteration)), imdp);
+                case AIRCRAFT ->
+                        p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
+                case SAV2 ->
+                        p.loadSavPolicy(null, imdp); // SAV Policy was uniform after RL training
                 default -> throw new PrismException("Unsupported model type: " + experiment.model);
-            }
+            };
 //            if (experiment.model == Experiment.Model.BETTING_GAME_FAVOURABLE) {
 //                //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", imdp);
 //                //MRStrategy rlStrat = p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);

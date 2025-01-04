@@ -451,7 +451,7 @@ public class Estimator {
     public MDStrategy computeStrategyFromEstimate(IMDP<Double> estimate, boolean robust) throws PrismException {
         UMDPModelChecker mc = new UMDPModelChecker(this.prism);
         mc.setGenStrat(true);
-        mc.setPrecomp(false);
+        mc.setPrecomp(true);
         mc.setErrorOnNonConverge(false);
         //mc.setMaxIters(100000);
 
