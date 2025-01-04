@@ -98,8 +98,8 @@ public class LearnVerifyParallel {
         int m = 10; // = 300;
         int n = 10; // = 200;
 
-        System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
-        run_basic_algorithms(new Experiment(Model.DRONE).config(100, 1_000_000, samplingSeed, true, true, m, n, 5).info(id));
+        //System.out.println("Running with seed: " + seed + " and sampling seed: " + samplingSeed);
+        //run_basic_algorithms(new Experiment(Model.DRONE).config(100, 1_000_000, samplingSeed, true, true, m, n, 5).info(id));
         //run_basic_algorithms_pac(new Experiment(Model.SAV).config(50, 1_000_000, samplingSeed, true, false, 12, 8, 2).info(id));
         run_basic_algorithms_naive(new Experiment(Model.CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, samplingSeed, false, false, m, n, 3).info(id));
     }

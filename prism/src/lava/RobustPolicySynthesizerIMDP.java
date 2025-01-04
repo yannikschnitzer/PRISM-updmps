@@ -138,9 +138,9 @@ public class RobustPolicySynthesizerIMDP {
             IDTMC<Double> inducedIDTMC = imdp.constructInducedIDTMC(strategy);
             IDTMCModelChecker mc = new IDTMCModelChecker(prism);
 
-            mc.setErrorOnNonConverge(true);
+            mc.setErrorOnNonConverge(false);
             mc.setGenStrat(true);
-            mc.setPrecomp(true);
+            mc.setPrecomp(false);
             PropertiesFile pf = prism.parsePropertiesString(spec);
 
             buildModulesFiles(prism);
@@ -172,6 +172,10 @@ public class RobustPolicySynthesizerIMDP {
                         p.loadAircraftPolicy(String.format("policies/aircraft/aircraft_policies/policy_single_%d.json",(iteration)),imdp);
                 case SAV2 ->
                         p.loadSavPolicy(null, imdp); // SAV Policy was uniform after RL training
+                case CHAIN_LARGE_TWO_ACTION ->
+                        p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
+                case DRONE ->
+                        p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), imdp);
                 default -> throw new PrismException("Unsupported model type: " + experiment.model);
             };
 //            if (experiment.model == Experiment.Model.BETTING_GAME_FAVOURABLE) {

@@ -137,6 +137,10 @@ public class Experiment {
                 this.modelFile = "models/chain_large_twoaction.prism";
                 this.type = Type.REWARD;
                 this.optimizations = true;
+
+                // Preset values for artifact reproducibility in feasible runtime
+                this.numVerificationMDPs = 10;
+                this.numTrainingMDPs = 10;
                 break;
             case CHAIN_LARGE2:
                 this.goal = "\"goal\"";
@@ -165,7 +169,6 @@ public class Experiment {
                 this.presetValuesVer.add(val);
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 12;
-
                 break;
             case BRP:
                 this.goal = "\"Target\"";
@@ -217,6 +220,13 @@ public class Experiment {
                 this.modelFile = "models/drone_single_param.prism";
                 this.type = Type.REACH;
                 this.optimizations = false;
+
+                // Preset values for artifact reproducibility in feasible runtime
+                val = new Values();
+                val.setValue("p", 0.3150358755);
+                this.presetValuesVer.add(val);
+                this.numVerificationMDPs = 4;
+                this.numTrainingMDPs = 8;
                 break;
             case FIREWIRE:
                 this.goal = "dead";

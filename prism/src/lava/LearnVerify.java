@@ -26,6 +26,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
+import static lava.Experiment.Model.DRONE;
+
 public class LearnVerify {
 
     public MRStrategy rlStrat;
@@ -89,13 +91,15 @@ public class LearnVerify {
 
     public void basic() {
         String id = "basic";
-        int m = 5; // = 300;
-        int n = 5; // = 200;
+        int m = 10; // = 300;
+        int n = 10; // = 200;
 
 
-        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_00_000, seed, true, true, 4).info(id));
+        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, true, 4).info(id));
         //run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(12, 1_000_000, seed, true, true, 3).info(id));
-        run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true,  2).info(id));
+        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true,  2).info(id));
+        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, seed, true, true,3).setMaximisation(false).info(id));
+        //run_basic_algorithms(new Experiment(DRONE).config(100, 1_000_000, seed, true, true, 5).info(id));
 
 //        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
 //        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
@@ -207,11 +211,6 @@ public class LearnVerify {
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
-            Iterator<Entry<Integer, Function>> iter = mdpParam.getTransitionsIterator(43, 1);
-            while (iter.hasNext()) {
-                System.out.println("Iteration: " + iter.next().getValue().getClass());
-            }
-
             List<Values> trainingParams = new ArrayList<>();
             List<Values> verificationParams = new ArrayList<>();
             if (ex.model == Model.SAV2) {
@@ -250,11 +249,15 @@ public class LearnVerify {
                 int alpha = switch (ex.model) {
                     case BETTING_GAME_FAVOURABLE -> 20;
                     case AIRCRAFT -> 10;
+                    case CHAIN_LARGE_TWO_ACTION -> 5;
+                    case DRONE -> 2;
                     default -> throw new PrismException("Unsupported model type");
                 };
                 int beta = switch (ex.model) {
                     case BETTING_GAME_FAVOURABLE -> 2;
                     case AIRCRAFT -> 2;
+                    case CHAIN_LARGE_TWO_ACTION -> 5;
+                    case DRONE -> 20;
                     default -> throw new PrismException("Unsupported model type");
                 };
                 BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
@@ -399,7 +402,7 @@ public class LearnVerify {
 
                     System.out.println("\n" + "=============================");
                     // Empirical Risk:
-                    //computeEmpiricalRisk(robstratI, Collections.min(robResultsI), 1000, ex);
+                    computeEmpiricalRisk(robstratI, ex.maximisation ? Collections.min(robResultsI) : Collections.max(robResultsI), 1000, ex);
                     computeEmpiricalRisk(robstratI, 0.7854, 1000, ex);
 
                     double totalRuntime = (elapsedTimeTraining + elapsedTimeVerification);
@@ -479,11 +482,15 @@ public class LearnVerify {
             int alpha = switch (ex.model) {
                 case BETTING_GAME_FAVOURABLE -> 20;
                 case AIRCRAFT -> 10;
+                case CHAIN_LARGE_TWO_ACTION -> 5;
+                case DRONE -> 2;
                 default -> throw new PrismException("Unsupported model type");
             };
             int beta = switch (ex.model) {
                 case BETTING_GAME_FAVOURABLE -> 2;
                 case AIRCRAFT -> 2;
+                case CHAIN_LARGE_TWO_ACTION -> 5;
+                case DRONE -> 20;
                 default -> throw new PrismException("Unsupported model type");
             };
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
@@ -512,15 +519,16 @@ public class LearnVerify {
         System.out.println("Results for Empirical Eval:" + robResultsCross);
         System.out.println("Parameters: " + evaluationParams);
         int numFail = 0;
-        int i = 0;
         for (double res : robResultsCross) {
-            if (res < guarantee) {
-                numFail++;
+            if (ex.maximisation) {
+                if (res < guarantee) {
+                    numFail++;
+                }
+            } else {
+                if (res > guarantee) {
+                    numFail++;
+                }
             }
-            if (res == 0.7853447694960158) {
-                System.out.println(res + " " + evaluationParams.get(i));
-            }
-            i++;
         }
         int N = robResultsCross.size();
         double empiricalRisk = (double) numFail / (double) N;
@@ -541,7 +549,7 @@ public class LearnVerify {
 
     private void constructValuesBeta(List<Values> params, Iterator<Double> it, Experiment ex) throws PrismException {
         Values v = new Values();
-        double pL = it.next();
+        double pL = (ex.model != DRONE) ?  it.next() : 0.0;
         double pH = it.next();
 
         // For Chain Benchmark, only p's and q'
@@ -564,6 +572,13 @@ public class LearnVerify {
                 }
                 v.addValue("r", pL);
                 v.addValue("p", 1 - pH);
+            }
+            case CHAIN_LARGE_TWO_ACTION -> {
+                v.addValue("p", pH);
+                v.addValue("q", 1-pH);
+            }
+            case DRONE -> {
+                v.addValue("p", Math.min(pH, 0.32)); // Ensure valid probability distributions
             }
             default -> {
                 throw new PrismException("Unsupported model type");
@@ -613,9 +628,9 @@ public class LearnVerify {
              * Betting Game: p
              * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"p","r","pH","pL"};
-            String[] paramLowerBounds = new String[]{"0","0","0","0"};
-            String[] paramUpperBounds = new String[]{"1","1","1","1"};
+            String[] paramNames = new String[]{"p","r","pH","pL","q"};
+            String[] paramLowerBounds = new String[]{"0","0","0","0","0"};
+            String[] paramUpperBounds = new String[]{"1","1","1","1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
