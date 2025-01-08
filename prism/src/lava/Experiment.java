@@ -361,6 +361,7 @@ public class Experiment {
                 this.presetValuesVer.add(val);
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 5;
+                this.numSeeds = 5;
 
                 break;
             case BETTING_GAME_UNFAVOURABLE:

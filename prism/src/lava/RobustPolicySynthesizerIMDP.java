@@ -123,7 +123,7 @@ public class RobustPolicySynthesizerIMDP {
         mc.setModelCheckingInfo(modelGen, pf, modelGen);
 
         Result result = mc.check(this.combinedIMDP, exprTarget);
-        System.out.println("Result: " + result.getResultString());
+        //System.out.println("Result: " + result.getResultString());
 
         MDStrategy<Double> strat = (MDStrategy<Double>) result.getStrategy();
 //        System.out.println("Robust Strategy IMDPs:" + strat);

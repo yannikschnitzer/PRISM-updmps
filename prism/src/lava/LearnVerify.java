@@ -133,7 +133,7 @@ public class LearnVerify implements Callable<Integer> {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-        //runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
         runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), MAPEstimator::new);
         runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
@@ -339,19 +339,19 @@ public class LearnVerify implements Callable<Integer> {
                 double minExistentialGuarantee = ex.maximisation ? Collections.min(existentialLambdas) : Collections.max(existentialLambdas); // Minimum Existential Guarantee (Badings et al.)
 
                 // System.out.println("Verification Results with IMDP strategy on IMDPs:" + robResultsI);
-                System.out.println("IMDP Robust Guarantee with IMDP strategy: " + minIMDPRobustGuarantee);
+                System.out.println("IMDP Robust Guarantee with IMDP strategy (J̃): " + minIMDPRobustGuarantee);
 
                 // System.out.println("Verification Results with RL strategy on IMDPs:" + robResultsIRL);
-                System.out.println("IMDP Robust Guarantee with RL strategy: " + minIMDPRobustGuaranteeRL);
+                System.out.println("IMDP Robust Guarantee with RL strategy (J̃): " + minIMDPRobustGuaranteeRL);
 
                 // System.out.println("Verification Results with MDP strategy on true MDPs:" + robResults);
-                System.out.println("True MDP Robust Guarantee with true MDP strategy: " + minTrueMDPRobustGuarantee);
+//                System.out.println("True (hidden) MDP Robust Guarantee with true MDP strategy: " + minTrueMDPRobustGuarantee);
 
                 // System.out.println("Verification Results with IMDP strategy on true MDPs:" + robResultsCross);
-                System.out.println("True MDP Robust Guarantee with IMDP strategy: " + minTrueMDPRobustGuaranteeIMDPStrategy);
+                System.out.println("True (hidden) MDP Robust Guarantee with IMDP strategy (J): " + minTrueMDPRobustGuaranteeIMDPStrategy);
 
                 // System.out.println("Verification Results with RL strategy on true MDPs:" + robResultsCrossRL);
-                System.out.println("True MDP Robust Guarantee with RL strategy: " + minTrueMDPRobustGuaranteeRL);
+                System.out.println("True (hidden) MDP Robust Guarantee with RL strategy (J): " + minTrueMDPRobustGuaranteeRL);
 
                 // System.out.println("Existential Results on true MDPs:" + existentialLambdas);
                 System.out.println("Existential Guarantee (Badings et al.): " + minExistentialGuarantee);
