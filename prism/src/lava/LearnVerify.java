@@ -121,6 +121,8 @@ public class LearnVerify implements Callable<Integer> {
             default -> throw new RuntimeException("Unknown model type.");
         }
 
+        System.out.println("Running with seeds: " + get_seeds(seed, experiment.numSeeds));
+        System.out.println("Running n = " + experiment.numTrainingMDPs+" and m= " + experiment.numVerificationMDPs);
         for (int seed : get_seeds(seed, experiment.numSeeds)) {
             run_basic_algorithms(experiment.setSeed(seed));
         }
@@ -131,10 +133,10 @@ public class LearnVerify implements Callable<Integer> {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
-//        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
-//        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), MAPEstimator::new);
-//        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), UCRL2IntervalEstimatorOptimistic::new);
+        //runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
+        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), MAPEstimator::new);
+        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
     }
 
 

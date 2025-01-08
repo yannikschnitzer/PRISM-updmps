@@ -330,7 +330,7 @@ public class Experiment {
                 val.addValue("p", 0.175920355159);
                 val.addValue("r", 0.464605015264);
                 this.presetValuesVer.add(val);
-                this.numVerificationMDPs = 1;
+                this.numVerificationMDPs = 10;
                 this.numTrainingMDPs = 10;
                 this.numSeeds = 4;
 
