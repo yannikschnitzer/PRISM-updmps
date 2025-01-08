@@ -25,15 +25,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 
-import static lava.Experiment.Model.DRONE;
+import static lava.Experiment.Model.*;
 
-public class LearnVerify {
+@CommandLine.Command(mixinStandardHelpOptions = true, version = "Artifact-Eval 0.1", description = "Artifact evaluation code base for \"Certiifiably Robust Policies for Uncertain Parametric Environments\" ")
+public class LearnVerify implements Callable<Integer> {
 
     public MRStrategy rlStrat;
     private Prism prism;
     private String modelStats = null;
-    private int seed = 1650280571;
     private boolean verbose = true;
 
     double rangeMin1 = 0.55;
@@ -43,35 +44,36 @@ public class LearnVerify {
 
     public LearnVerify() {
     }
-
     public LearnVerify(boolean verbose) {
         this.verbose = verbose;
     }
+    @CommandLine.Option(names = {"-c", "--casestudy"}, description = "Run a specific case study - \"aircraft\", \"betting\", \"sav\", \"chain\", \"drone\", \"firewire\"")
+    private String casestudy = "aircraft";
+
+    @CommandLine.Option(names = {"-no-opt", "--without-optimisations"}, description = "Run without optimisations, i.e., without parameter-tying.")
+    private boolean no_optimisations = false;
+
+    @CommandLine.Option(names = {"-seed"}, description = "Sampling seed.")
+    private int seed = 1650280571;
 
     public LearnVerify(int seed) {
         this.seed = seed;
     }
 
+
+    @Override
+    public Integer call() throws Exception {
+        basic();
+        return 0;
+    }
+
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         if (args.length > 0) {
-            int seed;
-            for (String s : args) {
-                try {
-                    seed = Integer.parseInt(s);
-                } catch (NumberFormatException e) {
-                    System.out.println("skipping invalid seed " + s);
-                    continue;
-                }
-                System.out.println("running with seed " + s);
-                //LearnVerify l = new LearnVerify(seed);
-                //l.basic();
-                //l.switching_environment();
-                //l.gridStrengthEval();x
-                //l.evaluate_strength();
-            }
+                int exitCode = new CommandLine(new LearnVerify()).execute(args);
+                System.exit(exitCode);
         } else {
-            System.out.println("Starting Learning and Verification");
+            System.out.println("Starting Learning and Verification");;
             LearnVerify l = new LearnVerify();
             l.basic();
         }
@@ -85,7 +87,6 @@ public class LearnVerify {
         for (int i = 0; i < num - 1; i++) {
             seeds.add(r.nextInt(seed));
         }
-
         return seeds;
     }
 
@@ -94,60 +95,35 @@ public class LearnVerify {
         int m = 10; // = 300;
         int n = 10; // = 200;
 
+        System.out.println(get_seeds(seed, 5));
 
-        //run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, true, 4).info(id));
-        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(12, 1_000_000, seed, true, true, 3).info(id));
-        //run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true,  2).info(id));
-        //run_basic_algorithms(new Experiment(Model.CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, seed, true, true,3).setMaximisation(false).info(id));
-        //run_basic_algorithms(new Experiment(DRONE).config(100, 1_000_000, seed, true, true, 5).info(id));
+        String algorithm = "LUI";
+        boolean parameter_tying = !no_optimisations;
+        System.out.println("invoked with: " + casestudy);
 
-//        run_basic_algorithms(new Experiment(Model.CHAIN_SMALL).config(100, 1000, seed).info(id));
-//        run_basic_algorithms(new Experiment(Model.LOOP).config(100, 1000, seed).info(id));
+        Experiment experiment;
+        switch (casestudy) {
+            case "aircraft" -> {
+                experiment = new Experiment(AIRCRAFT).config(12, 1_000_000, seed, parameter_tying, parameter_tying, 3).info(id);
+            }
+            case "betting" -> {
+                experiment = new Experiment(BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, parameter_tying, parameter_tying, 4).info(id);
+            }
+            case "sav" -> {
+                experiment = new Experiment(SAV2).config(50, 1_000_000, seed, parameter_tying, parameter_tying,  2).info(id);
+            }
+            case "chain" -> {
+                experiment = new Experiment(CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, seed, parameter_tying, parameter_tying,3).setMaximisation(false).info(id);
+            }
+            case "drone" -> {
+                experiment = new Experiment(DRONE).config(100, 1_000_000, seed, parameter_tying, parameter_tying, 5).info(id);
+            }
+            default -> throw new RuntimeException("Unknown model type.");
+        }
 
-//       run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 100_000, seed, true, true,4).info(id));
-//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, true, false, 4).info(id));
-//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(100, 1_000_000, seed, false, false, 10).info(id));
-
-//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, true, 10).info(id));
-//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, true, false, 10).info(id));
-//        run_basic_algorithms(new Experiment(Model.BRP).config(100, 1_00_000, seed, false, false, 50).info(id));
-
-//        run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_0_000, seed, false).info(id));
-//        run_basic_algorithms(new Experiment(Model.DRONE).config(50, 1_000, seed, false).info(id));
-//        run_basic_algorithms(new Experiment(Model.NAND).config(50, 1_000_000, seed, true).info(id));
-
-//        run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(102, 1_000_000, seed, false).info(id));
-
-//        for (int seed : get_seeds(seed, 10)) {
-//            run_basic_algorithms(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, true, false, m, n, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.SAV2).config(50, 1_000_000, seed, false, false, m, n, 2).info(id));
-//        }
-
-//        for (int seed : get_seeds(seed, 1)) {
-        //   run_basic_algorithms(new Experiment(Model.AIRCRAFT).config(10, 10_000, seed, true, true, m, n, 2).info(id));
-        //           run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_0_000, seed, true, true, m, n, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.AIRCRAFT).config(10, 1_00000, seed, false, false, m, n, 2).info(id));
-//        }
-
-//        for (int seed : get_seeds(seed, 1)) {
-//            //run_basic_algorithms(new Experiment(Model.DRONE_SINGLE).config(50, 1_000_000, seed, true, true, m, n, 4).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGLE).config(50, 1_0_000, seed, true, true, m, n, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.DRONE_SINGE).config(10, 1_000_000, seed, false, false, m, n, 2).info(id));
-//        }
-
-
-//        for (int seed : get_seeds(seed, 10)) {
-//            run_basic_algorithms(new Experiment(Model.CHAIN_LARGE).config(30, 1_000_000, seed, true, true, m, n, 4).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.CHAIN_LARGE).config(30, 1_000_000, seed, true, false, m, n, 2).info(id));
-//            //run_basic_algorithms_pac(new Experiment(Model.CHAIN_LARGE).config(30, 1_000_000, seed, false, false, m, n, 2).info(id));
-//        }
-//
-//        for (int seed : get_seeds(seed, 10)) {
-//        run_basic_algorithms(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_0_000, seed, true, true, 4).info(id));
-//            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_FAVOURABLE).config(15, 1_000_000, seed, true, false, m, n, 2).info(id));
-//            run_basic_algorithms_pac(new Experiment(Model.BETTING_GAME_UNFAVOURABLE).config(15, 1_000_000, seed, false, false, m, n, 2).info(id));
-//        }
+        for (int seed : get_seeds(seed, experiment.numSeeds)) {
+            run_basic_algorithms(experiment.setSeed(seed));
+        }
     }
 
     private void run_basic_algorithms(Experiment ex) {
@@ -156,7 +132,7 @@ public class LearnVerify {
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
         runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
- //       runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
+//        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false), PACIntervalEstimatorOptimistic::new);
 //        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), MAPEstimator::new);
 //        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true), UCRL2IntervalEstimatorOptimistic::new);
     }
@@ -205,15 +181,16 @@ public class LearnVerify {
 
     public void runRobustPolicyComparisonForVis(String label, Experiment ex, EstimatorConstructor estimatorConstructor) {
         try {
-            System.out.println("Result iterations:" + ex.getResultIterations());
+            //System.out.println("Result iterations:" + ex.getResultIterations());
             System.out.println("Label: " + label);
+            System.out.println("Running with optimisations: " + (ex.optimizations && ex.tieParameters));
             // Build pMDP model
             resetAll(ex.seed);
             MDP<Function> mdpParam = buildParamModel(ex);
 
             List<Values> trainingParams = new ArrayList<>();
             List<Values> verificationParams = new ArrayList<>();
-            if (ex.model == Model.SAV2) {
+            if (ex.model == SAV2) {
                 // Generate uniform sample training and verification MDP parameters
                 /*
                  * Range for SAV2: [0.75, 0.95] and [0.55, 0.85]
@@ -457,7 +434,7 @@ public class LearnVerify {
 
     private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
         List<Values> evaluationParams = new ArrayList<>();
-        if (ex.model == Model.SAV2) {
+        if (ex.model == SAV2) {
             // Generate uniform sample training and verification MDP parameters
             /*
              * Range for SAV2: [0.75, 0.95] and [0.55, 0.85]
@@ -588,7 +565,7 @@ public class LearnVerify {
 
             PropertiesFile pf = prism.parsePropertiesString(ex.spec);
             Expression exprTarget = pf.getProperty(0);
-            
+
             for (MDP<Double> mdp : mdps) {
                 modelGen.setSomeUndefinedConstants(mdp.getConstantValues());
                 mc.setModelCheckingInfo(modelGen, pf, modelGen);
@@ -730,7 +707,7 @@ public class LearnVerify {
             }
             similarStateMap.get(transitionStructure).add(s);
         }
-        System.out.println("Similar state map" + similarStateMap);
+        //System.out.println("Similar state map" + similarStateMap);
         return similarStateMap;
     }
 
@@ -748,7 +725,7 @@ public class LearnVerify {
             }
         }
 
-        System.out.println("Similar state action map" + similarStateActionMap);
+        //System.out.println("Similar state action map" + similarStateActionMap);
         return similarStateActionMap;
     }
 
@@ -776,7 +753,7 @@ public class LearnVerify {
 
             similarTransitions.addAll(transitions.values());
         }
-        System.out.println("Similar Transitions: " + similarTransitions);
+        //System.out.println("Similar Transitions: " + similarTransitions);
         return similarTransitions;
     }
 
@@ -844,4 +821,6 @@ public class LearnVerify {
         prism.closeDown();
         return null;
     }
+
+
 }

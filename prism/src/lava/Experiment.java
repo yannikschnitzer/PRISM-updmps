@@ -52,6 +52,7 @@ public class Experiment {
     public int artifact_m;
     public int standard_n;
     public int standard_m;
+    public int numSeeds = 1;
     public InitialInterval initialInterval = InitialInterval.WIDE;
     public double trueOpt = Double.NaN;
     private String modelInfo = "";
@@ -331,6 +332,7 @@ public class Experiment {
                 this.presetValuesVer.add(val);
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 10;
+                this.numSeeds = 4;
 
                 break;
             case BANDIT:
@@ -391,6 +393,14 @@ public class Experiment {
         this.iterations = iterations;
         this.seed = repetitions;
         this.optimizations = optimizations;
+        return this;
+    }
+
+    public Experiment config(int max_episode_length, int iterations, int repetitions, int multiplier) {
+        this.max_episode_length = max_episode_length;
+        this.iterations = iterations;
+        this.seed = repetitions;
+        this.multiplier = multiplier;
         return this;
     }
 
@@ -462,6 +472,11 @@ public class Experiment {
 
     public Experiment setMultiplier(int multiplier) {
         this.multiplier = multiplier;
+        return this;
+    }
+
+    public Experiment setSeed(int seed) {
+        this.seed = seed;
         return this;
     }
 
