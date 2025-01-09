@@ -109,6 +109,7 @@ public class RobustPolicySynthesizerMDP {
         UMDPModelChecker mc = new UMDPModelChecker(prism);
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
+        mc.setMaxIters(100000);
 
         buildModulesFiles(prism);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);

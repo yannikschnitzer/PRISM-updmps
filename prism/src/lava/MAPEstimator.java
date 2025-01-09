@@ -178,8 +178,10 @@ public class MAPEstimator extends Estimator {
 
     public MDStrategy computeStrategyFromEstimate(IMDP<Double> estimate) throws PrismException {
         UMDPModelChecker mc = new UMDPModelChecker(this.prism);
+        mc.setPrecomp(false); //TODO: here
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
+        mc.setMaxIters(100000);
         PropertiesFile pf = prism.parsePropertiesString(ex.robustSpec);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, this.prism);
         modelGen.setSomeUndefinedConstants(estimate.getConstantValues());
@@ -211,6 +213,9 @@ public class MAPEstimator extends Estimator {
         MDPExplicit<Double> mdp = (MDPExplicit<Double>) this.prism.getBuiltModelExplicit();
         DTMC<Double> dtmc = (DTMC<Double>) mdp.constructInducedModel(strat);
         DTMCModelChecker mc = new DTMCModelChecker(this.prism);
+        //mc.setPrecomp(false); //TODO: here
+        mc.setErrorOnNonConverge(false);
+        mc.setMaxIters(100000);
         mc.setGenStrat(true);
         PropertiesFile pf = prism.parsePropertiesString(ex.dtmcSpec);
 

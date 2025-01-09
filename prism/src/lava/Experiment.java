@@ -142,6 +142,7 @@ public class Experiment {
                 // Preset values for artifact reproducibility in feasible runtime
                 this.numVerificationMDPs = 10;
                 this.numTrainingMDPs = 10;
+                this.numSeeds = 5;
                 break;
             case CHAIN_LARGE2:
                 this.goal = "\"goal\"";
@@ -170,6 +171,7 @@ public class Experiment {
                 this.presetValuesVer.add(val);
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 12;
+                this.numSeeds = 3;
                 break;
             case BRP:
                 this.goal = "\"Target\"";
@@ -228,6 +230,7 @@ public class Experiment {
                 this.presetValuesVer.add(val);
                 this.numVerificationMDPs = 4;
                 this.numTrainingMDPs = 8;
+                this.numSeeds = 3;
                 break;
             case FIREWIRE:
                 this.goal = "dead";

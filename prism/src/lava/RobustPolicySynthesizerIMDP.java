@@ -112,6 +112,7 @@ public class RobustPolicySynthesizerIMDP {
         mc.setGenStrat(true);
         mc.setErrorOnNonConverge(false);
         mc.setPrecomp(true);
+        mc.setMaxIters(100000);
 
         buildModulesFiles(prism);
         ModulesFileModelGenerator<?> modelGen = ModulesFileModelGenerator.create(modulesFileIMDP, prism);

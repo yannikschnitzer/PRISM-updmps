@@ -80,7 +80,7 @@ public class ProbModelChecker extends NonProbModelChecker
 	// Parameter for iterative numerical method termination criteria
 	protected double termCritParam = 1e-8;
 	// Max iterations for numerical solution
-	protected int maxIters = 100000;
+	protected int maxIters = 1000000;
 	// Resolution for POMDP fixed grid approximation algorithm
 	protected int gridResolution = 10;
 	// Use precomputation algorithms in model checking?
@@ -96,7 +96,7 @@ public class ProbModelChecker extends NonProbModelChecker
 	// Method used for numerical solution
 	protected SolnMethod solnMethod = SolnMethod.VALUE_ITERATION;
 	// Is non-convergence of an iterative method an error?
-	protected boolean errorOnNonConverge = true;
+	protected boolean errorOnNonConverge = false;
 
 	// Delay between occasional updates for slow processes, e.g. numerical solution (milliseconds)
 	public static final int UPDATE_DELAY = 5000;

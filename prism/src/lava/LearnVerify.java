@@ -48,13 +48,19 @@ public class LearnVerify implements Callable<Integer> {
         this.verbose = verbose;
     }
     @CommandLine.Option(names = {"-c", "--casestudy"}, description = "Run a specific case study - \"aircraft\", \"betting\", \"sav\", \"chain\", \"drone\", \"firewire\"")
-    private String casestudy = "aircraft";
+    private String casestudy = "drone";
+
+    @CommandLine.Option(names = {"-a", "--algorithm"}, description = "Run a specific IMDP learning algorhtm - \"LUI\", \"PAC\", \"MAP\", \"UCRL\"")
+    private String algorithm = "all";
 
     @CommandLine.Option(names = {"-no-opt", "--without-optimisations"}, description = "Run without optimisations, i.e., without parameter-tying.")
     private boolean no_optimisations = false;
 
     @CommandLine.Option(names = {"-seed"}, description = "Sampling seed.")
     private int seed = 1650280571;
+
+    @CommandLine.Option(names = {"-smoke"}, description = "Run smoke test.")
+    private boolean is_smoke_test = false;
 
     public LearnVerify(int seed) {
         this.seed = seed;
@@ -63,7 +69,14 @@ public class LearnVerify implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        basic();
+        if (is_smoke_test) {
+            System.out.println("Starting Smoke Test.");
+            Experiment experiment = new Experiment(AIRCRAFT).config(12, 1_000, seed, true, true, 3);
+            run_basic_algorithms(experiment.setSeed(seed));
+            System.out.println("Smoke Test finished successfully :)");
+        } else {
+            basic();
+        }
         return 0;
     }
 
@@ -133,10 +146,27 @@ public class LearnVerify implements Callable<Integer> {
         ex.setResultIterations(new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 1000, 1200, 2000, 4000, 6000, 8000, 10000, 15000, 19000, 30000, 40000, 50000, 60000, 80000, 100000, 200000, 300000, 400000, 500000, 800000, 900000)));
         postfix += ex.tieParameters ? "_tied" : (ex.optimizations ? "_opt" : "_naive");
 
-        runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
-        runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), MAPEstimator::new);
-        runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
+        switch (algorithm) {
+            case "all" -> {
+                runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
+                runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
+                runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), MAPEstimator::new);
+                runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
+            }
+            case "LUI" -> {
+                runRobustPolicyComparisonForVis("LUI_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), BayesianEstimatorOptimistic::new);
+            }
+            case "PAC" -> {
+                runRobustPolicyComparisonForVis("PAC_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(false).stratWeight(0.9), PACIntervalEstimatorOptimistic::new);
+            }
+            case "MAP" -> {
+                runRobustPolicyComparisonForVis("MAP_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), MAPEstimator::new);
+            }
+            case "UCRL" -> {
+                runRobustPolicyComparisonForVis("UCRL_rpol" + postfix, ex.setErrorTol(0.001).setBayesian(true).stratWeight(0.9), UCRL2IntervalEstimatorOptimistic::new);
+            }
+            default -> throw new RuntimeException("Unknown algorithm: " + algorithm);
+        }
     }
 
 
