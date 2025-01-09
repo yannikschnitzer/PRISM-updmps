@@ -53,6 +53,10 @@ public class Experiment {
     public int standard_n;
     public int standard_m;
     public int numSeeds = 1;
+    public double k0perf;
+    public double k5perf;
+    public double k10perf;
+
     public InitialInterval initialInterval = InitialInterval.WIDE;
     public double trueOpt = Double.NaN;
     private String modelInfo = "";
@@ -172,6 +176,10 @@ public class Experiment {
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 12;
                 this.numSeeds = 3;
+
+                this.k0perf = 0.7855;
+                this.k5perf = 0.7883;
+                this.k10perf = 0.7946;
                 break;
             case BRP:
                 this.goal = "\"Target\"";
@@ -231,6 +239,12 @@ public class Experiment {
                 this.numVerificationMDPs = 4;
                 this.numTrainingMDPs = 8;
                 this.numSeeds = 3;
+
+
+                this.k0perf = 0.7274;
+                this.k5perf = 0.8487;
+                this.k10perf = 0.8957;
+
                 break;
             case FIREWIRE:
                 this.goal = "dead";
@@ -333,9 +347,14 @@ public class Experiment {
                 val.addValue("p", 0.175920355159);
                 val.addValue("r", 0.464605015264);
                 this.presetValuesVer.add(val);
-                this.numVerificationMDPs = 10;
+                this.numVerificationMDPs = 10; // = 10
                 this.numTrainingMDPs = 10;
                 this.numSeeds = 4;
+
+                // Preset values for
+                this.k0perf = 0.6076;
+                this.k5perf = 0.6590;
+                this.k10perf = 0.7199;
 
                 break;
             case BANDIT:
@@ -365,6 +384,10 @@ public class Experiment {
                 this.numVerificationMDPs = 1;
                 this.numTrainingMDPs = 5;
                 this.numSeeds = 5;
+
+                this.k0perf = 32.08;
+                this.k5perf = 39.91;
+                this.k10perf = 42.50;
 
                 break;
             case BETTING_GAME_UNFAVOURABLE:
@@ -531,7 +554,10 @@ public class Experiment {
                                   double minRLIMDP,
                                   double minRLMDP,
                                   double totruntime,
-                                  double runtimeper10k) {
+                                  double runtimeper10k,
+                                  double k0risk,
+                                  double k5risk,
+                                  double k10risk) {
 
         try {
             FileWriter writer = new FileWriter(pathPrefix + file_name + ".yaml");
@@ -552,9 +578,12 @@ public class Experiment {
             writer.write("prefix: " + file_name + "\n");
             writer.write("IMDP policy performance on true MDPs (J): " + minMDP + "\n");
             writer.write("IMDP policy performance on IMDPs (J̃): " + minIMDP + "\n");
-            writer.write("RL policy performance on true MDPs (J): " + minMDP + "\n");
-            writer.write("RL policy performance on IMDPs (J̃): " + minIMDP + "\n");
+            writer.write("RL policy performance on true MDPs (J): " + minRLMDP + "\n");
+            writer.write("RL policy performance on IMDPs (J̃): " + minRLIMDP + "\n");
             writer.write("existential guarantee: " + existential + "\n");
+            writer.write("empirical risk for k = 0: " + k0risk + "\n");
+            writer.write("empirical risk for k = 5: " + k5risk + "\n");
+            writer.write("empirical risk for k = 10: " + k10risk + "\n");
             writer.write("total runtime: " + totruntime + "sec\n");
             writer.write("runtime per 10k trajectories: " + runtimeper10k + "sec\n");
             writer.close();

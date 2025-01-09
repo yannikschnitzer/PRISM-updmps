@@ -62,6 +62,8 @@ public class LearnVerify implements Callable<Integer> {
     @CommandLine.Option(names = {"-smoke"}, description = "Run smoke test.")
     private boolean is_smoke_test = false;
 
+    private boolean full_sample_size = false;
+
     public LearnVerify(int seed) {
         this.seed = seed;
     }
@@ -71,9 +73,10 @@ public class LearnVerify implements Callable<Integer> {
     public Integer call() throws Exception {
         if (is_smoke_test) {
             System.out.println("Starting Smoke Test.");
-            Experiment experiment = new Experiment(AIRCRAFT).config(12, 1_000, seed, true, true, 3);
+            algorithm = "LUI";
+            Experiment experiment = new Experiment(AIRCRAFT).config(12, 1_00, seed, true, true, 3);
             run_basic_algorithms(experiment.setSeed(seed));
-            System.out.println("Smoke Test finished successfully :)");
+            System.out.println("PRISM smoke test finished successfully :)");
         } else {
             basic();
         }
@@ -86,7 +89,7 @@ public class LearnVerify implements Callable<Integer> {
                 int exitCode = new CommandLine(new LearnVerify()).execute(args);
                 System.exit(exitCode);
         } else {
-            System.out.println("Starting Learning and Verification");;
+            System.out.println("Starting Learning and Verification");
             LearnVerify l = new LearnVerify();
             l.basic();
         }
@@ -110,7 +113,6 @@ public class LearnVerify implements Callable<Integer> {
 
         System.out.println(get_seeds(seed, 5));
 
-        String algorithm = "LUI";
         boolean parameter_tying = !no_optimisations;
         System.out.println("invoked with: " + casestudy);
 
@@ -403,14 +405,31 @@ public class LearnVerify implements Callable<Integer> {
                 if (i == trainingSet.first.getFirst().size() - 1) {
                     System.out.println("\n" + "=============================");
                     // Empirical Risk:
-                    computeEmpiricalRisk(robstratI, ex.maximisation ? Collections.min(robResultsI) : Collections.max(robResultsI), 1000, ex);
-                    computeEmpiricalRisk(robstratI, 0.7854, 1000, ex);
+                    robResultsI = robResultsI.stream().sorted().toList();
+                    robResultsIRL = robResultsIRL.stream().sorted().toList();
+
+                    double k0risk;
+                    double k5risk;
+                    double k10risk;
+
+                    if (full_sample_size) {
+                        k0risk = computeEmpiricalRisk(robstratI, ex.maximisation ? Collections.min(robResultsI) : Collections.max(robResultsI), 1000, ex);
+                        k5risk = computeEmpiricalRisk(robstratI, ex.maximisation? robResultsI.get(5) : robResultsI.get(robResultsI.size() - 5), 1000, ex);
+                        k10risk = computeEmpiricalRisk(robstratI, ex.maximisation? robResultsI.get(10) : robResultsI.get(robResultsI.size() - 10), 1000, ex);
+                    } else {
+                        k0risk = computeEmpiricalRisk(robstratI, ex.k0perf, 1000, ex);
+                        k5risk = computeEmpiricalRisk(robstratI, ex.k5perf, 1000, ex);
+                        k10risk = computeEmpiricalRisk(robstratI, ex.k10perf, 1000, ex);
+                        System.out.println("k0risk: " + k0risk);
+                        System.out.println("k5risk: " + k5risk);
+                        System.out.println("k10risk: " + k10risk);
+                    }
 
                     double totalRuntime = (elapsedTimeTraining + elapsedTimeVerification);
                     double runtimePer10k = totalRuntime / (ex.numTrainingMDPs + ex.numVerificationMDPs) / (ex.iterations / 10_000.0);
                     System.out.println("Total runtime: " + totalRuntime + "sec" + ", per 10k trajectories: " + runtimePer10k + "sec");
 
-                    ex.dumpConfiguration(makeOutputDirectory(ex), label, minIMDPRobustGuarantee, minTrueMDPRobustGuarantee, minExistentialGuarantee, minIMDPRobustGuaranteeRL, minTrueMDPRobustGuaranteeRL, totalRuntime, runtimePer10k);
+                    ex.dumpConfiguration(makeOutputDirectory(ex), label, minIMDPRobustGuarantee, minTrueMDPRobustGuarantee, minExistentialGuarantee, minIMDPRobustGuaranteeRL, minTrueMDPRobustGuaranteeRL, totalRuntime, runtimePer10k, k0risk, k5risk, k10risk);
                 }
 
                 DataProcessor dp = new DataProcessor();
@@ -464,7 +483,7 @@ public class LearnVerify implements Callable<Integer> {
         return robResultsCross;
     }
 
-    private void computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
+    private double computeEmpiricalRisk(MDStrategy<Double> strat, double guarantee, int numEvalSamples, Experiment ex) throws PrismException {
         List<Values> evaluationParams = new ArrayList<>();
         if (ex.model == SAV2) {
             // Generate uniform sample training and verification MDP parameters
@@ -531,7 +550,9 @@ public class LearnVerify implements Callable<Integer> {
         }
         int N = robResultsCross.size();
         double empiricalRisk = (double) numFail / (double) N;
-        System.out.println("Empirical Risk: " + (empiricalRisk) + " for N = " + N + " and guarantee " + guarantee);
+        System.out.println(robResultsCross.stream().sorted().toList().get(3) + " " + robResultsCross.stream().sorted().toList().get(23) + " " + robResultsCross.stream().sorted().toList().get(57));
+        System.out.println("Empirical Risk: " + (empiricalRisk) + " for N = " + N + " and guarantee" + guarantee);
+        return empiricalRisk;
     }
 
     private void constructValues(double rangeMin1, double rangeMax1,double rangeMin2, double rangeMax2, List<Values> params, Random r) {
