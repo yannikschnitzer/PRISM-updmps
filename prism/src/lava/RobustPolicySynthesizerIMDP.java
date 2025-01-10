@@ -177,6 +177,8 @@ public class RobustPolicySynthesizerIMDP {
                         p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), imdp);
                 case DRONE ->
                         p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), imdp);
+                case FIREWIRE ->
+                    p.loadFirewirePolicy("", imdp);
                 default -> throw new PrismException("Unsupported model type: " + experiment.model);
             };
 //            if (experiment.model == Experiment.Model.BETTING_GAME_FAVOURABLE) {

@@ -173,6 +173,8 @@ public class RobustPolicySynthesizerMDP {
                         p.loadChainPolicy(String.format("policies/chain_twoact/chain_policies_extended/policy_single_%d.json",(iteration)), mdp);
                 case DRONE ->
                         p.loadDronePolicy(String.format("policies/drone/drone_policies/policy_single_%d.json",(iteration)), mdp);
+                case FIREWIRE ->
+                        p.loadFirewirePolicy("", mdp);
                 default -> throw new PrismException("Unsupported model type: " + experiment.model);
             };
             //MRStrategy rlStrat = p.loadAircraftPolicy("policies/aircraft/policy.json", mdp);

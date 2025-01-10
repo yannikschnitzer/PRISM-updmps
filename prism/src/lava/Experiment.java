@@ -261,6 +261,19 @@ public class Experiment {
                 this.modelFile = "models/firewire.prism";
                 this.type = Type.REACH;
                 this.optimizations = false;
+
+                // Preset values for artifact reproducibility in feasible runtime
+                val = new Values();
+                val.setValue("fast", 0.109280077836);
+                this.presetValuesVer.add(val);
+                this.numVerificationMDPs = 0;
+                this.numTrainingMDPs = 5;
+                this.numSeeds = 1;
+
+                this.k0perf = 0.7274;
+                this.k5perf = 0.8487;
+                this.k10perf = 0.8957;
+
                 break;
             case CONSENSUS2:
                 this.goal = "\"finished\"&\"all_coins_equal_1\"";

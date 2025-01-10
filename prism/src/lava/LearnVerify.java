@@ -48,7 +48,7 @@ public class LearnVerify implements Callable<Integer> {
         this.verbose = verbose;
     }
     @CommandLine.Option(names = {"-c", "--casestudy"}, description = "Run a specific case study - \"aircraft\", \"betting\", \"sav\", \"chain\", \"drone\", \"firewire\"")
-    private String casestudy = "chain";
+    private String casestudy = "firewire";
 
     @CommandLine.Option(names = {"-a", "--algorithm"}, description = "Run a specific IMDP learning algorhtm - \"LUI\", \"PAC\", \"MAP\", \"UCRL\"")
     private String algorithm = "all";
@@ -68,7 +68,6 @@ public class LearnVerify implements Callable<Integer> {
     public LearnVerify(int seed) {
         this.seed = seed;
     }
-
 
     @Override
     public Integer call() throws Exception {
@@ -127,6 +126,8 @@ public class LearnVerify implements Callable<Integer> {
             experiments.add(new Experiment(SAV2).config(50, 1_000_000, seed, parameter_tying, parameter_tying,m, n,  2).info(id));
             experiments.add(new Experiment(CHAIN_LARGE_TWO_ACTION).config(100, 1_000_000, seed, parameter_tying, parameter_tying,m, n,3).setMaximisation(false).info(id));
             experiments.add(new Experiment(DRONE).config(100, 1_000_000, seed, parameter_tying, parameter_tying,m, n, 5).info(id));
+            experiments.add(new Experiment(FIREWIRE).config(60, 1_000_000, seed, parameter_tying, parameter_tying, 5).info(id));
+
 
             for (Experiment experiment : experiments) {
                 System.out.println("Running with seeds: " + get_seeds(seed, experiment.numSeeds));
@@ -152,6 +153,9 @@ public class LearnVerify implements Callable<Integer> {
                 }
                 case "drone" -> {
                     experiment = new Experiment(DRONE).config(100, 1_000_000, seed, parameter_tying, parameter_tying, 5).info(id);
+                }
+                case "firewire" -> {
+                    experiment = new Experiment(FIREWIRE).config(60, 1_000_000, seed, parameter_tying, parameter_tying, 5).info(id);
                 }
                 default -> throw new RuntimeException("Unknown model type.");
             }
@@ -283,6 +287,7 @@ public class LearnVerify implements Callable<Integer> {
                     case AIRCRAFT -> 10;
                     case CHAIN_LARGE_TWO_ACTION -> 5;
                     case DRONE -> 2;
+                    case FIREWIRE -> 5;
                     default -> throw new PrismException("Unsupported model type");
                 };
                 int beta = switch (ex.model) {
@@ -290,6 +295,7 @@ public class LearnVerify implements Callable<Integer> {
                     case AIRCRAFT -> 2;
                     case CHAIN_LARGE_TWO_ACTION -> 5;
                     case DRONE -> 20;
+                    case FIREWIRE -> 5;
                     default -> throw new PrismException("Unsupported model type");
                 };
                 BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
@@ -523,6 +529,7 @@ public class LearnVerify implements Callable<Integer> {
                 case AIRCRAFT -> 10;
                 case CHAIN_LARGE_TWO_ACTION -> 5;
                 case DRONE -> 2;
+                case FIREWIRE -> 5;
                 default -> throw new PrismException("Unsupported model type");
             };
             int beta = switch (ex.model) {
@@ -530,6 +537,7 @@ public class LearnVerify implements Callable<Integer> {
                 case AIRCRAFT -> 2;
                 case CHAIN_LARGE_TWO_ACTION -> 5;
                 case DRONE -> 20;
+                case FIREWIRE -> 5;
                 default -> throw new PrismException("Unsupported model type");
             };
             BetaDistribution betaDist = BetaDistribution.of(alpha, beta);
@@ -621,6 +629,9 @@ public class LearnVerify implements Callable<Integer> {
             case DRONE -> {
                 v.addValue("p", Math.min(pH, 0.32)); // Ensure valid probability distributions
             }
+            case FIREWIRE -> {
+                v.addValue("fast", pH);
+            }
             default -> {
                 throw new PrismException("Unsupported model type");
             }
@@ -667,9 +678,9 @@ public class LearnVerify implements Callable<Integer> {
              * Betting Game: p
              * Chain Large: p, q
              */
-            String[] paramNames = new String[]{"p","r","pH","pL","q"};
-            String[] paramLowerBounds = new String[]{"0","0","0","0","0"};
-            String[] paramUpperBounds = new String[]{"1","1","1","1","1"};
+            String[] paramNames = new String[]{"p","r","pH","pL","q","fast"};
+            String[] paramLowerBounds = new String[]{"0","0","0","0","0","0"};
+            String[] paramUpperBounds = new String[]{"1","1","1","1","1","1"};
             this.prism.setPRISMModelConstants(new Values(), true);
             this.prism.setParametric(paramNames, paramLowerBounds, paramUpperBounds);
             this.prism.buildModel();
