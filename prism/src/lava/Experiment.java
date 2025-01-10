@@ -147,6 +147,11 @@ public class Experiment {
                 this.numVerificationMDPs = 10;
                 this.numTrainingMDPs = 10;
                 this.numSeeds = 5;
+
+                this.k0perf = 38279.7;
+                this.k5perf = 29729.0;
+                this.k10perf = 6873.94;
+
                 break;
             case CHAIN_LARGE2:
                 this.goal = "\"goal\"";
