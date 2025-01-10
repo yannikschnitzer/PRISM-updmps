@@ -48,7 +48,7 @@ public class LearnVerify implements Callable<Integer> {
         this.verbose = verbose;
     }
     @CommandLine.Option(names = {"-c", "--casestudy"}, description = "Run a specific case study - \"aircraft\", \"betting\", \"sav\", \"chain\", \"drone\", \"firewire\"")
-    private String casestudy = "firewire";
+    private String casestudy = "aircraft";
 
     @CommandLine.Option(names = {"-a", "--algorithm"}, description = "Run a specific IMDP learning algorhtm - \"LUI\", \"PAC\", \"MAP\", \"UCRL\"")
     private String algorithm = "all";
@@ -851,8 +851,10 @@ public class LearnVerify implements Callable<Integer> {
             MDP<Double> SUL = estimator.getSUL();
 
             if (true/*this.modelStats == null*/) {
-                this.modelStats = estimator.getModelStats();
-                System.out.println(this.modelStats);
+                //this.modelStats = estimator.getModelStats();
+                System.out.println("======");
+                System.out.println(ex.model);
+                System.out.println("======");
             }
 
             ObservationSampler observationSampler = new ObservationSampler(this.prism, SUL, estimator.getTerminatingStates());
